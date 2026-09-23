@@ -1,0 +1,4 @@
+# Sitio estático: no hay paso de compilación. Netlify publica la carpeta "sitio".
+[build]
+  publish = "sitio"
+  command = ""
