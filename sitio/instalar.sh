@@ -44,7 +44,7 @@ server {
     index index.html;
     charset utf-8;
     gzip on;
-    gzip_types text/html text/css application/javascript application/json image/svg+xml;
+    gzip_types text/css application/javascript application/json image/svg+xml;
     gzip_min_length 1024;
     location / { try_files \$uri \$uri/ =404; }
     location ~* \.html\$ { add_header Cache-Control "no-cache"; }
