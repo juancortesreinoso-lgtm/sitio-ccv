@@ -18,8 +18,9 @@ set -euo pipefail
 DOM="${1:-}"; MAIL="${2:-}"
 REPO="https://github.com/juancortesreinoso-lgtm/sitio-ccv.git"
 DIR="/var/www/sitio-ccv"
-if [ -z "$DOM" ]; then echo "Uso: instalar.sh DOMINIO [correo]"; exit 1; fi
-[ -z "$MAIL" ] && MAIL="admin@${DOM#*.}"
+# Sin dominio: se publica por IP en http:// (sin certificado). Con dominio: HTTPS automático.
+[ -z "$MAIL" ] && [ -n "$DOM" ] && MAIL="admin@${DOM#*.}"
+SERVER_NAME="${DOM:-_}"
 if [ "$(id -u)" -ne 0 ]; then echo "Ejecute con sudo"; exit 1; fi
 
 echo "== 1/4 Paquetes"
@@ -38,7 +39,7 @@ cat > /etc/nginx/sites-available/sitio-ccv <<EOF
 server {
     listen 80;
     listen [::]:80;
-    server_name ${DOM};
+    server_name ${SERVER_NAME};
     root ${DIR}/sitio;
     index index.html;
     charset utf-8;
@@ -64,7 +65,10 @@ EOF
 chmod 644 /etc/cron.d/sitio-ccv
 
 echo "== 4/4 HTTPS (Let's Encrypt)"
-if certbot --nginx -d "$DOM" --non-interactive --agree-tos -m "$MAIL" --redirect; then
+if [ -z "$DOM" ]; then
+  echo "Sin dominio: el sitio queda disponible en http://$(curl -s -4 ifconfig.me 2>/dev/null || hostname -I | awk '{print $1}')"
+  echo "Cuando tenga el dominio apuntando a este servidor, ejecute de nuevo el instalador con el dominio para activar HTTPS."
+elif certbot --nginx -d "$DOM" --non-interactive --agree-tos -m "$MAIL" --redirect; then
   echo "HTTPS listo: https://${DOM}"
 else
   echo "No se pudo emitir el certificado todavía. Verifique que el DNS de ${DOM} apunte a la IP de este servidor y vuelva a ejecutar:"
