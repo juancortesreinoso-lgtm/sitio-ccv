@@ -341,6 +341,7 @@ function normalizarPrograma(p){
               comentario: str(a.comentario), fecha: str(a.fecha), por: str(a.por) };
   });
   return {
+    version: Number(p.version) || 0,
     fechaCorte: str(p.fechaCorte),
     avances: av,
     cortes: (p.cortes && typeof p.cortes === 'object') ? p.cortes : {},

@@ -55,8 +55,9 @@ function cerrarSimulador(){ ESTADO_UI.simAbierto = null; render(); }
    cada usuario (localStorage), nunca en el servidor.
    ================================================================== */
 
-const ADMIN = { activo:false };
+const ADMIN = { activo:false, token:'' };
 const ADMIN_SESION_KEY = 'ccv_admin_sesion';
+const ADMIN_TOKEN_KEY = 'ccv_admin_token';   /* token para escribir en el servicio de datos compartidos */
 
 /* Funciones que modifican datos: se envuelven para exigir el modo administrador */
 const FUNCIONES_EDICION = [
@@ -141,8 +142,8 @@ function instalarGuardias(){
 }
 function dialogoAdmin(){
   if(ADMIN.activo){
-    ADMIN.activo = false;
-    try{ sessionStorage.removeItem(ADMIN_SESION_KEY); }catch(e){}
+    ADMIN.activo = false; ADMIN.token = '';
+    try{ sessionStorage.removeItem(ADMIN_SESION_KEY); sessionStorage.removeItem(ADMIN_TOKEN_KEY); }catch(e){}
     cerrarModal(); render(); toast('Modo lectura activado.', 'ok');
     return;
   }
@@ -167,6 +168,7 @@ function dialogoAdmin(){
       if(h === ADMIN_HASH){
         ADMIN.activo = true;
         try{ sessionStorage.setItem(ADMIN_SESION_KEY, h); }catch(e){}
+        sha256Hex('ccv-servidor|' + v).then(function(tk){ ADMIN.token = tk; try{ sessionStorage.setItem(ADMIN_TOKEN_KEY, tk); }catch(e){} });
         cerrarModal(); render(); toast('🔓 Edición habilitada para esta pestaña. Pulse el botón de administrador para volver a bloquear.', 'ok', 6000);
       }else{
         ok.disabled = false; inp.value = ''; inp.focus();
@@ -179,7 +181,7 @@ function dialogoAdmin(){
   inp.focus();
 }
 function initAdmin(){
-  try{ if(sessionStorage.getItem(ADMIN_SESION_KEY) === ADMIN_HASH) ADMIN.activo = true; }catch(e){}
+  try{ if(sessionStorage.getItem(ADMIN_SESION_KEY) === ADMIN_HASH){ ADMIN.activo = true; ADMIN.token = sessionStorage.getItem(ADMIN_TOKEN_KEY) || ''; } }catch(e){}
   instalarGuardias();
   const b = document.getElementById('adminBtn');
   if(b) b.addEventListener('click', dialogoAdmin);

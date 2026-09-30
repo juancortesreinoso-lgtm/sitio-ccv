@@ -13,6 +13,64 @@
    requiere modo administrador.
    ================================================================== */
 
+/* ---------- datos compartidos (servicio Apps Script, clave "programa") ----------
+   Lo que se registra en este módulo se guarda en el navegador (DB) y ADEMÁS se sube
+   al servicio de datos compartidos, para que todos vean el mismo avance. Al abrir el
+   módulo se descarga la última versión. Escribir requiere el token de administrador. */
+const SINC = { estado:'', hora:null, version:0, error:'', pendiente:false, ultimaLectura:0 };
+function servicioDatos(){ return (typeof servicioCalidad === 'function') ? servicioCalidad() : ''; }
+function servicioDatosOK(){ return (typeof servicioCalidadOK === 'function') && servicioCalidadOK(); }
+function bajarPrograma(forzar){
+  if(!servicioDatosOK()) return Promise.resolve(false);
+  if(!forzar && Date.now() - SINC.ultimaLectura < 45000) return Promise.resolve(false);
+  SINC.ultimaLectura = Date.now(); SINC.estado = 'leyendo'; pintarSinc();
+  return fetch(servicioDatos() + '?accion=leer&clave=programa&t=' + Date.now(), { redirect:'follow', cache:'no-store' })
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      if(!j || !j.ok) throw new Error((j && j.error) || 'respuesta inválida');
+      SINC.error = ''; SINC.hora = new Date(); SINC.version = j.version || 0;
+      if(j.datos && (j.version || 0) >= (DB.programa.version || 0) && !SINC.pendiente){
+        const nuevo = normalizarPrograma(j.datos); nuevo.version = j.version || 0;
+        const cambio = JSON.stringify(nuevo) !== JSON.stringify(DB.programa);
+        if(cambio){ DB.programa = nuevo; guardarDB(); if(/^plan/.test(ESTADO_UI.ruta)) render(); }
+      }
+      SINC.estado = 'ok'; pintarSinc(); return true;
+    })
+    .catch(function(e){ SINC.estado = 'error'; SINC.error = String(e && e.message || e); pintarSinc(); return false; });
+}
+function subirPrograma(){
+  if(!servicioDatosOK()) return Promise.resolve(false);
+  if(!ADMIN.token){ SINC.estado = 'error'; SINC.error = 'sin token de administrador (vuelva a ingresar la clave)'; SINC.pendiente = true; pintarSinc(); return Promise.resolve(false); }
+  SINC.estado = 'subiendo'; pintarSinc();
+  const datos = JSON.parse(JSON.stringify(DB.programa)); delete datos.version;
+  return fetch(servicioDatos(), { method:'POST', redirect:'follow', headers:{ 'Content-Type':'text/plain;charset=utf-8' },
+      body: JSON.stringify({ accion:'guardar', clave:'programa', token:ADMIN.token, datos:datos, por:(DB.contrato.jefeOT || '') }) })
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      if(!j || !j.ok) throw new Error((j && j.error) || 'respuesta inválida');
+      DB.programa.version = j.version || 0; guardarDB();
+      SINC.estado = 'ok'; SINC.error = ''; SINC.pendiente = false; SINC.hora = new Date(); SINC.version = j.version || 0; pintarSinc();
+      toast('Avance sincronizado para todos (versión ' + SINC.version + ').', 'ok', 2500); return true;
+    })
+    .catch(function(e){ SINC.estado = 'error'; SINC.error = String(e && e.message || e); SINC.pendiente = true; pintarSinc();
+      toast('Guardado en este navegador, pero no se pudo sincronizar (' + esc(SINC.error) + '). Se reintentará al guardar de nuevo.', 'bad', 6000); return false; });
+}
+function guardarPrograma(){ guardarDB(); subirPrograma(); }
+function pintarSinc(){
+  const el = document.getElementById('sincEstado'); if(!el) return;
+  el.innerHTML = textoSinc();
+}
+function textoSinc(){
+  if(!servicioDatosOK()) return '<span class="pill neutral" title="Sin servicio de datos configurado: los registros quedan solo en este navegador">solo local</span>';
+  const h = SINC.hora ? pad(SINC.hora.getHours()) + ':' + pad(SINC.hora.getMinutes()) : '';
+  if(SINC.estado === 'leyendo') return '<span class="pill neutral">⟳ leyendo datos compartidos…</span>';
+  if(SINC.estado === 'subiendo') return '<span class="pill neutral">⟳ sincronizando…</span>';
+  if(SINC.estado === 'error') return '<span class="pill bad" title="' + attr(SINC.error) + '">⚠ sin sincronizar' + (SINC.pendiente ? ' (pendiente)' : '') + '</span> <button class="btn sm" onclick="reintentarSinc()">Reintentar</button>';
+  if(SINC.estado === 'ok') return '<span class="pill ok" title="Datos compartidos por todos los usuarios">✓ compartido · v' + SINC.version + (h ? ' · ' + h : '') + '</span>';
+  return '';
+}
+function reintentarSinc(){ if(SINC.pendiente && ADMIN.activo) subirPrograma(); else bajarPrograma(true); }
+
 /* ---------- índice del programa ---------- */
 const PRG = (function(){
   const porUID = {}, hijos = {};
@@ -146,14 +204,14 @@ function guardarAvance(uid){
   if(t.M && fin) pct = 100;
   if(ini && fin && fin < ini){ toast('El término real no puede ser anterior al inicio real.', 'bad'); return; }
   DB.programa.avances[uid] = { pct:pct, inicioReal:ini, finReal:fin, comentario:valorCampo('avCom'), fecha:hoyISO(), por:valorCampo('avPor') };
-  registrarCorte(); guardarDB(); cerrarModal(); render();
+  registrarCorte(); guardarPrograma(); cerrarModal(); render();
   toast('Avance registrado: #' + esc(t.i) + ' → ' + pct + ' %. Avance total real: ' + totalReal() + ' %.', 'ok');
 }
 function eliminarAvance(uid){
-  delete DB.programa.avances[uid]; registrarCorte(); guardarDB(); cerrarModal(); render(); toast('Registro de avance eliminado.', 'ok');
+  delete DB.programa.avances[uid]; registrarCorte(); guardarPrograma(); cerrarModal(); render(); toast('Registro de avance eliminado.', 'ok');
 }
 function guardarFechaCorte(v){
-  DB.programa.fechaCorte = str(v); registrarCorte(); guardarDB(); render();
+  DB.programa.fechaCorte = str(v); registrarCorte(); guardarPrograma(); render();
 }
 
 /* ==================================================================
@@ -162,8 +220,12 @@ function guardarFechaCorte(v){
 function prgNav(actual){
   const items = [['plan/gantt','5.1 Carta Gantt'],['plan/avance','5.2 Avance y curva S'],['plan/hitos','5.3 Hitos'],['plan/restricciones','5.4 Restricciones'],['plan/informe','5.5 Informe semanal']];
   return '<div class="toolbar" style="margin-bottom:12px">' + items.map(function(it){ return '<a class="btn sm' + (it[0] === actual ? ' primary' : '') + '" href="#/' + it[0] + '">' + esc(it[1]) + '</a>'; }).join('') +
-    '<span class="spacer"></span><span style="font-size:11.5px;color:var(--text-3)">Programa: ' + esc(PROGRAMA_META.fuente.replace(/\.xml$/i,'')) + ' · guardado ' + fmtCorta(PROGRAMA_META.guardado) + '</span></div>';
+    '<span class="spacer"></span><span id="sincEstado">' + textoSinc() + '</span><span style="font-size:11.5px;color:var(--text-3);margin-left:8px">Programa: ' + esc(PROGRAMA_META.fuente.replace(/\.xml$/i,'')) + ' · guardado ' + fmtCorta(PROGRAMA_META.guardado) + '</span></div>';
 }
+function renderAvancePost(){ bajarPrograma(); }
+function renderHitosPost(){ bajarPrograma(); }
+function renderRestriccionesPost(){ bajarPrograma(); }
+function renderInformePost(){ bajarPrograma(); }
 function filasGantt(){
   if(PRG_UI.colapsadas === null){ PRG_UI.colapsadas = {}; PROGRAMA_TAREAS.forEach(function(t){ if(t.S && t.l >= 3) PRG_UI.colapsadas[t.u] = true; }); }
   const q = PRG_UI.buscar.trim().toLowerCase(), corte = fechaCorte();
@@ -245,6 +307,7 @@ function renderGantt(){
   return h;
 }
 function renderGanttPost(){
+  bajarPrograma();
   const der = document.getElementById('gDer'); if(!der) return;
   const corte = fechaCorte(), ini = prgFecha(PRG.inicio), t0 = new Date(ini.getFullYear(), ini.getMonth(), 1);
   const pxDia = PRG_UI.escala === 'semanas' ? 6 : 3;
@@ -444,11 +507,11 @@ function guardarRestriccion(id){
   if(obj.estado === 'Cerrada' && !obj.fechaCierre) obj.fechaCierre = hoyISO();
   const i = DB.programa.restricciones.map(function(x){ return x.id; }).indexOf(obj.id);
   if(i >= 0) DB.programa.restricciones[i] = obj; else DB.programa.restricciones.push(obj);
-  guardarDB(); cerrarModal(); render(); toast('Restricción guardada.', 'ok');
+  guardarPrograma(); cerrarModal(); render(); toast('Restricción guardada.', 'ok');
 }
 function eliminarRestriccion(id){
   confirmar('Eliminar restricción', '<p>¿Eliminar este registro? No se puede deshacer.</p>', function(){
-    DB.programa.restricciones = DB.programa.restricciones.filter(function(x){ return x.id !== id; }); guardarDB(); render(); toast('Registro eliminado.', 'ok');
+    DB.programa.restricciones = DB.programa.restricciones.filter(function(x){ return x.id !== id; }); guardarPrograma(); render(); toast('Registro eliminado.', 'ok');
   });
 }
 function exportarRestrCSV(){

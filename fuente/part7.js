@@ -483,6 +483,7 @@ function borrarTodo(){
   initBuscador();
   initCarpeta();
   initAdmin();
+  if(typeof bajarPrograma === 'function') setTimeout(function(){ bajarPrograma(); }, 800);
   window.addEventListener('hashchange', onHashChange);
   ESTADO_UI.ruta = buscarRuta(rutaActual()) ? rutaActual() : 'dashboard';
   const info = buscarRuta(ESTADO_UI.ruta);
