@@ -358,6 +358,8 @@ function renderConfig(){
       campo('cJefeCal', 'Jefe de calidad', '<input class="inp" id="cJefeCal" value="' + attr(c.jefeCalidad) + '">', 'Responsable del PIE, protocolos y NCR.') +
       campo('cDrive', 'Carpeta del contrato en Google Drive (URL)', '<input class="inp" id="cDrive" value="' + attr(c.carpetaDrive) + '" placeholder="https://drive.google.com/drive/folders/…">',
         'Se abre con el botón "Drive" de la cabecera. Mantenga esta app y los PDF dentro de esa carpeta sincronizada con Google Drive para escritorio: así cada documento se abre con un clic desde cualquier PC.') +
+      campo('cCalidad', 'Carpeta de Calidad en Google Drive (URL)', '<input class="inp" id="cCalidad" value="' + attr(c.carpetaCalidad || '') + '" placeholder="https://drive.google.com/drive/folders/…">',
+        'La muestra el Módulo 02 en modo lectura. La carpeta debe estar compartida como "Cualquier persona con el enlace: Lector" para que todos la vean.') +
     '</div>' +
     '<button class="btn primary" onclick="guardarContrato()">Guardar datos del contrato</button>' +
   '</div>';
@@ -415,7 +417,8 @@ function guardarContrato(){
     nContrato: valorCampo('cNContrato'), ods: valorCampo('cOds'),
     fechaInicio: valorCampo('cIni'), fechaTermino: valorCampo('cTer'),
     adminContrato: valorCampo('cAdmin'), jefeOT: valorCampo('cJefeOT'), jefeCalidad: valorCampo('cJefeCal'),
-    carpetaDrive: valorCampo('cDrive')
+    carpetaDrive: valorCampo('cDrive'),
+    carpetaCalidad: valorCampo('cCalidad')
   };
   if(DB.contrato.fechaInicio && DB.contrato.fechaTermino && DB.contrato.fechaTermino < DB.contrato.fechaInicio){
     toast('La fecha de término no puede ser anterior a la de inicio.', 'bad'); return;

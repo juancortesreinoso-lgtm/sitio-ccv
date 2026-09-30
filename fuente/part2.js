@@ -13,6 +13,9 @@ const APP = {
 };
 /* Carpeta del contrato en Google Drive (editable después en el Módulo 09) */
 const CARPETA_DRIVE_URL = 'https://drive.google.com/drive/folders/1AMPknVM0vV6eBRyXKo7snW__kNlnwzKg';
+/* Carpeta de CALIDAD en Google Drive (PIE, ITP, protocolos, dossier). La mantiene el encargado
+   de calidad en Drive; la app solo la muestra (lectura) y refleja al instante lo que se agregue. */
+const CARPETA_CALIDAD_URL = 'https://drive.google.com/drive/folders/1tySoS6tr7J6zkKRMFueEMPRTdxCTkfwF';
 /* Archivos de la carpeta Construccion en Google Drive (compartida con enlace, lector): nombre → URL */
 const DRIVE_ARCHIVOS = {
  "BUS CONFIGURATION & COMMUNICATION OVERVIEW_5.001.pdf": "https://drive.google.com/file/d/1sXJwmEFuZynBl3BieLQBjiLObpMBWA2f/view",
@@ -121,7 +124,7 @@ const MENU = [
   },
   {
     id: 'calidad', code: '02', label: 'Calidad (PIE / ITP / Protocolos)', icon: 'folder',
-    route: 'calidad', wip: true,
+    route: 'calidad', render: 'renderCalidad',
     wipDesc: 'Administrará el Plan de Inspección y Ensayo del contrato: matriz PIE/ITP por actividad y sistema, definición de hold points y witness points, protocolos de montaje y pruebas eléctricas (megado, torque, continuidad, puesta a tierra, pruebas funcionales de cicloconvertidores), estado de firma del mandante y carpeta de calidad para entrega final (dossier).',
     wipItems: ['Matriz PIE / ITP por sistema y actividad', 'Hold points y witness points con aviso al mandante',
                'Protocolos y registros de ensayo con estado de firma', 'Dossier de calidad y entregable final']
@@ -260,7 +263,8 @@ function contratoPorDefecto(){
     adminContrato:'',
     jefeOT:      '',
     jefeCalidad: '',
-    carpetaDrive: CARPETA_DRIVE_URL
+    carpetaDrive: CARPETA_DRIVE_URL,
+    carpetaCalidad: CARPETA_CALIDAD_URL
   };
 }
 function paramsPorDefecto(){
