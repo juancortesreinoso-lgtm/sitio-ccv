@@ -145,10 +145,13 @@ const MENU = [
   },
   {
     id: 'plan', code: '05', label: 'Planificación y Avance', icon: 'folder',
-    route: 'plan', wip: true,
-    wipDesc: 'Programa del contrato y avance físico: hitos contractuales, curva S planificada vs. real, avance por sistema y disciplina, restricciones y desviaciones de plazo con su impacto sobre la ingeniería liberada para construcción.',
-    wipItems: ['Hitos contractuales y fechas comprometidas', 'Curva S plan vs. real y avance por disciplina',
-               'Registro de restricciones y desviaciones', 'Informe semanal de avance']
+    children: [
+      { id: 'gantt',   label: '5.1 Carta Gantt del programa',        route: 'plan/gantt',         render: 'renderGantt' },
+      { id: 'avance',  label: '5.2 Avance físico y curva S',         route: 'plan/avance',        render: 'renderAvance' },
+      { id: 'hitos',   label: '5.3 Hitos contractuales',             route: 'plan/hitos',         render: 'renderHitos' },
+      { id: 'restr',   label: '5.4 Restricciones y desviaciones',    route: 'plan/restricciones', render: 'renderRestricciones' },
+      { id: 'informe', label: '5.5 Informe semanal de avance',       route: 'plan/informe',       render: 'renderInforme' }
+    ]
   },
   {
     id: 'mat', code: '06', label: 'Materiales y Suministros', icon: 'folder',
@@ -272,7 +275,7 @@ function paramsPorDefecto(){
   return { plazoRevisionDias: 10, usarDiasHabiles: true };
 }
 function dbVacia(){
-  return { contrato: contratoPorDefecto(), params: paramsPorDefecto(), correlativo: 1, documentos: [], circuitos: {} };
+  return { contrato: contratoPorDefecto(), params: paramsPorDefecto(), correlativo: 1, documentos: [], circuitos: {}, programa: normalizarPrograma(null) };
 }
 
 let DB = dbVacia();
@@ -319,12 +322,34 @@ function normalizarDB(obj){
     params:   Object.assign(paramsPorDefecto(),   (obj && obj.params)   || {}),
     correlativo: (obj && Number(obj.correlativo)) || 1,
     documentos: Array.isArray(obj && obj.documentos) ? obj.documentos : [],
-    circuitos: (obj && obj.circuitos && typeof obj.circuitos === 'object') ? obj.circuitos : {}
+    circuitos: (obj && obj.circuitos && typeof obj.circuitos === 'object') ? obj.circuitos : {},
+    programa: normalizarPrograma(obj && obj.programa)
   };
   db.documentos = db.documentos.map(normalizarDoc).filter(Boolean);
   const maxCorr = db.documentos.reduce((m,d)=>Math.max(m, Number(d.correlativo)||0), 0);
   if(db.correlativo <= maxCorr) db.correlativo = maxCorr + 1;
   return db;
+}
+
+/* Avance del programa de montaje (Módulo 05): registros por actividad, restricciones y cortes */
+function normalizarPrograma(p){
+  p = (p && typeof p === 'object') ? p : {};
+  const av = {};
+  Object.keys(p.avances || {}).forEach(function(k){
+    const a = p.avances[k] || {};
+    av[k] = { pct: Math.max(0, Math.min(100, Number(a.pct) || 0)), inicioReal: str(a.inicioReal), finReal: str(a.finReal),
+              comentario: str(a.comentario), fecha: str(a.fecha), por: str(a.por) };
+  });
+  return {
+    fechaCorte: str(p.fechaCorte),
+    avances: av,
+    cortes: (p.cortes && typeof p.cortes === 'object') ? p.cortes : {},
+    restricciones: Array.isArray(p.restricciones) ? p.restricciones.map(function(r){
+      return { id: r.id || uid(), fecha: str(r.fecha), tipo: str(r.tipo) || 'Restricción', descripcion: str(r.descripcion),
+               actividad: str(r.actividad), impacto: str(r.impacto) || 'Plazo', diasImpacto: Number(r.diasImpacto) || 0,
+               responsable: str(r.responsable), accion: str(r.accion), estado: str(r.estado) || 'Abierta', fechaCierre: str(r.fechaCierre) };
+    }) : []
+  };
 }
 
 function normalizarDoc(d){

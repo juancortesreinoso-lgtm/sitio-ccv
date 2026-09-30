@@ -301,6 +301,43 @@ body.lectura .solo-admin{display:none!important}
 .sim-card p{margin:0;font-size:12.5px;color:var(--text-2)}
 .sim-card .sim-src{font-size:11.5px;color:var(--text-3)}
 .sim-card .toolbar{margin:auto 0 0}
+/* módulo 05: carta Gantt, avance, informe */
+.gantt{border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);overflow:auto;max-height:calc(100vh - 120px);scrollbar-width:thin}
+.g-row{display:flex;width:max-content;min-width:100%}
+.g-row.g-head{position:sticky;top:0;z-index:4}
+.g-izq{position:sticky;left:0;z-index:2;flex:0 0 380px;width:380px;background:var(--surface);border-right:1px solid var(--border);box-sizing:border-box}
+.g-row.g-res .g-izq{background:var(--surface-2)}
+.g-der{flex:0 0 auto}
+.g-cab{background:var(--surface-2);border-bottom:1px solid var(--border);height:34px;display:flex;align-items:center;font-size:11px;font-weight:650;text-transform:uppercase;letter-spacing:.3px;color:var(--text-2);padding:0 10px;white-space:nowrap;box-sizing:border-box}
+.g-izq.g-cab{z-index:5}
+.g-der.g-cab{padding:0;flex-wrap:wrap;height:auto;min-height:34px;align-items:stretch}
+.g-mes{border-right:1px solid var(--border);text-align:center;font-size:11px;padding:3px 0 2px;box-sizing:border-box;text-transform:none;letter-spacing:0;flex:0 0 auto}
+.g-semanas{display:flex;width:100%;border-top:1px solid var(--border)}
+.g-sem{border-right:1px solid var(--border);text-align:center;font-size:9.5px;font-weight:500;color:var(--text-3);box-sizing:border-box;flex:0 0 auto}
+.g-fila{height:34px;display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--border);cursor:pointer;font-size:12.5px;white-space:nowrap;overflow:hidden;padding-right:8px}
+.g-row:hover .g-izq,.g-row:hover .g-linea{background-color:var(--surface-3)}
+.g-row.g-res .g-fila{font-weight:650}
+.g-tog{flex:0 0 16px;width:16px;height:16px;border:1px solid var(--border-2);border-radius:3px;background:var(--surface);font-size:11px;line-height:1;cursor:pointer;padding:0;color:var(--text-2)}
+.g-row:not(.g-res) .g-tog{border:0;background:none}
+.g-nom{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.g-sub{flex:0 0 auto;font-size:10.5px;color:var(--text-3);font-weight:400}
+.g-linea{position:relative;height:34px;border-bottom:1px solid var(--border);cursor:pointer;background-image:linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:90px 100%}
+.g-barra{position:absolute;top:9px;height:16px;border-radius:3px;border:1px solid;box-sizing:border-box;overflow:hidden}
+.g-barra.g-resumen{top:12px;height:8px;border:0;border-radius:2px}
+.g-barra.g-crit{outline:2px solid var(--bad);outline-offset:1px}
+.g-real{position:absolute;left:0;top:0;bottom:0;background:rgba(0,0,0,.35)}
+.g-resumen .g-real{background:rgba(255,255,255,.55)}
+.g-pct{position:absolute;left:5px;top:0;line-height:14px;font-size:10px;font-weight:700;color:#fff;text-shadow:0 0 2px rgba(0,0,0,.6)}
+.g-hito{position:absolute;top:11px;width:10px;height:10px;transform:rotate(45deg);border:2px solid;background:var(--surface);box-sizing:border-box}
+.g-corte{position:absolute;top:0;bottom:0;width:0;border-left:2px dashed var(--bad);z-index:1;pointer-events:none}
+.pbar{position:relative;width:90px;height:14px;background:var(--surface-3);border-radius:3px;overflow:hidden;font-size:10.5px;line-height:14px}
+.pbar div{position:absolute;left:0;top:0;bottom:0}
+.pbar span{position:relative;padding-left:5px;color:var(--text);font-weight:600}
+.informe h3{margin-top:0}
+.inf-cab{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;border-bottom:2px solid var(--accent);padding-bottom:10px}
+.informe table{width:100%}
+.informe .sec{margin-top:14px;padding-top:12px}
+@media print{.no-print,.help,.sidebar,.topbar,.toolbar,.fsbar{display:none!important}.content{padding:0}.card{box-shadow:none;border:0}.informe .card{border:0}body{background:#fff}}
 /* explorador de carpeta de calidad (Drive) */
 .migas{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:13px;margin:0 0 10px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm)}
 .migas a{text-decoration:none;color:var(--accent-2)}
@@ -330,6 +367,7 @@ body.lectura .solo-admin{display:none!important}
 .wip-list li{margin-bottom:4px}
 
 @media (max-width:860px){
+  .g-izq{flex-basis:230px;width:230px}
   .sidebar{position:fixed;z-index:80;left:0;top:0;transform:translateX(-100%);box-shadow:var(--shadow)}
   .sidebar.open{transform:none}
   .hamb{display:grid;place-items:center}
@@ -530,10 +568,13 @@ const MENU = [
   },
   {
     id: 'plan', code: '05', label: 'Planificación y Avance', icon: 'folder',
-    route: 'plan', wip: true,
-    wipDesc: 'Programa del contrato y avance físico: hitos contractuales, curva S planificada vs. real, avance por sistema y disciplina, restricciones y desviaciones de plazo con su impacto sobre la ingeniería liberada para construcción.',
-    wipItems: ['Hitos contractuales y fechas comprometidas', 'Curva S plan vs. real y avance por disciplina',
-               'Registro de restricciones y desviaciones', 'Informe semanal de avance']
+    children: [
+      { id: 'gantt',   label: '5.1 Carta Gantt del programa',        route: 'plan/gantt',         render: 'renderGantt' },
+      { id: 'avance',  label: '5.2 Avance físico y curva S',         route: 'plan/avance',        render: 'renderAvance' },
+      { id: 'hitos',   label: '5.3 Hitos contractuales',             route: 'plan/hitos',         render: 'renderHitos' },
+      { id: 'restr',   label: '5.4 Restricciones y desviaciones',    route: 'plan/restricciones', render: 'renderRestricciones' },
+      { id: 'informe', label: '5.5 Informe semanal de avance',       route: 'plan/informe',       render: 'renderInforme' }
+    ]
   },
   {
     id: 'mat', code: '06', label: 'Materiales y Suministros', icon: 'folder',
@@ -657,7 +698,7 @@ function paramsPorDefecto(){
   return { plazoRevisionDias: 10, usarDiasHabiles: true };
 }
 function dbVacia(){
-  return { contrato: contratoPorDefecto(), params: paramsPorDefecto(), correlativo: 1, documentos: [], circuitos: {} };
+  return { contrato: contratoPorDefecto(), params: paramsPorDefecto(), correlativo: 1, documentos: [], circuitos: {}, programa: normalizarPrograma(null) };
 }
 
 let DB = dbVacia();
@@ -704,12 +745,34 @@ function normalizarDB(obj){
     params:   Object.assign(paramsPorDefecto(),   (obj && obj.params)   || {}),
     correlativo: (obj && Number(obj.correlativo)) || 1,
     documentos: Array.isArray(obj && obj.documentos) ? obj.documentos : [],
-    circuitos: (obj && obj.circuitos && typeof obj.circuitos === 'object') ? obj.circuitos : {}
+    circuitos: (obj && obj.circuitos && typeof obj.circuitos === 'object') ? obj.circuitos : {},
+    programa: normalizarPrograma(obj && obj.programa)
   };
   db.documentos = db.documentos.map(normalizarDoc).filter(Boolean);
   const maxCorr = db.documentos.reduce((m,d)=>Math.max(m, Number(d.correlativo)||0), 0);
   if(db.correlativo <= maxCorr) db.correlativo = maxCorr + 1;
   return db;
+}
+
+/* Avance del programa de montaje (Módulo 05): registros por actividad, restricciones y cortes */
+function normalizarPrograma(p){
+  p = (p && typeof p === 'object') ? p : {};
+  const av = {};
+  Object.keys(p.avances || {}).forEach(function(k){
+    const a = p.avances[k] || {};
+    av[k] = { pct: Math.max(0, Math.min(100, Number(a.pct) || 0)), inicioReal: str(a.inicioReal), finReal: str(a.finReal),
+              comentario: str(a.comentario), fecha: str(a.fecha), por: str(a.por) };
+  });
+  return {
+    fechaCorte: str(p.fechaCorte),
+    avances: av,
+    cortes: (p.cortes && typeof p.cortes === 'object') ? p.cortes : {},
+    restricciones: Array.isArray(p.restricciones) ? p.restricciones.map(function(r){
+      return { id: r.id || uid(), fecha: str(r.fecha), tipo: str(r.tipo) || 'Restricción', descripcion: str(r.descripcion),
+               actividad: str(r.actividad), impacto: str(r.impacto) || 'Plazo', diasImpacto: Number(r.diasImpacto) || 0,
+               responsable: str(r.responsable), accion: str(r.accion), estado: str(r.estado) || 'Abierta', fechaCierre: str(r.fechaCierre) };
+    }) : []
+  };
 }
 
 function normalizarDoc(d){
@@ -4230,7 +4293,8 @@ const FUNCIONES_EDICION = [
   'formComentario','guardarComentario','eliminarComentario',
   'formTerreno','guardarTerreno','formDiscrepancia','guardarDiscrepancia','eliminarDiscrepancia',
   'guardarFichaCircuito','guardarContrato','guardarParams',
-  'dialogoCargaMasiva','procesarCargaMasiva','importarJSON','recargarBase','limpiarEjemplo','borrarTodo'
+  'dialogoCargaMasiva','procesarCargaMasiva','importarJSON','recargarBase','limpiarEjemplo','borrarTodo',
+  'formAvance','guardarAvance','eliminarAvance','formRestriccion','guardarRestriccion','eliminarRestriccion','guardarFechaCorte'
 ];
 
 /* SHA-256 (WebCrypto si existe; si no, implementación propia para file://) */
@@ -4620,6 +4684,713 @@ function verDocCalidad(id){
     '</div>'
   );
   const m = document.querySelector('#modalRoot .modal'); if(m) m.classList.add('wide');
+}
+/* Programa de montaje (MS Project) — datos convertidos. Generado desde Programa_Montaje_Cicloconvertidor_MSProject_Rev.CLG 29-09.xml. No editar a mano: se regenera con cada revisión del programa. */
+const PROGRAMA_META = {"titulo": "Programa_Montaje_Cicloconvertidor_MSProject_Rev.CLG 29-09", "fuente": "Programa_Montaje_Cicloconvertidor_MSProject_Rev.CLG 29-09.xml", "guardado": "2026-09-29T14:28:00", "inicio": "2026-10-09T09:00:00", "fin": "2027-10-08T11:00:00", "minDia": 480, "sha": "af5d9a2b70079ec2"};
+const PROGRAMA_ETAPAS_META = [["◆", "Compromisos del contrato", "Entregas, integración, parada de planta y puesta en marcha."], ["◎", "Inicio del contrato", "Adjudicación, documentación, acreditaciones y arranque."], ["▤", "Suministros de materiales", "Suministros DAND / Codelco y gestión de compras Mies."], ["⚑", "Instalación de faenas", "Instalación de faenas y desmovilización."], ["▥", "Muro corta fuego", "Preparación, construcción del muro y traslado de suministros."], ["▣", "Sala eléctrica proyectada", "Armado del E-HOUSE de cicloconvertidores."], ["⇢", "Trabajos previos a la parada", "Enfriamiento, canalizaciones, cables y equipos eléctricos."], ["⊙", "Parada de planta", "Retiro y montaje de equipos durante esta etapa."], ["↗", "Trabajos posteriores a la parada", "Retiro de equipos y cables."], ["◈", "Red de incendio", "Instalación de la red y partidas generales adicionales."]];
+const PROGRAMA_RECURSOS = ["Operador Camión Pluma", "Operador Múltiple", "Rigger", "Técnico Especialista", "MM Eléctrico", "M1 Eléctrico", "M2 Eléctrico", "Capataz Mecánico", "MM Mecánico", "M1 Mecánico", "Soldador 6G", "Soldador 3G (Plancha)", "Supervisor Electrico", "Ingeniero en prevencion de riesgos"];
+const PROGRAMA_TAREAS = [
+{"u":"1","i":"1","n":"OBRAS DE MONTAJE REEMPLAZO CICLOCONVERTIDOR MOLINO SAG - Rev.B","w":"1","l":1,"s":"2026-09-15T09:00:00","f":"2027-10-08T11:00:00","d":3494.0,"k":45361.4,"S":1,"M":0,"C":0,"p":"0","ph":null,"r":[],"L":[],"sl":"9600","ct":"0","cd":null},
+{"u":"2","i":"2","n":"HITOS DEL CONTRATO (BT Sección 15 – Cuadro de Hitos)","w":"1.1","l":2,"s":"2026-10-08T19:00:00","f":"2027-09-24T19:00:00","d":3159.0,"k":0.0,"S":1,"M":0,"C":1,"p":"1","ph":"2","r":[],"L":[],"sl":"0","ct":"0","cd":null},
+{"u":"3","i":"3","n":"Acta de Entrega de Terreno / Inicio de trabajo en terreno","w":"1.1.1","l":3,"s":"2026-10-09T09:00:00","f":"2026-10-09T09:00:00","d":0.0,"k":0.0,"S":0,"M":1,"C":0,"p":"2","ph":"2","r":[],"L":[],"sl":"890793","ct":"4","cd":"2026-10-09T09:00:00"},
+{"u":"4","i":"4","n":"HITO 1 – Movilización e instalación de faenas (día 30)","w":"1.1.2","l":3,"s":"2026-10-08T19:00:00","f":"2026-10-08T19:00:00","d":0.0,"k":0.0,"S":0,"M":1,"C":1,"p":"2","ph":"2","r":[],"L":[],"sl":"0","ct":"3","cd":"2026-10-08T19:00:00"},
+{"u":"5","i":"5","n":"HITO 2 – Armado de sala eléctrica (día 120)","w":"1.1.3","l":3,"s":"2027-02-06T19:00:00","f":"2027-02-06T19:00:00","d":0.0,"k":0.0,"S":0,"M":1,"C":1,"p":"2","ph":"2","r":[],"L":[],"sl":"0","ct":"3","cd":"2027-02-06T19:00:00"},
+{"u":"6","i":"6","n":"HITO 3 – Equipamiento de sala eléctrica (día 150)","w":"1.1.4","l":3,"s":"2027-03-08T19:00:00","f":"2027-03-08T19:00:00","d":0.0,"k":0.0,"S":0,"M":1,"C":1,"p":"2","ph":"2","r":[],"L":[],"sl":"0","ct":"3","cd":"2027-03-08T19:00:00"},
+{"u":"7","i":"7","n":"HITO 4 – Tendido de cables de fuerza y control (día 150)","w":"1.1.5","l":3,"s":"2027-03-08T19:00:00","f":"2027-03-08T19:00:00","d":0.0,"k":0.0,"S":0,"M":1,"C":1,"p":"2","ph":"2","r":[],"L":[],"sl":"0","ct":"3","cd":"2027-03-08T19:00:00"},
+{"u":"8","i":"8","n":"HITO 5 – Integración de equipos (día 180)","w":"1.1.6","l":3,"s":"2027-03-29T10:00:00","f":"2027-03-29T10:00:00","d":0.0,"k":0.0,"S":0,"M":1,"C":0,"p":"2","ph":"2","r":[],"L":[],"sl":"1052400","ct":"4","cd":"2027-03-29T10:00:00"},
+{"u":"9","i":"9","n":"Inicio Parada de Planta Molino SAG (ventana 14 días)","w":"1.1.7","l":3,"s":"2027-04-03T10:00:00","f":"2027-04-03T10:00:00","d":0.0,"k":0.0,"S":0,"M":1,"C":0,"p":"2","ph":"2","r":[],"L":[],"sl":"881400","ct":"4","cd":"2027-04-03T10:00:00"},
+{"u":"10","i":"10","n":"HITO 6 – Puesta en marcha de planta (día 210)","w":"1.1.8","l":3,"s":"2027-05-07T19:00:00","f":"2027-05-07T19:00:00","d":0.0,"k":0.0,"S":0,"M":1,"C":1,"p":"2","ph":"2","r":[],"L":[],"sl":"0","ct":"3","cd":"2027-05-07T19:00:00"},
+{"u":"11","i":"11","n":"HITO 7 – Post puesta en marcha (retiro canalizaciones y saneamiento) (día 350)","w":"1.1.9","l":3,"s":"2027-09-24T19:00:00","f":"2027-09-24T19:00:00","d":0.0,"k":0.0,"S":0,"M":1,"C":1,"p":"2","ph":"2","r":[],"L":[],"sl":"0","ct":"3","cd":"2027-09-24T19:00:00"},
+{"u":"12","i":"12","n":"HITO 8 – Desmovilización / fin del contrato (365 días) (día 365)","w":"1.1.10","l":3,"s":"2027-09-24T09:00:00","f":"2027-09-24T09:00:00","d":0.0,"k":0.0,"S":0,"M":1,"C":1,"p":"2","ph":"2","r":[],"L":[],"sl":"0","ct":"2","cd":"2027-09-24T09:00:00"},
+{"u":"183","i":"13","n":"INICIO CONTRATO","w":"1.2","l":2,"s":"2026-09-15T09:00:00","f":"2026-10-12T12:00:00","d":246.0,"k":0.0,"S":1,"M":0,"C":0,"p":"1","ph":"183","r":[],"L":[],"sl":"1958400","ct":"0","cd":null},
+{"u":"184","i":"14","n":"Recepción Carta Adjudicación del Contrato","w":"1.2.1","l":3,"s":"2026-09-15T09:00:00","f":"2026-09-15T18:00:00","d":8.0,"k":0.0,"S":0,"M":1,"C":0,"p":"183","ph":"183","r":[],"L":[],"sl":"1433400","ct":"4","cd":"2026-09-15T09:00:00"},
+{"u":"185","i":"15","n":"Envio de carta de inicio de actividades SERNAGEOMIN","w":"1.2.2","l":3,"s":"2026-09-21T09:00:00","f":"2026-09-21T18:00:00","d":8.0,"k":0.0,"S":0,"M":1,"C":0,"p":"183","ph":"183","r":[],"L":[],"sl":"1413600","ct":"4","cd":"2026-09-21T09:00:00"},
+{"u":"217","i":"16","n":"Contrato Firmado ambas partes","w":"1.2.3","l":3,"s":"2026-09-22T09:00:00","f":"2026-09-22T18:00:00","d":8.0,"k":0.0,"S":0,"M":1,"C":0,"p":"183","ph":"183","r":[],"L":[],"sl":"1345200","ct":"4","cd":"2026-09-22T09:00:00"},
+{"u":"216","i":"17","n":"Aprobacion de experto Seguridad","w":"1.2.4","l":3,"s":"2026-09-30T09:00:00","f":"2026-09-30T18:00:00","d":8.0,"k":0.0,"S":0,"M":1,"C":0,"p":"183","ph":"183","r":[],"L":[],"sl":"1375800","ct":"4","cd":"2026-09-30T09:00:00"},
+{"u":"187","i":"18","n":"Entrega Boleta de Garantia","w":"1.2.5","l":3,"s":"2026-09-30T09:00:00","f":"2026-09-30T18:00:00","d":8.0,"k":0.0,"S":0,"M":1,"C":0,"p":"183","ph":"183","r":[],"L":[],"sl":"1375800","ct":"4","cd":"2026-09-30T09:00:00"},
+{"u":"188","i":"19","n":"Entrega de Seguros de contrato","w":"1.2.6","l":3,"s":"2026-09-30T09:00:00","f":"2026-09-30T18:00:00","d":8.0,"k":0.0,"S":0,"M":1,"C":0,"p":"183","ph":"183","r":[],"L":[],"sl":"1375800","ct":"4","cd":"2026-09-30T09:00:00"},
+{"u":"189","i":"20","n":"Aprobacion Jornada Excepcional 7x7","w":"1.2.7","l":3,"s":"2026-09-30T09:00:00","f":"2026-09-30T18:00:00","d":8.0,"k":0.0,"S":0,"M":1,"C":0,"p":"183","ph":"183","r":[],"L":[],"sl":"1375800","ct":"4","cd":"2026-09-30T09:00:00"},
+{"u":"190","i":"21","n":"Reunion de inicio KOM","w":"1.2.8","l":3,"s":"2026-10-05T09:00:00","f":"2026-10-05T18:00:00","d":8.0,"k":0.0,"S":0,"M":1,"C":0,"p":"183","ph":"183","r":[],"L":[],"sl":"1362000","ct":"4","cd":"2026-10-05T09:00:00"},
+{"u":"191","i":"22","n":"Carpeta de Arranque","w":"1.2.9","l":3,"s":"2026-10-06T09:00:00","f":"2026-10-06T18:00:00","d":8.0,"k":0.0,"S":0,"M":1,"C":0,"p":"183","ph":"183","r":[],"L":[],"sl":"1356000","ct":"4","cd":"2026-10-06T09:00:00"},
+{"u":"193","i":"23","n":"Reunión de Arranque","w":"1.2.10","l":3,"s":"2026-10-06T09:00:00","f":"2026-10-06T18:00:00","d":8.0,"k":0.0,"S":0,"M":1,"C":0,"p":"183","ph":"183","r":[],"L":[],"sl":"1350000","ct":"4","cd":"2026-10-06T09:00:00"},
+{"u":"220","i":"24","n":"Creacion de perfil en plataforma Sucal","w":"1.2.11","l":3,"s":"2026-10-06T18:00:00","f":"2026-10-07T16:00:00","d":8.0,"k":0.0,"S":0,"M":0,"C":0,"p":"183","ph":"183","r":[],"L":[{"p":"193","t":"1","g":0}],"sl":"1350000","ct":"0","cd":null},
+{"u":"195","i":"25","n":"Entrega Planos Rev 0 (Aprobados para Construccion)","w":"1.2.12","l":3,"s":"2026-10-05T09:00:00","f":"2026-10-05T18:00:00","d":8.0,"k":0.0,"S":0,"M":1,"C":0,"p":"183","ph":"183","r":[],"L":[],"sl":"1342800","ct":"4","cd":"2026-10-05T09:00:00"},
+{"u":"196","i":"26","n":"Entrega listado de suministros aprobados para compra","w":"1.2.13","l":3,"s":"2026-10-08T12:00:00","f":"2026-10-09T11:00:00","d":8.0,"k":0.0,"S":0,"M":1,"C":0,"p":"183","ph":"183","r":[],"L":[{"p":"195","t":"1","g":1440}],"sl":"1342800","ct":"4","cd":"2026-09-30T09:00:00"},
+{"u":"197","i":"27","n":"Taller Constructibilidad","w":"1.2.14","l":3,"s":"2026-10-08T09:00:00","f":"2026-10-08T18:00:00","d":8.0,"k":0.0,"S":0,"M":1,"C":0,"p":"183","ph":"183","r":[],"L":[],"sl":"1344600","ct":"4","cd":"2026-10-08T09:00:00"},
+{"u":"199","i":"28","n":"Acta de Entrega de Terreno IIFF","w":"1.2.15","l":3,"s":"2026-10-05T18:00:00","f":"2026-10-06T16:00:00","d":8.0,"k":0.0,"S":0,"M":1,"C":0,"p":"183","ph":"183","r":[],"L":[{"p":"195","t":"1","g":0}],"sl":"1357200","ct":"4","cd":"2026-09-30T09:00:00"},
+{"u":"200","i":"29","n":"Acta de Entrega de Terreno SEM4","w":"1.2.16","l":3,"s":"2026-10-05T18:00:00","f":"2026-10-06T16:00:00","d":8.0,"k":0.0,"S":0,"M":1,"C":0,"p":"183","ph":"183","r":[],"L":[{"p":"195","t":"1","g":0}],"sl":"1357200","ct":"4","cd":"2026-09-30T09:00:00"},
+{"u":"205","i":"30","n":"Entrega Sala de Cambio","w":"1.2.17","l":3,"s":"2026-10-09T09:00:00","f":"2026-10-12T12:00:00","d":8.0,"k":0.0,"S":0,"M":1,"C":0,"p":"183","ph":"183","r":[],"L":[{"p":"3","t":"1","g":0}],"sl":"1339200","ct":"4","cd":"2026-09-30T09:00:00"},
+{"u":"201","i":"31","n":"ACREDITACIONES Y ANTECEDENTES","w":"1.2.18","l":3,"s":"2026-09-22T18:00:00","f":"2026-10-09T13:00:00","d":110.0,"k":0.0,"S":1,"M":0,"C":0,"p":"183","ph":"183","r":[],"L":[],"sl":"1341600","ct":"0","cd":null},
+{"u":"164","i":"32","n":"Personal","w":"1.2.18.1","l":4,"s":"2026-09-22T18:00:00","f":"2026-10-09T13:00:00","d":149.0,"k":0.0,"S":1,"M":0,"C":0,"p":"201","ph":"183","r":[],"L":[],"sl":"1974000","ct":"0","cd":null},
+{"u":"165","i":"33","n":"Reclutamiento","w":"1.2.18.1.1","l":5,"s":"2026-09-22T18:00:00","f":"2026-09-27T12:00:00","d":40.0,"k":0.0,"S":0,"M":0,"C":0,"p":"164","ph":"183","r":[],"L":[{"p":"217","t":"1","g":0}],"sl":"2015400","ct":"0","cd":null},
+{"u":"208","i":"34","n":"Examenes Medicos","w":"1.2.18.1.2","l":5,"s":"2026-09-27T12:00:00","f":"2026-10-01T17:00:00","d":40.0,"k":0.0,"S":0,"M":0,"C":0,"p":"164","ph":"183","r":[],"L":[{"p":"165","t":"1","g":0}],"sl":"2015400","ct":"0","cd":null},
+{"u":"209","i":"35","n":"Capacitaciones","w":"1.2.18.1.3","l":5,"s":"2026-09-27T12:00:00","f":"2026-10-01T17:00:00","d":40.0,"k":0.0,"S":0,"M":0,"C":0,"p":"164","ph":"183","r":[],"L":[{"p":"165","t":"1","g":0}],"sl":"2015400","ct":"0","cd":null},
+{"u":"207","i":"36","n":"Certificaciones","w":"1.2.18.1.4","l":5,"s":"2026-09-27T12:00:00","f":"2026-10-01T17:00:00","d":40.0,"k":0.0,"S":0,"M":0,"C":0,"p":"164","ph":"183","r":[],"L":[{"p":"165","t":"1","g":0}],"sl":"2015400","ct":"0","cd":null},
+{"u":"206","i":"37","n":"Acreditación","w":"1.2.18.1.5","l":5,"s":"2026-10-07T16:00:00","f":"2026-10-09T13:00:00","d":16.0,"k":0.0,"S":0,"M":0,"C":0,"p":"164","ph":"183","r":[],"L":[{"p":"220","t":"1","g":0}],"sl":"1974000","ct":"0","cd":null},
+{"u":"166","i":"38","n":"Equipos","w":"1.2.18.2","l":4,"s":"2026-09-22T18:00:00","f":"2026-10-08T15:00:00","d":141.0,"k":0.0,"S":1,"M":0,"C":0,"p":"201","ph":"183","r":[],"L":[],"sl":"1978800","ct":"0","cd":null},
+{"u":"210","i":"39","n":"Certificaciones","w":"1.2.18.2.1","l":5,"s":"2026-09-22T18:00:00","f":"2026-09-23T17:00:00","d":8.0,"k":0.0,"S":0,"M":0,"C":0,"p":"166","ph":"183","r":[],"L":[{"p":"217","t":"1","g":0}],"sl":"2058600","ct":"0","cd":null},
+{"u":"167","i":"40","n":"Acreditación","w":"1.2.18.2.2","l":5,"s":"2026-10-07T16:00:00","f":"2026-10-08T15:00:00","d":8.0,"k":0.0,"S":0,"M":0,"C":0,"p":"166","ph":"183","r":[],"L":[{"p":"220","t":"1","g":0}],"sl":"1978800","ct":"0","cd":null},
+{"u":"168","i":"41","n":"DOCUMENTAL CONTRACTUAL","w":"1.2.19","l":3,"s":"2026-09-29T15:00:00","f":"2026-10-08T17:00:00","d":64.0,"k":0.0,"S":1,"M":0,"C":0,"p":"183","ph":"183","r":[],"L":[],"sl":"1345200","ct":"0","cd":null},
+{"u":"169","i":"42","n":"Mapa de Procesos","w":"1.2.19.1","l":4,"s":"2026-10-06T11:00:00","f":"2026-10-07T09:00:00","d":8.0,"k":0.0,"S":0,"M":0,"C":0,"p":"168","ph":"183","r":[],"L":[{"p":"217","t":"1","g":4800}],"sl":"1354800","ct":"0","cd":null},
+{"u":"170","i":"43","n":"IPER","w":"1.2.19.2","l":4,"s":"2026-10-06T11:00:00","f":"2026-10-07T09:00:00","d":8.0,"k":0.0,"S":0,"M":0,"C":0,"p":"168","ph":"183","r":[],"L":[{"p":"217","t":"1","g":4800}],"sl":"1354800","ct":"0","cd":null},
+{"u":"171","i":"44","n":"Plan de Emergencia","w":"1.2.19.3","l":4,"s":"2026-10-06T11:00:00","f":"2026-10-07T09:00:00","d":8.0,"k":0.0,"S":0,"M":0,"C":0,"p":"168","ph":"183","r":[],"L":[{"p":"217","t":"1","g":4800}],"sl":"1354800","ct":"0","cd":null},
+{"u":"172","i":"45","n":"Procedimientos transversales","w":"1.2.19.4","l":4,"s":"2026-10-08T08:00:00","f":"2026-10-08T17:00:00","d":8.0,"k":0.0,"S":0,"M":0,"C":0,"p":"168","ph":"183","r":[],"L":[{"p":"217","t":"1","g":5760}],"sl":"1345200","ct":"0","cd":null},
+{"u":"173","i":"46","n":"Procedimientos Especificos","w":"1.2.19.5","l":4,"s":"2026-10-06T11:00:00","f":"2026-10-07T09:00:00","d":8.0,"k":0.0,"S":0,"M":0,"C":0,"p":"168","ph":"183","r":[],"L":[{"p":"217","t":"1","g":4800}],"sl":"1354800","ct":"0","cd":null},
+{"u":"174","i":"47","n":"Revisión y Levantamiento de Observaciones Documentación Contractual","w":"1.2.19.6","l":4,"s":"2026-10-06T11:00:00","f":"2026-10-07T09:00:00","d":8.0,"k":0.0,"S":0,"M":0,"C":0,"p":"168","ph":"183","r":[],"L":[{"p":"217","t":"1","g":4800}],"sl":"1354800","ct":"0","cd":null},
+{"u":"176","i":"48","n":"Programa de Trabajo","w":"1.2.19.7","l":4,"s":"2026-09-29T15:00:00","f":"2026-09-30T12:00:00","d":8.0,"k":0.0,"S":0,"M":0,"C":0,"p":"168","ph":"183","r":[],"L":[{"p":"217","t":"1","g":2400}],"sl":"1374000","ct":"0","cd":null},
+{"u":"177","i":"49","n":"Revisión y Levantamiento de Observaciones Documentación Contractual","w":"1.2.19.8","l":4,"s":"2026-09-30T12:00:00","f":"2026-10-01T11:00:00","d":8.0,"k":0.0,"S":0,"M":0,"C":0,"p":"168","ph":"183","r":[],"L":[{"p":"176","t":"1","g":0}],"sl":"1374000","ct":"0","cd":null},
+{"u":"13","i":"50","n":"SUMINISTROS DE MATERIALES","w":"1.3","l":2,"s":"2026-10-09T09:00:00","f":"2026-10-09T18:00:00","d":8.0,"k":0.0,"S":1,"M":0,"C":0,"p":"1","ph":"13","r":[],"L":[],"sl":"1339560","ct":"0","cd":null},
+{"u":"14","i":"51","n":"Suministros DAND / Codelco (hitos externos comprometidos)","w":"1.3.1","l":3,"s":"2026-10-09T09:00:00","f":"2026-10-09T18:00:00","d":8.0,"k":0.0,"S":1,"M":0,"C":0,"p":"13","ph":"13","r":[],"L":[],"sl":"1485600","ct":"0","cd":null},
+{"u":"15","i":"52","n":"1ª entrega packings E-House en túnel SAG (Innomotics)","w":"1.3.1.1","l":4,"s":"2026-10-09T09:00:00","f":"2026-10-09T18:00:00","d":8.0,"k":0.0,"S":0,"M":0,"C":0,"p":"14","ph":"13","r":[],"L":[],"sl":"1809840","ct":"0","cd":null},
+{"u":"16","i":"53","n":"Entrega cables principales de poder en bodega KM7","w":"1.3.1.2","l":4,"s":"2026-10-09T09:00:00","f":"2026-10-09T18:00:00","d":8.0,"k":0.0,"S":0,"M":0,"C":0,"p":"14","ph":"13","r":[],"L":[],"sl":"1485600","ct":"0","cd":null},
+{"u":"17","i":"54","n":"Entrega sistema de refrigeración cicloconvertidor","w":"1.3.1.3","l":4,"s":"2026-10-09T09:00:00","f":"2026-10-09T18:00:00","d":8.0,"k":0.0,"S":0,"M":0,"C":0,"p":"14","ph":"13","r":[],"L":[],"sl":"1794000","ct":"0","cd":null},
+{"u":"18","i":"55","n":"Entrega convertidores MT, excitación y PLC (parcializado)","w":"1.3.1.4","l":4,"s":"2026-10-09T09:00:00","f":"2026-10-09T18:00:00","d":8.0,"k":0.0,"S":0,"M":0,"C":0,"p":"14","ph":"13","r":[],"L":[],"sl":"1971600","ct":"0","cd":null},
+{"u":"19","i":"56","n":"Entrega equipos red contra incendio en túnel SAG","w":"1.3.1.5","l":4,"s":"2026-10-09T09:00:00","f":"2026-10-09T18:00:00","d":8.0,"k":0.0,"S":0,"M":0,"C":0,"p":"14","ph":"13","r":[],"L":[],"sl":"1971600","ct":"0","cd":null},
+{"u":"20","i":"57","n":"Entrega gabinetes, UPS, CPU y estación de operación","w":"1.3.1.6","l":4,"s":"2026-10-09T09:00:00","f":"2026-10-09T18:00:00","d":8.0,"k":0.0,"S":0,"M":0,"C":0,"p":"14","ph":"13","r":[],"L":[],"sl":"1971600","ct":"0","cd":null},
+{"u":"21","i":"58","n":"Materiales Mies (Inicio Gestion de Compra)","w":"1.3.2","l":3,"s":"2026-10-09T09:00:00","f":"2026-10-09T18:00:00","d":8.0,"k":0.0,"S":1,"M":0,"C":0,"p":"13","ph":"13","r":[],"L":[],"sl":"1339560","ct":"0","cd":null},
+{"u":"22","i":"59","n":"Procura acero estructural y paneles muro corta fuego","w":"1.3.2.1","l":4,"s":"2026-10-09T09:00:00","f":"2026-10-09T18:00:00","d":8.0,"k":0.0,"S":0,"M":0,"C":0,"p":"21","ph":"13","r":[],"L":[],"sl":"1971600","ct":"0","cd":null},
+{"u":"23","i":"60","n":"Materiales muro corta fuego en obra","w":"1.3.2.2","l":4,"s":"2026-10-09T09:00:00","f":"2026-10-09T18:00:00","d":8.0,"k":0.0,"S":0,"M":0,"C":0,"p":"21","ph":"13","r":[],"L":[],"sl":"1971600","ct":"0","cd":null},
+{"u":"24","i":"61","n":"Procura cañerías, fittings y válvulas (piping enfriamiento)","w":"1.3.2.3","l":4,"s":"2026-10-09T09:00:00","f":"2026-10-09T18:00:00","d":8.0,"k":0.0,"S":0,"M":0,"C":0,"p":"21","ph":"13","r":[],"L":[],"sl":"1971600","ct":"0","cd":null},
+{"u":"25","i":"62","n":"Materiales piping en obra","w":"1.3.2.4","l":4,"s":"2026-10-09T09:00:00","f":"2026-10-09T18:00:00","d":8.0,"k":0.0,"S":0,"M":0,"C":0,"p":"21","ph":"13","r":[],"L":[],"sl":"1677940","ct":"0","cd":null},
+{"u":"26","i":"63","n":"Procura escalerillas, curvas y conduits","w":"1.3.2.5","l":4,"s":"2026-10-09T09:00:00","f":"2026-10-09T18:00:00","d":8.0,"k":0.0,"S":0,"M":0,"C":0,"p":"21","ph":"13","r":[],"L":[],"sl":"1339560","ct":"0","cd":null},
+{"u":"27","i":"64","n":"Escalerillas y conduits en obra","w":"1.3.2.6","l":4,"s":"2026-10-09T09:00:00","f":"2026-10-09T18:00:00","d":8.0,"k":0.0,"S":0,"M":0,"C":0,"p":"21","ph":"13","r":[],"L":[],"sl":"1971600","ct":"0","cd":null},
+{"u":"28","i":"65","n":"Procura fibra óptica, terminales y cables auxiliares","w":"1.3.2.7","l":4,"s":"2026-10-09T09:00:00","f":"2026-10-09T18:00:00","d":8.0,"k":0.0,"S":0,"M":0,"C":0,"p":"21","ph":"13","r":[],"L":[],"sl":"1971600","ct":"0","cd":null},
+{"u":"29","i":"66","n":"FO, terminales y cables auxiliares en obra","w":"1.3.2.8","l":4,"s":"2026-10-09T09:00:00","f":"2026-10-09T18:00:00","d":8.0,"k":0.0,"S":0,"M":0,"C":0,"p":"21","ph":"13","r":[],"L":[],"sl":"1777200","ct":"0","cd":null},
+{"u":"30","i":"67","n":"Procura materiales red de incendio (canalización, cajas, cañerías)","w":"1.3.2.9","l":4,"s":"2026-10-09T09:00:00","f":"2026-10-09T18:00:00","d":8.0,"k":0.0,"S":0,"M":0,"C":0,"p":"21","ph":"13","r":[],"L":[],"sl":"1971600","ct":"0","cd":null},
+{"u":"31","i":"68","n":"Materiales red de incendio en obra","w":"1.3.2.10","l":4,"s":"2026-10-09T09:00:00","f":"2026-10-09T18:00:00","d":8.0,"k":0.0,"S":0,"M":0,"C":0,"p":"21","ph":"13","r":[],"L":[],"sl":"1971600","ct":"0","cd":null},
+{"u":"32","i":"69","n":"1 INSTALACIÓN DE FAENAS","w":"1.4","l":2,"s":"2026-10-09T09:00:00","f":"2027-10-08T11:00:00","d":3278.0,"k":1488.0,"S":1,"M":0,"C":0,"p":"1","ph":"32","r":[],"L":[],"sl":"9600","ct":"0","cd":null},
+{"u":"33","i":"70","n":"1.1 - Movilización e Instalación de faena","w":"1.4.1","l":3,"s":"2026-10-09T09:00:00","f":"2026-11-04T16:00:00","d":240.0,"k":1152.0,"S":0,"M":0,"C":0,"p":"32","ph":"32","r":[],"L":[{"p":"3","t":"1","g":0}],"sl":"890793","ct":"0","cd":null},
+{"u":"34","i":"71","n":"1.2 - Desmovilización","w":"1.4.2","l":3,"s":"2027-09-24T09:00:00","f":"2027-10-08T11:00:00","d":128.0,"k":336.0,"S":0,"M":0,"C":0,"p":"32","ph":"32","r":[],"L":[{"p":"12","t":"1","g":0}],"sl":"9600","ct":"0","cd":null},
+{"u":"35","i":"72","n":"2 EXTENSION MURO CORTA FUEGO","w":"1.5","l":2,"s":"2026-10-09T18:00:00","f":"2026-11-27T16:00:00","d":439.0,"k":1499.0,"S":1,"M":0,"C":0,"p":"1","ph":"35","r":[],"L":[],"sl":"919593","ct":"0","cd":null},
+{"u":"36","i":"73","n":"Preparación área de trabajo","w":"1.5.1","l":3,"s":"2026-10-15T11:00:00","f":"2026-11-10T18:00:00","d":240.0,"k":720.0,"S":1,"M":0,"C":0,"p":"35","ph":"35","r":[],"L":[],"sl":"890793","ct":"0","cd":null},
+{"u":"37","i":"74","n":"2.1 - Saneamiento, limpieza del área, instalacion de protecciones y segregación","w":"1.5.1.1","l":4,"s":"2026-10-15T11:00:00","f":"2026-11-10T18:00:00","d":240.0,"k":720.0,"S":0,"M":0,"C":0,"p":"36","ph":"35","r":["MM Eléctrico","M1 Eléctrico","M2 Eléctrico"],"L":[{"p":"33","t":"3","g":3360}],"sl":"890793","ct":"0","cd":null},
+{"u":"38","i":"75","n":"Construccion Muro Corta Fuego","w":"1.5.2","l":3,"s":"2026-11-10T18:00:00","f":"2026-11-27T16:00:00","d":151.0,"k":699.0,"S":1,"M":0,"C":0,"p":"35","ph":"35","r":[],"L":[],"sl":"1708200","ct":"0","cd":null},
+{"u":"39","i":"76","n":"2.2 - Suministro y montaje de estructura muro corta fuego","w":"1.5.2.1","l":4,"s":"2026-11-10T18:00:00","f":"2026-11-21T13:00:00","d":95.0,"k":475.0,"S":0,"M":0,"C":0,"p":"38","ph":"35","r":["Capataz Mecánico","MM Mecánico","M1 Mecánico","Soldador 3G (Plancha)","Soldador 6G"],"L":[{"p":"37","t":"1","g":0}],"sl":"1708200","ct":"0","cd":null},
+{"u":"40","i":"77","n":"2.3 - Suministro y montaje de panel tipo fast work","w":"1.5.2.2","l":4,"s":"2026-11-21T14:00:00","f":"2026-11-27T16:00:00","d":56.0,"k":224.0,"S":0,"M":0,"C":0,"p":"38","ph":"35","r":["Capataz Mecánico","MM Mecánico","M1 Mecánico","Soldador 3G (Plancha)"],"L":[{"p":"39","t":"1","g":0}],"sl":"1708200","ct":"0","cd":null},
+{"u":"41","i":"78","n":"TRASLADO DE SUMINISTROS INNOMOTICS","w":"1.5.3","l":3,"s":"2026-10-09T18:00:00","f":"2026-10-14T12:00:00","d":40.0,"k":80.0,"S":1,"M":0,"C":0,"p":"35","ph":"35","r":[],"L":[],"sl":"1947600","ct":"0","cd":null},
+{"u":"42","i":"79","n":"2.4 - Traslado de desde Santiago (Siemens Santiago) hasta bodega KM7 e interior mina","w":"1.5.3.1","l":4,"s":"2026-10-09T18:00:00","f":"2026-10-14T12:00:00","d":40.0,"k":80.0,"S":0,"M":0,"C":0,"p":"41","ph":"35","r":["Operador Camión Pluma","Rigger"],"L":[{"p":"15","t":"1","g":0}],"sl":"1947600","ct":"0","cd":null},
+{"u":"43","i":"80","n":"3 MONTAJE SALA ELECTRICA PROYECTADA","w":"1.6","l":2,"s":"2026-11-10T18:00:00","f":"2027-01-31T11:53:42","d":732.89,"k":8940.0,"S":1,"M":0,"C":0,"p":"1","ph":"43","r":[],"L":[],"sl":"919593","ct":"0","cd":null},
+{"u":"44","i":"81","n":"3.1 - Armado E-HOUSE de cicloconvertidores (quiebre según manual MNLME-0001 / plano 200ME-00003)","w":"1.6.1","l":3,"s":"2026-11-10T18:00:00","f":"2027-01-31T11:53:42","d":732.89,"k":8940.0,"S":1,"M":0,"C":0,"p":"43","ph":"43","r":[],"L":[],"sl":"919593","ct":"0","cd":null},
+{"u":"45","i":"82","n":"3.1.1 - Trabajos previos: verificación exoesqueleto, topografía y trazado","w":"1.6.1.1","l":4,"s":"2026-11-10T18:00:00","f":"2026-12-10T17:36:00","d":269.6,"k":539.2,"S":0,"M":0,"C":0,"p":"44","ph":"43","r":["Capataz Mecánico","MM Mecánico"],"L":[{"p":"37","t":"1","g":0},{"p":"15","t":"1","g":0}],"sl":"1637040","ct":"0","cd":null},
+{"u":"46","i":"83","n":"3.1.2 - Montaje soportes de anclaje sala eléctrica (16 un) en exoesqueleto","w":"1.6.1.2","l":4,"s":"2026-11-16T11:00:00","f":"2026-11-28T10:53:18","d":107.89,"k":971.0,"S":0,"M":0,"C":0,"p":"44","ph":"43","r":["M1 Eléctrico","M2 Eléctrico","MM Eléctrico"],"L":[{"p":"37","t":"1","g":2880}],"sl":"890793","ct":"0","cd":null},
+{"u":"47","i":"84","n":"3.1.3 - Armado base estructural módulos M1 a M10 (secuencia prioridad N°1 a N°10)","w":"1.6.1.3","l":4,"s":"2026-11-28T10:53:18","f":"2026-12-29T11:25:42","d":279.54,"k":2795.4,"S":0,"M":0,"C":0,"p":"44","ph":"43","r":["M1 Eléctrico","M1 Mecánico","M2 Eléctrico","MM Eléctrico","MM Mecánico"],"L":[{"p":"46","t":"1","g":0}],"sl":"890793","ct":"0","cd":null},
+{"u":"48","i":"85","n":"3.1.4 - Montaje de pilares de muro","w":"1.6.1.4","l":4,"s":"2026-12-29T11:25:42","f":"2027-01-08T12:55:42","d":91.5,"k":366.0,"S":0,"M":0,"C":0,"p":"44","ph":"43","r":["M1 Mecánico","MM Mecánico","Operador Camión Pluma","Rigger"],"L":[{"p":"47","t":"1","g":0}],"sl":"1482643","ct":"0","cd":null},
+{"u":"49","i":"86","n":"3.1.5 - Montaje de corona (vigas superiores)","w":"1.6.1.5","l":4,"s":"2026-12-31T09:25:42","f":"2027-01-08T18:28:42","d":80.05,"k":320.2,"S":0,"M":0,"C":0,"p":"44","ph":"43","r":["M1 Mecánico","MM Mecánico","Operador Camión Pluma","Rigger"],"L":[{"p":"47","t":"1","g":960}],"sl":"1479913","ct":"0","cd":null},
+{"u":"50","i":"87","n":"3.1.6 - Montaje de arriostramientos","w":"1.6.1.6","l":4,"s":"2027-01-02T16:25:42","f":"2027-01-16T16:05:42","d":125.67,"k":754.0,"S":0,"M":0,"C":0,"p":"44","ph":"43","r":["Capataz Mecánico","M1 Mecánico","MM Mecánico","Operador Múltiple","Soldador 3G (Plancha)","Soldador 6G"],"L":[{"p":"47","t":"1","g":2400}],"sl":"1144483","ct":"0","cd":null},
+{"u":"51","i":"88","n":"3.1.7 - Montaje de paneles de muro","w":"1.6.1.7","l":4,"s":"2027-01-04T14:25:42","f":"2027-01-24T11:24:12","d":177.97,"k":711.9,"S":0,"M":0,"C":0,"p":"44","ph":"43","r":["Capataz Mecánico","M1 Mecánico","MM Mecánico","Operador Múltiple"],"L":[{"p":"47","t":"1","g":3360}],"sl":"1397158","ct":"0","cd":null},
+{"u":"52","i":"89","n":"3.1.8 - Montaje de cerchas y paneles de cielo","w":"1.6.1.8","l":4,"s":"2027-01-07T10:25:42","f":"2027-01-22T18:48:12","d":142.38,"k":569.5,"S":0,"M":0,"C":0,"p":"44","ph":"43","r":["Capataz Mecánico","M1 Mecánico","MM Mecánico","Operador Múltiple"],"L":[{"p":"47","t":"1","g":4800}],"sl":"1404118","ct":"0","cd":null},
+{"u":"53","i":"90","n":"3.1.9 - Montaje de portones, puertas y celosías NEMA 3R","w":"1.6.1.9","l":4,"s":"2027-01-08T18:25:42","f":"2027-01-22T12:12:30","d":120.78,"k":1207.8,"S":0,"M":0,"C":0,"p":"44","ph":"43","r":["M1 Eléctrico","M1 Mecánico","M2 Eléctrico","MM Eléctrico","Soldador 3G (Plancha)"],"L":[{"p":"47","t":"1","g":5760}],"sl":"1407475","ct":"0","cd":null},
+{"u":"54","i":"91","n":"3.1.10 - Empaquetaduras y sellos de hermeticidad (silicona tipo N)","w":"1.6.1.10","l":4,"s":"2027-01-21T09:09:42","f":"2027-01-31T11:53:42","d":92.73,"k":278.2,"S":0,"M":0,"C":0,"p":"44","ph":"43","r":["Capataz Mecánico","M1 Mecánico","MM Mecánico"],"L":[{"p":"55","t":"1","g":0}],"sl":"1359063","ct":"0","cd":null},
+{"u":"55","i":"92","n":"3.1.11 - Montaje de piso técnico","w":"1.6.1.11","l":4,"s":"2027-01-10T16:25:42","f":"2027-01-21T09:09:42","d":92.73,"k":278.2,"S":0,"M":0,"C":0,"p":"44","ph":"43","r":["Capataz Mecánico","M1 Mecánico","MM Mecánico"],"L":[{"p":"47","t":"1","g":6720}],"sl":"890793","ct":"0","cd":null},
+{"u":"56","i":"93","n":"3.1.12 - Terminaciones: torque final, cuadratura y recepción estructural","w":"1.6.1.12","l":4,"s":"2027-01-21T09:09:42","f":"2027-01-25T10:18:42","d":37.15,"k":148.6,"S":0,"M":0,"C":0,"p":"44","ph":"43","r":["Capataz Mecánico","M1 Mecánico","MM Mecánico","Soldador 3G (Plancha)"],"L":[{"p":"55","t":"1","g":0}],"sl":"890793","ct":"0","cd":null},
+{"u":"57","i":"94","n":"4 Trabajos previo parada de planta","w":"1.7","l":2,"s":"2026-11-10T18:00:00","f":"2027-03-12T09:31:42","d":1090.53,"k":16910.8,"S":1,"M":0,"C":0,"p":"1","ph":"57","r":[],"L":[],"sl":"1144483","ct":"0","cd":null},
+{"u":"58","i":"95","n":"4.1 CAÑERIA DE AGUA, SISTEMA ENFRIAMIENTO","w":"1.7.1","l":3,"s":"2027-01-16T16:05:42","f":"2027-03-12T09:31:42","d":489.43,"k":1409.6,"S":1,"M":0,"C":0,"p":"57","ph":"57","r":[],"L":[],"sl":"1144483","ct":"0","cd":null},
+{"u":"59","i":"96","n":"4.1.1 - Suministro e instalacion de acero estructural liviano 0<30 kg/m (soporte)","w":"1.7.1.1","l":4,"s":"2027-01-16T16:05:42","f":"2027-01-17T14:41:42","d":7.6,"k":38.0,"S":0,"M":0,"C":0,"p":"58","ph":"57","r":["Capataz Mecánico","MM Mecánico","M1 Mecánico","Soldador 3G (Plancha)","Soldador 6G"],"L":[{"p":"50","t":"1","g":0},{"p":"25","t":"1","g":0}],"sl":"1144483","ct":"0","cd":null},
+{"u":"60","i":"97","n":"4.1.2 - Suministro y montaje de cañerias ranurada 3\" estandar soldada ERW Acero al c4a.1rb.3o -n Sou Am-5in3i sBtro","w":"1.7.1.2","l":4,"s":"2027-01-17T14:41:42","f":"2027-01-22T11:53:42","d":43.2,"k":129.6,"S":0,"M":0,"C":0,"p":"58","ph":"57","r":["Capataz Mecánico","M1 Mecánico","Soldador 6G"],"L":[{"p":"59","t":"1","g":0}],"sl":"1144483","ct":"0","cd":null},
+{"u":"61","i":"98","n":"4.1.3 - Suministro y montaje de codo 3\"45° RL Soldable A-53 B","w":"1.7.1.3","l":4,"s":"2027-01-21T09:41:42","f":"2027-01-21T12:41:42","d":3.0,"k":9.0,"S":0,"M":0,"C":0,"p":"58","ph":"57","r":["Capataz Mecánico","M1 Mecánico","Soldador 6G"],"L":[{"p":"60","t":"3","g":1920}],"sl":"1204983","ct":"0","cd":null},
+{"u":"62","i":"99","n":"4.1.4 - Suministro y montaje de codo 3\"90° RL Soldable A-53 -B","w":"1.7.1.4","l":4,"s":"2027-01-22T17:41:42","f":"2027-01-24T14:41:42","d":15.0,"k":45.0,"S":0,"M":0,"C":0,"p":"58","ph":"57","r":["Capataz Mecánico","M1 Mecánico","Soldador 6G"],"L":[{"p":"60","t":"3","g":2880}],"sl":"1188183","ct":"0","cd":null},
+{"u":"63","i":"100","n":"4.1.5 - Suministro y montaje de Flange 3\"SO 150# RF STL A105","w":"1.7.1.5","l":4,"s":"2027-01-24T15:41:42","f":"2027-01-26T10:11:42","d":13.5,"k":40.5,"S":0,"M":0,"C":0,"p":"58","ph":"57","r":["Capataz Mecánico","M1 Mecánico","Soldador 6G"],"L":[{"p":"60","t":"3","g":3840}],"sl":"1179483","ct":"0","cd":null},
+{"u":"64","i":"101","n":"4.1.6 - Suministro y montaje de Flange 3\"Blind 150# FF STL A105","w":"1.7.1.6","l":4,"s":"2027-01-26T12:41:42","f":"2027-01-26T16:41:42","d":3.0,"k":9.0,"S":0,"M":0,"C":0,"p":"58","ph":"57","r":["Capataz Mecánico","M1 Mecánico","Soldador 6G"],"L":[{"p":"60","t":"3","g":4800}],"sl":"1176183","ct":"0","cd":null},
+{"u":"65","i":"102","n":"4.1.7 - Suministro y montaje de Reduccion excentrica STD WT STL A234 WPB","w":"1.7.1.7","l":4,"s":"2027-01-28T10:41:42","f":"2027-01-28T15:41:42","d":4.0,"k":12.0,"S":0,"M":0,"C":0,"p":"58","ph":"57","r":["Capataz Mecánico","M1 Mecánico","Soldador 6G"],"L":[{"p":"60","t":"3","g":5760}],"sl":"1165983","ct":"0","cd":null},
+{"u":"66","i":"103","n":"4.1.8 - Suministro y montaje de Tee STD WT ST A234 WPB","w":"1.7.1.8","l":4,"s":"2027-01-29T18:41:42","f":"2027-01-30T14:41:42","d":5.0,"k":15.0,"S":0,"M":0,"C":0,"p":"58","ph":"57","r":["Capataz Mecánico","M1 Mecánico","Soldador 6G"],"L":[{"p":"60","t":"3","g":6720}],"sl":"1155783","ct":"0","cd":null},
+{"u":"67","i":"104","n":"4.1.9 - Suministro y montaje de Válvula 3\"VMP-506 Butterfly Lug HP 150# CS Buna N HO","w":"1.7.1.9","l":4,"s":"2027-01-31T16:41:42","f":"2027-02-01T15:31:42","d":7.83,"k":23.5,"S":0,"M":0,"C":0,"p":"58","ph":"57","r":["Capataz Mecánico","M1 Mecánico","MM Mecánico"],"L":[{"p":"60","t":"3","g":7680}],"sl":"1144483","ct":"0","cd":null},
+{"u":"68","i":"105","n":"4.1.10 - TIE-IN","w":"1.7.1.10","l":4,"s":"2027-02-01T15:31:42","f":"2027-02-07T10:31:42","d":50.0,"k":200.0,"S":0,"M":0,"C":0,"p":"58","ph":"57","r":["Capataz Mecánico","M1 Mecánico","Soldador 6G","MM Mecánico"],"L":[{"p":"60","t":"1","g":0},{"p":"61","t":"1","g":0},{"p":"62","t":"1","g":0},{"p":"63","t":"1","g":0},{"p":"64","t":"1","g":0},{"p":"65","t":"1","g":0},{"p":"66","t":"1","g":0},{"p":"67","t":"1","g":0}],"sl":"1144483","ct":"0","cd":null},
+{"u":"69","i":"106","n":"4.1.11 - Montaje Refrigeracion / Aire acondicionado","w":"1.7.1.11","l":4,"s":"2027-02-07T10:31:42","f":"2027-02-16T09:31:42","d":80.0,"k":240.0,"S":0,"M":0,"C":0,"p":"58","ph":"57","r":["Capataz Mecánico","M1 Mecánico","MM Mecánico"],"L":[{"p":"68","t":"1","g":0},{"p":"17","t":"1","g":0}],"sl":"1144483","ct":"0","cd":null},
+{"u":"70","i":"107","n":"4.1.12 - Montaje Unidad de enfriamiento cicloconvertidor","w":"1.7.1.12","l":4,"s":"2027-02-16T09:31:42","f":"2027-03-12T09:31:42","d":216.0,"k":648.0,"S":0,"M":0,"C":0,"p":"58","ph":"57","r":["Capataz Mecánico","M1 Mecánico","MM Mecánico"],"L":[{"p":"69","t":"1","g":0}],"sl":"1144483","ct":"0","cd":null},
+{"u":"71","i":"108","n":"4.2. SUMINISTRO Y MONTAJE DE CANALIZACIONES ELECTRICAS","w":"1.7.2","l":3,"s":"2026-11-10T18:00:00","f":"2027-01-05T18:00:00","d":504.0,"k":2794.0,"S":1,"M":0,"C":0,"p":"57","ph":"57","r":[],"L":[],"sl":"1166760","ct":"0","cd":null},
+{"u":"72","i":"109","n":"4.2.1 - Escalerilla Portaconductores Galvanizado en Caliente Clase 180mm 600mm","w":"1.7.2.1","l":4,"s":"2026-11-10T18:00:00","f":"2027-01-05T18:00:00","d":504.0,"k":1512.0,"S":0,"M":0,"C":0,"p":"71","ph":"57","r":["M1 Eléctrico","M2 Eléctrico","MM Eléctrico"],"L":[{"p":"26","t":"1","g":0},{"p":"37","t":"1","g":0}],"sl":"1166760","ct":"0","cd":null},
+{"u":"73","i":"110","n":"4.2.2 - Curva Horizontal 90° Escalerilla Portaconductores Galvanizado en Caliente","w":"1.7.2.2","l":4,"s":"2026-11-19T17:00:00","f":"2026-11-21T18:50:00","d":19.83,"k":59.5,"S":0,"M":0,"C":0,"p":"71","ph":"57","r":["M1 Eléctrico","M2 Eléctrico","MM Eléctrico"],"L":[{"p":"72","t":"3","g":4800}],"sl":"1738900","ct":"0","cd":null},
+{"u":"74","i":"111","n":"4.2.3 - Curva Vertical Interior 90° Escalerilla Portaconductores Galvanizado en Caliente Clase 180","w":"1.7.2.3","l":4,"s":"2026-11-22T14:00:00","f":"2026-11-23T16:40:00","d":11.67,"k":35.0,"S":0,"M":0,"C":0,"p":"71","ph":"57","r":["M1 Eléctrico","M2 Eléctrico","MM Eléctrico"],"L":[{"p":"72","t":"3","g":6240}],"sl":"1729400","ct":"0","cd":null},
+{"u":"75","i":"112","n":"4.2.4 - Curva Vertical Exterior 90° Escalerilla Portaconductores Galvanizado en Caliente Clase 180","w":"1.7.2.4","l":4,"s":"2026-11-25T10:00:00","f":"2026-11-30T18:30:00","d":52.5,"k":157.5,"S":0,"M":0,"C":0,"p":"71","ph":"57","r":["M1 Eléctrico","M2 Eléctrico","MM Eléctrico"],"L":[{"p":"72","t":"3","g":7680}],"sl":"1690500","ct":"0","cd":null},
+{"u":"76","i":"113","n":"4.2.5 - Curva Horizontal 45° Escalerilla Portaconductores Galvanizado en Caliente, 600 mm de ancho","w":"1.7.2.5","l":4,"s":"2026-11-27T17:00:00","f":"2026-11-29T09:40:00","d":11.67,"k":35.0,"S":0,"M":0,"C":0,"p":"71","ph":"57","r":["M1 Eléctrico","M2 Eléctrico","MM Eléctrico"],"L":[{"p":"72","t":"3","g":9120}],"sl":"1700600","ct":"0","cd":null},
+{"u":"77","i":"114","n":"4.2.6 - Curva Vertical Interior 45° Escalerilla Portaconductores Galvanizado en Caliente Clase 180","w":"1.7.2.6","l":4,"s":"2026-11-30T14:00:00","f":"2026-12-01T09:50:00","d":5.83,"k":17.5,"S":0,"M":0,"C":0,"p":"71","ph":"57","r":["M1 Eléctrico","M2 Eléctrico","MM Eléctrico"],"L":[{"p":"72","t":"3","g":10560}],"sl":"1689700","ct":"0","cd":null},
+{"u":"78","i":"115","n":"4.2.7 - Curva Vertical Exterior 45° Escalerilla Portaconductores Galvanizado en Caliente, 600 mm d","w":"1.7.2.7","l":4,"s":"2026-12-03T10:00:00","f":"2026-12-03T16:50:00","d":5.83,"k":17.5,"S":0,"M":0,"C":0,"p":"71","ph":"57","r":["M1 Eléctrico","M2 Eléctrico","MM Eléctrico"],"L":[{"p":"72","t":"3","g":12000}],"sl":"1675300","ct":"0","cd":null},
+{"u":"79","i":"116","n":"4.2.8 - Suministro y Montaje Conduits Acero Galvanizado de 1\"a 2 1/2\"","w":"1.7.2.8","l":4,"s":"2026-11-24T11:00:00","f":"2026-12-29T17:00:00","d":320.0,"k":960.0,"S":0,"M":0,"C":0,"p":"71","ph":"57","r":["M1 Eléctrico","M2 Eléctrico","MM Eléctrico"],"L":[{"p":"72","t":"3","g":7200}],"sl":"1340400","ct":"0","cd":null},
+{"u":"80","i":"117","n":"4.3 MONTAJE DE CABLES, CONEXIONADO Y PRUEBAS","w":"1.7.3","l":3,"s":"2026-11-10T18:00:00","f":"2027-03-07T18:24:00","d":1053.4,"k":11627.2,"S":1,"M":0,"C":0,"p":"57","ph":"57","r":[],"L":[],"sl":"1166760","ct":"0","cd":null},
+{"u":"81","i":"118","n":"4.3.1 - Instalacion y pruebas cables desde,Transformadores de poder hasta cicloconvertidor, NHXSGA","w":"1.7.3.1","l":4,"s":"2026-11-10T18:00:00","f":"2027-02-08T18:00:00","d":810.0,"k":4860.0,"S":0,"M":0,"C":0,"p":"80","ph":"57","r":["M1 Eléctrico","M2 Eléctrico","MM Eléctrico"],"L":[{"p":"72","t":"3","g":0},{"p":"16","t":"1","g":0}],"sl":"1312800","ct":"0","cd":null},
+{"u":"82","i":"119","n":"4.3.2 - Instalacion y pruebas cables desde, desconectador hasta cicloconvertidor, NHXSGAFHXÖ","w":"1.7.3.2","l":4,"s":"2027-01-11T11:00:00","f":"2027-03-05T09:12:00","d":475.2,"k":2851.2,"S":0,"M":0,"C":0,"p":"80","ph":"57","r":["M1 Eléctrico","M2 Eléctrico","MM Eléctrico"],"L":[{"p":"72","t":"1","g":2880}],"sl":"1182480","ct":"0","cd":null},
+{"u":"83","i":"120","n":"4.3.3 - Instalación y pruebas de cable desde Transformadores de excitacion hasta gabinete de excit","w":"1.7.3.3","l":4,"s":"2027-01-05T18:00:00","f":"2027-01-17T18:00:00","d":108.0,"k":324.0,"S":0,"M":0,"C":0,"p":"80","ph":"57","r":["M1 Eléctrico","M2 Eléctrico","MM Eléctrico"],"L":[{"p":"72","t":"1","g":0}],"sl":"1166760","ct":"0","cd":null},
+{"u":"84","i":"121","n":"4.3.4 - Instalación y pruebas de cable desde, Cubiculo excitación hasta desconectador excitación,","w":"1.7.3.4","l":4,"s":"2027-01-17T18:00:00","f":"2027-01-31T18:44:00","d":126.73,"k":380.2,"S":0,"M":0,"C":0,"p":"80","ph":"57","r":["M1 Eléctrico","M2 Eléctrico","MM Eléctrico"],"L":[{"p":"83","t":"1","g":0}],"sl":"1166760","ct":"0","cd":null},
+{"u":"85","i":"122","n":"4.3.5 - Instalación y pruebas de cable desde desconectador hasta estator 1, SISIF-CU VZ 6,6 KV 1","w":"1.7.3.5","l":4,"s":"2027-01-31T18:44:00","f":"2027-02-23T16:56:00","d":205.2,"k":615.6,"S":0,"M":0,"C":0,"p":"80","ph":"57","r":["M1 Eléctrico","M2 Eléctrico","MM Eléctrico"],"L":[{"p":"84","t":"1","g":0}],"sl":"1232440","ct":"0","cd":null},
+{"u":"86","i":"123","n":"4.3.6 - Instalación y pruebas de cable desde desconectador hasta estator 2, SISIF-CU VZ 1x185 MM²","w":"1.7.3.6","l":4,"s":"2027-02-08T09:44:00","f":"2027-03-02T17:56:00","d":205.2,"k":615.6,"S":0,"M":0,"C":0,"p":"80","ph":"57","r":["M1 Eléctrico","M2 Eléctrico","MM Eléctrico"],"L":[{"p":"84","t":"1","g":3840}],"sl":"1182040","ct":"0","cd":null},
+{"u":"87","i":"124","n":"4.3.7 - Instalación y pruebas de cable desde excitación hasta el rotor, SISIF-CU VZ 1x185 MM² 6,6","w":"1.7.3.7","l":4,"s":"2027-03-02T17:56:00","f":"2027-03-05T09:56:00","d":20.0,"k":60.0,"S":0,"M":0,"C":0,"p":"80","ph":"57","r":["M1 Eléctrico","M2 Eléctrico","MM Eléctrico"],"L":[{"p":"86","t":"1","g":0}],"sl":"1182040","ct":"0","cd":null},
+{"u":"88","i":"125","n":"4.3.8 - Terminal desnudo de cobre estañado galvánico, calibre 500MCM (240mm²) doble perforación 1/","w":"1.7.3.8","l":4,"s":"2027-01-31T18:44:00","f":"2027-02-12T11:44:00","d":102.0,"k":204.0,"S":0,"M":0,"C":0,"p":"80","ph":"57","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"84","t":"1","g":0}],"sl":"1265560","ct":"0","cd":null},
+{"u":"89","i":"126","n":"4.3.9 - TERMINAL OJO DESNUDO 350 MCM - 185MM","w":"1.7.3.9","l":4,"s":"2027-02-12T11:44:00","f":"2027-02-17T15:44:00","d":48.0,"k":96.0,"S":0,"M":0,"C":0,"p":"80","ph":"57","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"88","t":"1","g":0}],"sl":"1265560","ct":"0","cd":null},
+{"u":"90","i":"127","n":"4.3.10 - Suministro y Tendido de cable Fibra optica 12 filamento","w":"1.7.3.10","l":4,"s":"2027-01-31T18:44:00","f":"2027-03-02T15:24:00","d":266.67,"k":800.0,"S":0,"M":0,"C":0,"p":"80","ph":"57","r":["M1 Eléctrico","MM Eléctrico","M2 Eléctrico"],"L":[{"p":"84","t":"1","g":0}],"sl":"1166760","ct":"0","cd":null},
+{"u":"91","i":"128","n":"4.3.11 - Certificacion Fibra optica","w":"1.7.3.11","l":4,"s":"2027-03-02T15:24:00","f":"2027-03-02T15:36:00","d":0.2,"k":0.6,"S":0,"M":0,"C":0,"p":"80","ph":"57","r":["M1 Eléctrico","MM Eléctrico","M2 Eléctrico"],"L":[{"p":"90","t":"1","g":0}],"sl":"1172640","ct":"0","cd":null},
+{"u":"92","i":"129","n":"4.3.12 - fusionado y conexión fibra optica","w":"1.7.3.12","l":4,"s":"2027-03-02T15:36:00","f":"2027-03-02T17:36:00","d":2.0,"k":4.0,"S":0,"M":0,"C":0,"p":"80","ph":"57","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"91","t":"1","g":0}],"sl":"1172640","ct":"0","cd":null},
+{"u":"93","i":"130","n":"4.3.13 - Terminales F.O. (SFP, SFP+, QSFP)","w":"1.7.3.13","l":4,"s":"2027-03-02T17:36:00","f":"2027-03-06T17:36:00","d":36.0,"k":72.0,"S":0,"M":0,"C":0,"p":"80","ph":"57","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"92","t":"1","g":0}],"sl":"1172640","ct":"0","cd":null},
+{"u":"94","i":"131","n":"4.3.14 - Suministro e Instalacion y pruebas de cable desde TDFI-3330-01 hasta +1.B10","w":"1.7.3.14","l":4,"s":"2026-12-29T17:00:00","f":"2027-01-02T17:00:00","d":36.0,"k":72.0,"S":0,"M":0,"C":0,"p":"80","ph":"57","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"29","t":"1","g":0},{"p":"79","t":"1","g":0}],"sl":"1340400","ct":"0","cd":null},
+{"u":"95","i":"132","n":"4.3.15 - Suministro e Instalacion y pruebas de cable desde alimentacion","w":"1.7.3.15","l":4,"s":"2027-01-02T17:00:00","f":"2027-01-06T17:00:00","d":36.0,"k":72.0,"S":0,"M":0,"C":0,"p":"80","ph":"57","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"94","t":"1","g":0}],"sl":"1340400","ct":"0","cd":null},
+{"u":"96","i":"133","n":"4.3.16 - Suministro e Instalacion y pruebas de cable desde CCM Existente","w":"1.7.3.16","l":4,"s":"2027-01-06T17:00:00","f":"2027-01-10T17:00:00","d":36.0,"k":72.0,"S":0,"M":0,"C":0,"p":"80","ph":"57","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"95","t":"1","g":0}],"sl":"1340400","ct":"0","cd":null},
+{"u":"97","i":"134","n":"4.3.17 - Suministro e Instalacion y pruebas de cable paradas de emergencia","w":"1.7.3.17","l":4,"s":"2027-01-10T17:00:00","f":"2027-01-14T17:00:00","d":36.0,"k":72.0,"S":0,"M":0,"C":0,"p":"80","ph":"57","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"96","t":"1","g":0}],"sl":"1340400","ct":"0","cd":null},
+{"u":"98","i":"135","n":"4.3.18 - Suministro e instalacion Cabezeras F.O","w":"1.7.3.18","l":4,"s":"2027-03-02T15:24:00","f":"2027-03-07T18:24:00","d":48.0,"k":96.0,"S":0,"M":0,"C":0,"p":"80","ph":"57","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"90","t":"1","g":0}],"sl":"1166760","ct":"0","cd":null},
+{"u":"99","i":"136","n":"4.3.19 - Suministro e instalacion Cables transductores LEM","w":"1.7.3.19","l":4,"s":"2027-01-14T17:00:00","f":"2027-02-03T17:00:00","d":180.0,"k":360.0,"S":0,"M":0,"C":0,"p":"80","ph":"57","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"97","t":"1","g":0}],"sl":"1340400","ct":"0","cd":null},
+{"u":"100","i":"137","n":"4.4 MONTAJE DE EQUIPOS ELECTRICOS","w":"1.7.4","l":3,"s":"2027-01-25T10:18:42","f":"2027-03-06T10:18:42","d":360.0,"k":1080.0,"S":1,"M":0,"C":0,"p":"57","ph":"57","r":[],"L":[],"sl":"1176413","ct":"0","cd":null},
+{"u":"101","i":"138","n":"4.4.1 - Transformador de corriente 1 (proyectado)","w":"1.7.4.1","l":4,"s":"2027-01-25T10:18:42","f":"2027-01-29T10:18:42","d":36.0,"k":72.0,"S":0,"M":0,"C":0,"p":"100","ph":"57","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"56","t":"1","g":0}],"sl":"1176413","ct":"0","cd":null},
+{"u":"102","i":"139","n":"4.4.2 - Transformador de corriente 2 (proyectado)","w":"1.7.4.2","l":4,"s":"2027-01-29T10:18:42","f":"2027-02-02T10:18:42","d":36.0,"k":72.0,"S":0,"M":0,"C":0,"p":"100","ph":"57","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"101","t":"1","g":0}],"sl":"1327613","ct":"0","cd":null},
+{"u":"103","i":"140","n":"4.4.3 - Transformador de corriente 3 (proyectado)","w":"1.7.4.3","l":4,"s":"2027-02-02T10:18:42","f":"2027-02-06T10:18:42","d":36.0,"k":72.0,"S":0,"M":0,"C":0,"p":"100","ph":"57","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"102","t":"1","g":0}],"sl":"1327613","ct":"0","cd":null},
+{"u":"104","i":"141","n":"4.4.4 - Cicloconvertidor (Proyectado)","w":"1.7.4.4","l":4,"s":"2027-01-29T10:18:42","f":"2027-02-18T10:18:42","d":180.0,"k":360.0,"S":0,"M":0,"C":0,"p":"100","ph":"57","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"101","t":"1","g":0}],"sl":"1262813","ct":"0","cd":null},
+{"u":"105","i":"142","n":"4.4.5 - Cicloconvertidor (Proyectado)","w":"1.7.4.5","l":4,"s":"2027-02-06T10:18:42","f":"2027-02-26T10:18:42","d":180.0,"k":360.0,"S":0,"M":0,"C":0,"p":"100","ph":"57","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"101","t":"1","g":4320}],"sl":"1176413","ct":"0","cd":null},
+{"u":"106","i":"143","n":"4.4.7 - Rectificador (Proyectado)","w":"1.7.4.6","l":4,"s":"2027-02-26T10:18:42","f":"2027-03-06T10:18:42","d":72.0,"k":144.0,"S":0,"M":0,"C":0,"p":"100","ph":"57","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"105","t":"1","g":0}],"sl":"1176413","ct":"0","cd":null},
+{"u":"107","i":"144","n":"5.0 Trabajos parada de planta","w":"1.8","l":2,"s":"2027-03-15T11:00:00","f":"2027-04-29T17:00:00","d":410.0,"k":7234.0,"S":1,"M":0,"C":0,"p":"1","ph":"107","r":[],"L":[],"sl":"881400","ct":"0","cd":null},
+{"u":"108","i":"145","n":"5.1 Retiro y montajes de equipos","w":"1.8.1","l":3,"s":"2027-03-15T11:00:00","f":"2027-04-29T17:00:00","d":410.0,"k":7234.0,"S":1,"M":0,"C":0,"p":"107","ph":"107","r":[],"L":[],"sl":"881400","ct":"0","cd":null},
+{"u":"109","i":"146","n":"5.1.1 - Retiro de gabinete de control existente +1.B18 (Gabinete de control SINNAMICS SL 150)","w":"1.8.1.1","l":4,"s":"2027-04-01T10:00:00","f":"2027-04-03T10:00:00","d":18.0,"k":36.0,"S":0,"M":0,"C":0,"p":"108","ph":"107","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"9","t":"2","g":0}],"sl":"881400","ct":"0","cd":null},
+{"u":"110","i":"147","n":"5.1.2 - Montaje de UPS Y Banco de baterias nuevo +1.B32/33","w":"1.8.1.2","l":4,"s":"2027-04-03T10:00:00","f":"2027-04-11T10:00:00","d":72.0,"k":144.0,"S":0,"M":0,"C":0,"p":"108","ph":"107","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"109","t":"1","g":0}],"sl":"982200","ct":"0","cd":null},
+{"u":"111","i":"148","n":"5.1.3 - Montaje de armario de control cicloconvertidor SINAMIC SL150 +1B18","w":"1.8.1.3","l":4,"s":"2027-04-03T10:00:00","f":"2027-04-07T10:00:00","d":36.0,"k":72.0,"S":0,"M":0,"C":0,"p":"108","ph":"107","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"109","t":"1","g":0}],"sl":"1003800","ct":"0","cd":null},
+{"u":"112","i":"149","n":"5.1.4 - Montaje armario auxiliar de los variadores","w":"1.8.1.4","l":4,"s":"2027-04-03T10:00:00","f":"2027-04-05T17:00:00","d":24.0,"k":48.0,"S":0,"M":0,"C":0,"p":"108","ph":"107","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"109","t":"1","g":0}],"sl":"1011000","ct":"0","cd":null},
+{"u":"113","i":"150","n":"5.1.5 - Retiro de gabinete de excitatriz +1.B31","w":"1.8.1.5","l":4,"s":"2027-04-03T10:00:00","f":"2027-04-05T10:00:00","d":18.0,"k":36.0,"S":0,"M":0,"C":0,"p":"108","ph":"107","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"109","t":"1","g":0}],"sl":"1014600","ct":"0","cd":null},
+{"u":"114","i":"151","n":"5.1.6 - Montaje de gabinete nuevo excitatriz +1.B31","w":"1.8.1.6","l":4,"s":"2027-04-03T10:00:00","f":"2027-04-07T10:00:00","d":36.0,"k":72.0,"S":0,"M":0,"C":0,"p":"108","ph":"107","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"109","t":"1","g":0}],"sl":"1003800","ct":"0","cd":null},
+{"u":"115","i":"152","n":"5.1.7 - Retiro de CPU existente +.B12 (rack borneras espejo N°2) (UC-320)","w":"1.8.1.7","l":4,"s":"2027-04-03T10:00:00","f":"2027-04-05T17:00:00","d":24.0,"k":48.0,"S":0,"M":0,"C":0,"p":"108","ph":"107","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"109","t":"1","g":0}],"sl":"1011000","ct":"0","cd":null},
+{"u":"116","i":"153","n":"5.1.8 - Montaje nueva CPU S7","w":"1.8.1.8","l":4,"s":"2027-04-03T10:00:00","f":"2027-04-05T17:00:00","d":24.0,"k":48.0,"S":0,"M":0,"C":0,"p":"108","ph":"107","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"109","t":"1","g":0}],"sl":"1011000","ct":"0","cd":null},
+{"u":"117","i":"154","n":"5.1.9 - Reemplazo de estacion de operacon existente +1.B.01(sistema de visualizacion con servidor","w":"1.8.1.9","l":4,"s":"2027-04-03T10:00:00","f":"2027-04-08T13:00:00","d":48.0,"k":96.0,"S":0,"M":0,"C":0,"p":"108","ph":"107","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"109","t":"1","g":0}],"sl":"996600","ct":"0","cd":null},
+{"u":"118","i":"155","n":"5.1.10 - Apoyo de persoal directo a la integracion , comisionamiento, conexioando y","w":"1.8.1.10","l":4,"s":"2027-03-15T11:00:00","f":"2027-04-20T18:00:00","d":330.0,"k":5280.0,"S":0,"M":0,"C":0,"p":"108","ph":"107","r":["M1 Eléctrico","MM Eléctrico","Técnico Especialista","Ingeniero en prevencion de riesgos","Supervisor Electrico"],"L":[{"p":"7","t":"1","g":3360}],"sl":"929400","ct":"0","cd":null},
+{"u":"119","i":"156","n":"5.1.11 - Montaje transductores de corriente de estrella (Lem) apoyo PEM","w":"1.8.1.11","l":4,"s":"2027-04-03T10:00:00","f":"2027-04-29T17:00:00","d":240.0,"k":720.0,"S":0,"M":0,"C":0,"p":"108","ph":"107","r":["M1 Eléctrico","M2 Eléctrico","MM Eléctrico"],"L":[{"p":"109","t":"1","g":0}],"sl":"881400","ct":"0","cd":null},
+{"u":"120","i":"157","n":"5.1.12 - Gabinete de conexión y desconexión de motor estator 1 parada","w":"1.8.1.12","l":4,"s":"2027-04-03T10:00:00","f":"2027-04-08T13:00:00","d":48.0,"k":96.0,"S":0,"M":0,"C":0,"p":"108","ph":"107","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"109","t":"1","g":0}],"sl":"996600","ct":"0","cd":null},
+{"u":"121","i":"158","n":"5.1.13 - Gabinete de conexión y desconexión de motor estator 2 parada","w":"1.8.1.13","l":4,"s":"2027-04-06T16:00:00","f":"2027-04-11T19:00:00","d":48.0,"k":96.0,"S":0,"M":0,"C":0,"p":"108","ph":"107","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"109","t":"1","g":1920}],"sl":"977400","ct":"0","cd":null},
+{"u":"122","i":"159","n":"5.1.14 - Gabinete de conexión y desconexión de motor excitación parada","w":"1.8.1.14","l":4,"s":"2027-04-08T14:00:00","f":"2027-04-13T17:00:00","d":48.0,"k":96.0,"S":0,"M":0,"C":0,"p":"108","ph":"107","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"109","t":"1","g":2880}],"sl":"931800","ct":"0","cd":null},
+{"u":"123","i":"160","n":"5.1.15 - Tie - In Electrico","w":"1.8.1.15","l":4,"s":"2027-04-13T17:00:00","f":"2027-04-20T13:00:00","d":60.0,"k":120.0,"S":0,"M":0,"C":0,"p":"108","ph":"107","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"122","t":"1","g":0}],"sl":"931800","ct":"0","cd":null},
+{"u":"124","i":"161","n":"5.1.16 - Tie - In Electrico","w":"1.8.1.16","l":4,"s":"2027-04-13T17:00:00","f":"2027-04-20T13:00:00","d":60.0,"k":120.0,"S":0,"M":0,"C":0,"p":"108","ph":"107","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"122","t":"1","g":0}],"sl":"931800","ct":"0","cd":null},
+{"u":"125","i":"162","n":"5.1.17 - Tie - In Electrico","w":"1.8.1.17","l":4,"s":"2027-04-13T17:00:00","f":"2027-04-17T16:20:00","d":35.33,"k":106.0,"S":0,"M":0,"C":0,"p":"108","ph":"107","r":["M1 Eléctrico","MM Eléctrico","M2 Eléctrico"],"L":[{"p":"122","t":"1","g":0}],"sl":"946600","ct":"0","cd":null},
+{"u":"126","i":"163","n":"6 Trabajos post parada de planta","w":"1.9","l":2,"s":"2027-05-08T09:00:00","f":"2027-09-03T14:40:00","d":1066.67,"k":7648.0,"S":1,"M":0,"C":0,"p":"1","ph":"126","r":[],"L":[],"sl":"197000","ct":"0","cd":null},
+{"u":"127","i":"164","n":"6.1 Retiro de equipos y cables","w":"1.9.1","l":3,"s":"2027-05-08T09:00:00","f":"2027-09-03T14:40:00","d":1066.67,"k":7648.0,"S":1,"M":0,"C":0,"p":"126","ph":"126","r":[],"L":[],"sl":"197000","ct":"0","cd":null},
+{"u":"128","i":"165","n":"6.1.1 - Transformador de corriente 1 (Retiro) post parada de planta","w":"1.9.1.1","l":4,"s":"2027-05-08T09:00:00","f":"2027-05-10T16:00:00","d":24.0,"k":48.0,"S":0,"M":0,"C":0,"p":"127","ph":"126","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"10","t":"1","g":0}],"sl":"721800","ct":"0","cd":null},
+{"u":"129","i":"166","n":"6.1.2 - Transformador de corriente 2 (Retiro)post parada de planta","w":"1.9.1.2","l":4,"s":"2027-05-10T16:00:00","f":"2027-05-13T12:00:00","d":24.0,"k":48.0,"S":0,"M":0,"C":0,"p":"127","ph":"126","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"128","t":"1","g":0}],"sl":"721800","ct":"0","cd":null},
+{"u":"130","i":"167","n":"6.1.3 - Transformador de corriente 3 (Retiro)post parada de planta","w":"1.9.1.3","l":4,"s":"2027-05-13T12:00:00","f":"2027-05-15T19:00:00","d":24.0,"k":48.0,"S":0,"M":0,"C":0,"p":"127","ph":"126","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"129","t":"1","g":0}],"sl":"721800","ct":"0","cd":null},
+{"u":"131","i":"168","n":"6.1.4 - Cicloconvertidor retiro post parada de planta","w":"1.9.1.4","l":4,"s":"2027-05-08T09:00:00","f":"2027-05-21T12:00:00","d":120.0,"k":240.0,"S":0,"M":0,"C":0,"p":"127","ph":"126","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"10","t":"1","g":0}],"sl":"765000","ct":"0","cd":null},
+{"u":"132","i":"169","n":"6.1.5 - Cicloconvertidor retiro post parada de planta","w":"1.9.1.5","l":4,"s":"2027-05-16T09:00:00","f":"2027-05-29T12:00:00","d":120.0,"k":240.0,"S":0,"M":0,"C":0,"p":"127","ph":"126","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"130","t":"1","g":0}],"sl":"721800","ct":"0","cd":null},
+{"u":"133","i":"170","n":"6.1.6 - Rectificador ( existente a retirar) post parada de planta","w":"1.9.1.6","l":4,"s":"2027-05-08T09:00:00","f":"2027-05-11T19:00:00","d":36.0,"k":72.0,"S":0,"M":0,"C":0,"p":"127","ph":"126","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"10","t":"1","g":0}],"sl":"649800","ct":"0","cd":null},
+{"u":"134","i":"171","n":"6.1.7 - Banco y cargador de baterias post parada de planta","w":"1.9.1.7","l":4,"s":"2027-05-12T09:00:00","f":"2027-05-19T19:00:00","d":72.0,"k":144.0,"S":0,"M":0,"C":0,"p":"127","ph":"126","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"133","t":"1","g":0}],"sl":"649800","ct":"0","cd":null},
+{"u":"135","i":"172","n":"6.1.8 - UPS 230 VAC post parada de planta","w":"1.9.1.8","l":4,"s":"2027-05-20T09:00:00","f":"2027-05-22T16:00:00","d":24.0,"k":48.0,"S":0,"M":0,"C":0,"p":"127","ph":"126","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"134","t":"1","g":0}],"sl":"649800","ct":"0","cd":null},
+{"u":"136","i":"173","n":"6.1.9 - Unidad de enfriamiento post parada de planta","w":"1.9.1.9","l":4,"s":"2027-05-22T16:00:00","f":"2027-06-11T16:00:00","d":180.0,"k":360.0,"S":0,"M":0,"C":0,"p":"127","ph":"126","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"135","t":"1","g":0}],"sl":"649800","ct":"0","cd":null},
+{"u":"137","i":"174","n":"6.1.10 - Retiro de cable existente por canalizacion por existentes","w":"1.9.1.10","l":4,"s":"2027-05-08T09:00:00","f":"2027-09-03T14:40:00","d":1066.67,"k":6400.0,"S":0,"M":0,"C":0,"p":"127","ph":"126","r":["M1 Eléctrico","MM Eléctrico","M2 Eléctrico"],"L":[{"p":"10","t":"1","g":0}],"sl":"197000","ct":"0","cd":null},
+{"u":"138","i":"175","n":"7 Red de Incendio","w":"1.10","l":2,"s":"2026-10-09T09:00:00","f":"2027-04-28T09:20:42","d":1809.35,"k":1641.6,"S":1,"M":0,"C":0,"p":"1","ph":"138","r":[],"L":[],"sl":"890793","ct":"0","cd":null},
+{"u":"139","i":"176","n":"7.1 Instalacion red de incendio","w":"1.10.1","l":3,"s":"2027-01-25T10:18:42","f":"2027-04-28T09:20:42","d":836.03,"k":1101.6,"S":1,"M":0,"C":0,"p":"138","ph":"138","r":[],"L":[],"sl":"890793","ct":"0","cd":null},
+{"u":"140","i":"177","n":"7.1.1 - Instalacion de panel de incendio Notifier NSF-320","w":"1.10.1.1","l":4,"s":"2027-03-24T14:48:42","f":"2027-03-27T10:48:42","d":24.0,"k":48.0,"S":0,"M":0,"C":0,"p":"139","ph":"138","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"158","t":"1","g":26400}],"sl":"890793","ct":"0","cd":null},
+{"u":"141","i":"178","n":"7.1.2 - Instalacion Detector fotoelectrico Notifier FSP-951T","w":"1.10.1.2","l":4,"s":"2027-03-27T10:48:42","f":"2027-03-31T10:48:42","d":36.0,"k":72.0,"S":0,"M":0,"C":0,"p":"139","ph":"138","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"140","t":"1","g":0}],"sl":"890793","ct":"0","cd":null},
+{"u":"142","i":"179","n":"7.1.3 - Instalación detector temperatura fija/RR Notifier FST-951R","w":"1.10.1.3","l":4,"s":"2027-03-31T10:48:42","f":"2027-04-02T17:48:42","d":24.0,"k":48.0,"S":0,"M":0,"C":0,"p":"139","ph":"138","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"141","t":"1","g":0}],"sl":"890793","ct":"0","cd":null},
+{"u":"143","i":"180","n":"7.1.4 - Instalación Pulsador de descarga agente FK-51-12 Notifier NBG-12","w":"1.10.1.4","l":4,"s":"2027-04-02T17:48:42","f":"2027-04-04T10:48:42","d":12.0,"k":24.0,"S":0,"M":0,"C":0,"p":"139","ph":"138","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"142","t":"1","g":0}],"sl":"890793","ct":"0","cd":null},
+{"u":"144","i":"181","n":"7.1.5 -Instalación Botón aborto a la descarga Edwards rela-ABT","w":"1.10.1.5","l":4,"s":"2027-04-04T10:48:42","f":"2027-04-05T14:48:42","d":12.0,"k":24.0,"S":0,"M":0,"C":0,"p":"139","ph":"138","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"143","t":"1","g":0}],"sl":"890793","ct":"0","cd":null},
+{"u":"145","i":"182","n":"7.1.6 - Instalación Modulo de monitoreo Notifier FMM-1","w":"1.10.1.6","l":4,"s":"2027-04-05T14:48:42","f":"2027-04-09T14:48:42","d":36.0,"k":72.0,"S":0,"M":0,"C":0,"p":"139","ph":"138","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"144","t":"1","g":0}],"sl":"890793","ct":"0","cd":null},
+{"u":"146","i":"183","n":"7.1.7 - Instalación Modulo mini de monitoreo Notifier FMM-101","w":"1.10.1.7","l":4,"s":"2027-04-09T14:48:42","f":"2027-04-12T10:48:42","d":24.0,"k":48.0,"S":0,"M":0,"C":0,"p":"139","ph":"138","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"145","t":"1","g":0}],"sl":"890793","ct":"0","cd":null},
+{"u":"147","i":"184","n":"7.1.8 - Modulo de control nac Notifier FCM-1","w":"1.10.1.8","l":4,"s":"2027-04-12T10:48:42","f":"2027-04-13T14:48:42","d":12.0,"k":24.0,"S":0,"M":0,"C":0,"p":"139","ph":"138","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"146","t":"1","g":0}],"sl":"890793","ct":"0","cd":null},
+{"u":"148","i":"185","n":"7.1.9 - Modulo de relé Notifier FRM-1","w":"1.10.1.9","l":4,"s":"2027-04-13T14:48:42","f":"2027-04-17T14:48:42","d":36.0,"k":72.0,"S":0,"M":0,"C":0,"p":"139","ph":"138","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"147","t":"1","g":0}],"sl":"890793","ct":"0","cd":null},
+{"u":"149","i":"186","n":"7.1.10 - Sirena c/luz estobo exterior Edwards 757","w":"1.10.1.10","l":4,"s":"2027-04-17T14:48:42","f":"2027-04-17T18:20:42","d":3.53,"k":10.6,"S":0,"M":0,"C":0,"p":"139","ph":"138","r":["M1 Eléctrico","M2 Eléctrico","MM Eléctrico"],"L":[{"p":"148","t":"1","g":0}],"sl":"890793","ct":"0","cd":null},
+{"u":"150","i":"187","n":"7.1.11 - Sirena c/luz estobo interior Edwards 757","w":"1.10.1.11","l":4,"s":"2027-04-17T18:20:42","f":"2027-04-18T16:20:42","d":7.0,"k":21.0,"S":0,"M":0,"C":0,"p":"139","ph":"138","r":["M1 Eléctrico","M2 Eléctrico","MM Eléctrico"],"L":[{"p":"149","t":"1","g":0}],"sl":"890793","ct":"0","cd":null},
+{"u":"151","i":"188","n":"7.1.12 - Campalilla aviso descarga System S. SSM24-6","w":"1.10.1.12","l":4,"s":"2027-04-18T16:20:42","f":"2027-04-20T16:20:42","d":18.0,"k":36.0,"S":0,"M":0,"C":0,"p":"139","ph":"138","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"150","t":"1","g":0}],"sl":"890793","ct":"0","cd":null},
+{"u":"152","i":"189","n":"7.1.13 - Switch presión - descarga en curso Siex poinpre","w":"1.10.1.13","l":4,"s":"2027-04-20T16:20:42","f":"2027-04-22T09:20:42","d":12.0,"k":24.0,"S":0,"M":0,"C":0,"p":"139","ph":"138","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"151","t":"1","g":0}],"sl":"890793","ct":"0","cd":null},
+{"u":"153","i":"190","n":"7.1.14 - Switch baja presión cilindro Siex propen50","w":"1.10.1.14","l":4,"s":"2027-04-22T09:20:42","f":"2027-04-23T12:20:42","d":12.0,"k":24.0,"S":0,"M":0,"C":0,"p":"139","ph":"138","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"152","t":"1","g":0}],"sl":"890793","ct":"0","cd":null},
+{"u":"154","i":"191","n":"7.1.15 - Switch servicio deshabilitado/habilitado Edwards SIGA-SRV","w":"1.10.1.15","l":4,"s":"2027-04-23T12:20:42","f":"2027-04-24T16:20:42","d":12.0,"k":24.0,"S":0,"M":0,"C":0,"p":"139","ph":"138","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"153","t":"1","g":0}],"sl":"890793","ct":"0","cd":null},
+{"u":"155","i":"192","n":"7.1.16 - Switch monitoreo cabezal disparo siex 227AMD","w":"1.10.1.16","l":4,"s":"2027-04-24T16:20:42","f":"2027-04-26T09:20:42","d":12.0,"k":24.0,"S":0,"M":0,"C":0,"p":"139","ph":"138","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"154","t":"1","g":0}],"sl":"890793","ct":"0","cd":null},
+{"u":"156","i":"193","n":"7.1.17 - Cilindro de 84 lts. 80 Kgs. De agente Primer piso (Cilindro NOVEC-1230)","w":"1.10.1.17","l":4,"s":"2027-04-26T09:20:42","f":"2027-04-27T09:20:42","d":9.0,"k":18.0,"S":0,"M":0,"C":0,"p":"139","ph":"138","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"163","t":"1","g":0},{"p":"155","t":"1","g":0}],"sl":"890793","ct":"0","cd":null},
+{"u":"157","i":"194","n":"7.1.18 - Cilindro de 84 lts. 80 Kgs. De agente Segundo piso (Cilindro NOVEC-1230)","w":"1.10.1.18","l":4,"s":"2027-04-27T09:20:42","f":"2027-04-28T09:20:42","d":9.0,"k":18.0,"S":0,"M":0,"C":0,"p":"139","ph":"138","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"163","t":"1","g":0},{"p":"156","t":"1","g":0}],"sl":"890793","ct":"0","cd":null},
+{"u":"158","i":"195","n":"7.1.19 - Canalización C.A.G. 25mm. ANSI C80. 1 25mm","w":"1.10.1.19","l":4,"s":"2027-01-28T15:48:42","f":"2027-02-03T15:48:42","d":54.0,"k":108.0,"S":0,"M":0,"C":0,"p":"139","ph":"138","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"159","t":"1","g":0}],"sl":"890793","ct":"0","cd":null},
+{"u":"159","i":"196","n":"7.1.20 - Cajas de derivación 100x100x65 mm","w":"1.10.1.20","l":4,"s":"2027-01-25T10:18:42","f":"2027-01-28T15:48:42","d":31.5,"k":126.0,"S":0,"M":0,"C":0,"p":"139","ph":"138","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"56","t":"1","g":0}],"sl":"890793","ct":"0","cd":null},
+{"u":"160","i":"197","n":"7.1.21 - Cajas de derivación 100x65x65 mm","w":"1.10.1.21","l":4,"s":"2027-01-25T10:18:42","f":"2027-01-26T18:18:42","d":16.0,"k":32.0,"S":0,"M":0,"C":0,"p":"139","ph":"138","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"56","t":"1","g":0}],"sl":"1382813","ct":"0","cd":null},
+{"u":"161","i":"198","n":"7.1.22 - Cañería acero ASTM-SCH 40 1\"","w":"1.10.1.22","l":4,"s":"2027-01-28T15:48:42","f":"2027-02-01T15:48:42","d":36.0,"k":72.0,"S":0,"M":0,"C":0,"p":"139","ph":"138","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"159","t":"1","g":0}],"sl":"1236713","ct":"0","cd":null},
+{"u":"162","i":"199","n":"7.1.23 - Cañería acero ASTM-SCH 40 3/4\"","w":"1.10.1.23","l":4,"s":"2027-02-01T15:48:42","f":"2027-02-04T18:48:42","d":30.0,"k":60.0,"S":0,"M":0,"C":0,"p":"139","ph":"138","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"161","t":"1","g":0}],"sl":"1236713","ct":"0","cd":null},
+{"u":"163","i":"200","n":"7.1.24 - Tendido cable fuerza y control","w":"1.10.1.24","l":4,"s":"2027-02-04T18:48:42","f":"2027-02-06T18:48:42","d":18.0,"k":72.0,"S":0,"M":0,"C":0,"p":"139","ph":"138","r":["M1 Eléctrico","MM Eléctrico"],"L":[{"p":"162","t":"1","g":0}],"sl":"1236713","ct":"0","cd":null},
+{"u":"211","i":"201","n":"PARTIDAS GENERALES ADICIONALES (por actualización de revisiones documentales)","w":"1.10.2","l":3,"s":"2026-10-09T09:00:00","f":"2027-02-22T18:48:42","d":1232.81,"k":540.0,"S":1,"M":0,"C":0,"p":"138","ph":"138","r":[],"L":[],"sl":"1236713","ct":"0","cd":null},
+{"u":"212","i":"202","n":"8.1 -  Montaje transformador 15 KVA","w":"1.10.2.1","l":4,"s":"2027-02-06T18:48:42","f":"2027-02-12T18:48:42","d":54.0,"k":108.0,"S":0,"M":0,"C":0,"p":"211","ph":"138","r":["MM Eléctrico","M1 Eléctrico"],"L":[{"p":"163","t":"1","g":0}],"sl":"1290713","ct":"0","cd":null},
+{"u":"213","i":"203","n":"8.2 - Montaje de mangueras Linea N1 Y N2","w":"1.10.2.2","l":4,"s":"2027-02-06T18:48:42","f":"2027-02-22T18:48:42","d":144.0,"k":288.0,"S":0,"M":0,"C":0,"p":"211","ph":"138","r":["MM Eléctrico","M1 Eléctrico"],"L":[{"p":"163","t":"1","g":0}],"sl":"1236713","ct":"0","cd":null},
+{"u":"214","i":"204","n":"8.3 - Montaje de linea de alta y baja presión (5/8\"), c.a.g. 3/4, cable 4x1,5 mm2, soportación y fitting de sistema refrigeración / aire acondicionado","w":"1.10.2.3","l":4,"s":"2027-02-06T18:48:42","f":"2027-02-14T18:48:42","d":72.0,"k":144.0,"S":0,"M":0,"C":0,"p":"211","ph":"138","r":["MM Eléctrico","M1 Eléctrico"],"L":[{"p":"163","t":"1","g":0}],"sl":"1279913","ct":"0","cd":null},
+{"u":"221","i":"205","n":null,"w":"1.10.2.4","l":4,"s":"2026-10-09T09:00:00","f":"2026-10-09T18:00:00","d":8.0,"k":0.0,"S":0,"M":0,"C":0,"p":"211","ph":"138","r":[],"L":[],"sl":"1971600","ct":"0","cd":null}
+];
+/* ==================================================================
+   ===============   05 PLANIFICACIÓN Y AVANCE            ===========
+   ==================================================================
+   Programa de montaje (MS Project, Rev. CLG 29-09) convertido a datos
+   (part13data.js) y trabajado desde la app:
+     5.1 Carta Gantt navegable (etapas, actividades, hitos, filtros)
+     5.2 Avance físico: % real por actividad, curva S plan vs. real
+     5.3 Hitos contractuales con estado
+     5.4 Restricciones y desviaciones
+     5.5 Informe semanal imprimible
+   El programa (fechas plan) es de solo lectura; lo que se registra
+   (avance real, restricciones, fecha de corte) vive en DB.programa y
+   requiere modo administrador.
+   ================================================================== */
+
+/* ---------- índice del programa ---------- */
+const PRG = (function(){
+  const porUID = {}, hijos = {};
+  PROGRAMA_TAREAS.forEach(function(t){ porUID[t.u] = t; hijos[t.u] = []; });
+  PROGRAMA_TAREAS.forEach(function(t){ if(t.p && hijos[t.p]) hijos[t.p].push(t); });
+  const raiz = PROGRAMA_TAREAS.filter(function(t){ return t.l === 1; })[0];
+  const etapas = PROGRAMA_TAREAS.filter(function(t){ return t.l === 2; });
+  const hojas = PROGRAMA_TAREAS.filter(function(t){ return !t.S; });
+  const hitos = hojas.filter(function(t){ return t.M; });
+  const sucesores = {};
+  PROGRAMA_TAREAS.forEach(function(t){ (t.L||[]).forEach(function(l){ (sucesores[l.p] = sucesores[l.p] || []).push({ t:t, tipo:l.t, lag:l.g }); }); });
+  const etapaIdx = {}; etapas.forEach(function(e, i){ etapaIdx[e.u] = i; });
+  const ini = hojas.map(function(t){ return t.s; }).sort()[0], fin = hojas.map(function(t){ return t.f; }).sort().slice(-1)[0];
+  return { porUID:porUID, hijos:hijos, raiz:raiz, etapas:etapas, hojas:hojas, hitos:hitos, sucesores:sucesores, etapaIdx:etapaIdx, inicio:ini, fin:fin };
+})();
+const PRG_COLORES = ['#526075','#17658d','#835520','#386c50','#76528b','#006c73','#2855a1','#96413c','#5c6530','#79516c'];
+const PRG_UI = { escala:'meses', buscar:'', etapa:'', recurso:'', estado:'', criticas:false, colapsadas:null, filtroAvance:'atrasadas' };
+const TIPOS_RESTR = ['Restricción','Desviación de plazo','Cambio de alcance','Interferencia','Falta de suministro','Clima / fuerza mayor','Otro'];
+const EST_RESTR = ['Abierta','En gestión','Cerrada'];
+
+/* ---------- fechas ---------- */
+function prgFecha(iso){ return iso ? new Date(iso.slice(0,10) + 'T00:00:00') : null; }
+function prgMs(iso){ const d = prgFecha(iso); return d ? d.getTime() : 0; }
+function prgISO(d){ return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); }
+function fmtCorta(iso){ if(!iso) return '—'; const d = prgFecha(iso); const M=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic']; return d.getDate() + ' ' + M[d.getMonth()] + ' ' + d.getFullYear(); }
+function fechaCorte(){ return DB.programa.fechaCorte || hoyISO(); }
+function colorEtapa(t){ return PRG_COLORES[PRG.etapaIdx[t.ph]] || '#365970'; }
+function nombreEtapa(t){ const i = PRG.etapaIdx[t.ph]; return i == null ? '—' : String(i+1).padStart(2,'0') + ' · ' + PROGRAMA_ETAPAS_META[i][1]; }
+function fmtH(h){ return Number(h).toLocaleString('es-CL', { maximumFractionDigits:1 }) + ' h'; }
+function fmtDias(h){ return Number(h / 8).toLocaleString('es-CL', { maximumFractionDigits:1 }) + ' d'; }
+
+/* ---------- avance ---------- */
+function avanceDe(t){ return DB.programa.avances[t.u] || null; }
+function pesoHoja(t){ if(t.M) return 0; return t.k > 0 ? t.k : (t.d > 0 ? t.d : 0); }
+function descendientesHoja(t){
+  if(!t.S) return [t];
+  let acc = []; (PRG.hijos[t.u]||[]).forEach(function(h){ acc = acc.concat(descendientesHoja(h)); }); return acc;
+}
+function pctRealHoja(t){ const a = avanceDe(t); if(a) return a.pct; return 0; }
+function pctPlanHoja(t, corteISO){
+  const c = prgMs(corteISO) + 86400000, s = prgMs(t.s), f = prgMs(t.f) + 86400000;
+  if(c <= s) return 0; if(c >= f) return 100;
+  return Math.round((c - s) / (f - s) * 1000) / 10;
+}
+function pctPonderado(t, fn){
+  const hojas = descendientesHoja(t);
+  let pesoT = 0, acum = 0, n = 0, sum = 0;
+  hojas.forEach(function(h){ const w = pesoHoja(h); const v = fn(h); if(w > 0){ pesoT += w; acum += w * v; } n++; sum += v; });
+  if(pesoT > 0) return Math.round(acum / pesoT * 10) / 10;
+  return n ? Math.round(sum / n * 10) / 10 : 0;
+}
+function pctReal(t){ return t.S ? pctPonderado(t, pctRealHoja) : pctRealHoja(t); }
+function pctPlan(t, corte){ corte = corte || fechaCorte(); return t.S ? pctPonderado(t, function(h){ return pctPlanHoja(h, corte); }) : pctPlanHoja(t, corte); }
+function estadoActividad(t, corte){
+  corte = corte || fechaCorte();
+  const a = avanceDe(t), real = pctRealHoja(t), plan = pctPlanHoja(t, corte);
+  if(t.M){
+    if(a && (a.finReal || a.pct >= 100)) return { id:'completada', label:'Cumplido', cls:'aprobado' };
+    return prgMs(t.f) < prgMs(corte) ? { id:'atrasada', label:'Vencido', cls:'rechazado' } : { id:'pendiente', label:'Pendiente', cls:'recibido' };
+  }
+  if(real >= 100) return { id:'completada', label:'Completada', cls:'aprobado' };
+  if(plan > 0 && real + 0.05 < plan) return { id:'atrasada', label:'Atrasada', cls:'rechazado' };
+  if(real > 0) return { id:'curso', label:'En curso', cls:'revision' };
+  if(plan > 0) return { id:'atrasada', label:'Atrasada', cls:'rechazado' };
+  return { id:'pendiente', label:'No iniciada', cls:'recibido' };
+}
+function totalReal(){ return pctReal(PRG.raiz); }
+function totalPlan(corte){ return pctPlan(PRG.raiz, corte); }
+function registrarCorte(){ DB.programa.cortes[fechaCorte()] = totalReal(); }
+
+/* ---------- ficha de actividad ---------- */
+function fichaActividad(uid){
+  const t = PRG.porUID[uid]; if(!t) return;
+  const a = avanceDe(t), est = estadoActividad(t), ruta = [];
+  let p = PRG.porUID[t.p]; while(p){ ruta.unshift(p.n); p = PRG.porUID[p.p]; }
+  const tipos = { '0':'FF fin–fin', '1':'FI fin–inicio', '2':'IF inicio–fin', '3':'II inicio–inicio' };
+  const pred = (t.L||[]).map(function(l){ const q = PRG.porUID[l.p]; return q ? '<li><a href="javascript:void 0" onclick="fichaActividad(\'' + q.u + '\')">#' + esc(q.i) + ' ' + esc(q.n) + '</a> <span class="tag">' + (tipos[l.t]||l.t) + (l.g ? ' ' + (l.g>0?'+':'') + Math.round(l.g/PROGRAMA_META.minDia*10)/10 + ' d' : '') + '</span></li>' : ''; }).join('');
+  const suc = (PRG.sucesores[t.u]||[]).map(function(s){ return '<li><a href="javascript:void 0" onclick="fichaActividad(\'' + s.t.u + '\')">#' + esc(s.t.i) + ' ' + esc(s.t.n) + '</a> <span class="tag">' + (tipos[s.tipo]||s.tipo) + '</span></li>'; }).join('');
+  const hijos = t.S ? (PRG.hijos[t.u]||[]) : [];
+  abrirModal(
+    '<div class="modal-head"><div><div class="sub" style="margin:0 0 2px;font-size:11.5px">' + esc(ruta.join(' › ')) + '</div><h2>' + (t.M ? '◆ ' : t.S ? '▣ ' : '') + esc(t.n) + '</h2></div>' +
+      pillEstado2(est) + '<button class="x" onclick="cerrarModal()" aria-label="Cerrar">×</button></div>' +
+    '<div class="modal-body">' +
+      '<div class="dl">' +
+        '<dt>ID · EDT</dt><dd>#' + esc(t.i) + ' · ' + esc(t.w) + '</dd>' +
+        '<dt>Etapa</dt><dd><span class="tag" style="background:' + colorEtapa(t) + ';color:#fff">' + esc(nombreEtapa(t)) + '</span></dd>' +
+        '<dt>Inicio · término plan</dt><dd>' + fmtCorta(t.s) + ' → ' + fmtCorta(t.f) + (t.M ? ' (hito)' : '') + '</dd>' +
+        '<dt>Duración · trabajo</dt><dd>' + fmtH(t.d) + ' (' + fmtDias(t.d) + ') · ' + fmtH(t.k) + '</dd>' +
+        '<dt>Recursos</dt><dd>' + (t.r && t.r.length ? t.r.map(function(r){ return '<span class="tag">' + esc(r) + '</span>'; }).join(' ') : '—') + '</dd>' +
+        '<dt>Ruta crítica (Project)</dt><dd>' + (t.C ? '<span class="pill bad"><span class="dot"></span>Crítica</span>' : 'No') + (t.sl != null ? ' · holgura total ' + fmtDias(Number(t.sl)/60) : '') + '</dd>' +
+        '<dt>Avance plan a la fecha de corte</dt><dd><b>' + pctPlan(t) + ' %</b> <span class="sub" style="display:inline">(' + fmtFecha(fechaCorte()) + ')</span></dd>' +
+        '<dt>Avance real registrado</dt><dd><b>' + pctReal(t) + ' %</b>' + (a ? ' · ' + (a.inicioReal ? 'inicio real ' + fmtFecha(a.inicioReal) : '') + (a.finReal ? ' · término real ' + fmtFecha(a.finReal) : '') + (a.fecha ? ' · registrado ' + fmtFecha(a.fecha) : '') : '') + '</dd>' +
+        (a && a.comentario ? '<dt>Comentario</dt><dd>' + esc(a.comentario) + '</dd>' : '') +
+      '</div>' +
+      (hijos.length ? '<div class="sec"><h3>Actividades incluidas (' + hijos.length + ')</h3><ul class="wip-list">' + hijos.map(function(h){ return '<li><a href="javascript:void 0" onclick="fichaActividad(\'' + h.u + '\')">#' + esc(h.i) + ' ' + esc(h.n) + '</a> · ' + fmtCorta(h.s) + ' → ' + fmtCorta(h.f) + ' · real ' + pctReal(h) + ' %</li>'; }).join('') + '</ul></div>' : '') +
+      (pred ? '<div class="sec"><h3>Predecesoras</h3><ul class="wip-list">' + pred + '</ul></div>' : '') +
+      (suc ? '<div class="sec"><h3>Sucesoras</h3><ul class="wip-list">' + suc + '</ul></div>' : '') +
+    '</div>' +
+    '<div class="modal-foot">' + (!t.S ? '<button class="btn primary" onclick="formAvance(\'' + t.u + '\')">✎ Registrar avance</button>' : '') +
+      '<button class="btn" onclick="cerrarModal()">Cerrar</button></div>');
+}
+function pillEstado2(e){ return '<span class="pill ' + e.cls + '"><span class="dot"></span>' + esc(e.label) + '</span>'; }
+
+/* ---------- registro de avance (administrador) ---------- */
+function formAvance(uid){
+  const t = PRG.porUID[uid]; if(!t || t.S) return;
+  const a = avanceDe(t) || { pct:0, inicioReal:'', finReal:'', comentario:'', fecha:'', por:'' };
+  abrirModal(
+    '<div class="modal-head"><h2>Registrar avance — #' + esc(t.i) + ' ' + esc(t.n) + '</h2><button class="x" onclick="cerrarModal()" aria-label="Cerrar">×</button></div>' +
+    '<div class="modal-body">' +
+      '<p class="sub">Plan: ' + fmtCorta(t.s) + ' → ' + fmtCorta(t.f) + ' · avance plan a la fecha de corte (' + fmtFecha(fechaCorte()) + '): <b>' + pctPlan(t) + ' %</b>. ' +
+      (t.M ? 'Es un <b>hito</b>: márquelo cumplido con su fecha real.' : 'Registre el avance físico real de la actividad; 100 % la cierra.') + '</p>' +
+      '<div class="fgrid">' +
+        (t.M ? '<div class="field"><label class="f" for="avPct">Estado</label><select class="inp" id="avPct"><option value="0"' + (a.pct < 100 ? ' selected' : '') + '>Pendiente</option><option value="100"' + (a.pct >= 100 ? ' selected' : '') + '>Cumplido</option></select></div>'
+             : '<div class="field"><label class="f" for="avPct">Avance real (%)</label><input class="inp" id="avPct" type="number" min="0" max="100" step="1" value="' + a.pct + '"></div>') +
+        '<div class="field"><label class="f" for="avIni">Inicio real</label><input class="inp" id="avIni" type="date" value="' + attr(a.inicioReal) + '"></div>' +
+        '<div class="field"><label class="f" for="avFin">Término real' + (t.M ? ' (fecha de cumplimiento)' : '') + '</label><input class="inp" id="avFin" type="date" value="' + attr(a.finReal) + '"></div>' +
+        '<div class="field"><label class="f" for="avPor">Registrado por</label><input class="inp" id="avPor" value="' + attr(a.por || DB.contrato.jefeOT || '') + '"></div>' +
+      '</div>' +
+      '<div class="field"><label class="f" for="avCom">Comentario / restricción observada</label><textarea class="inp" id="avCom">' + esc(a.comentario) + '</textarea></div>' +
+    '</div>' +
+    '<div class="modal-foot">' + (avanceDe(t) ? '<button class="btn danger" onclick="eliminarAvance(\'' + t.u + '\')">Borrar registro</button>' : '') +
+      '<span class="spacer"></span><button class="btn" onclick="cerrarModal()">Cancelar</button>' +
+      '<button class="btn primary" onclick="guardarAvance(\'' + t.u + '\')">Guardar avance</button></div>');
+}
+function guardarAvance(uid){
+  const t = PRG.porUID[uid]; if(!t) return;
+  let pct = Math.max(0, Math.min(100, Number(valorCampo('avPct')) || 0));
+  const fin = valorCampo('avFin'), ini = valorCampo('avIni');
+  if(fin && !t.M && pct < 100){ pct = 100; }
+  if(t.M && fin) pct = 100;
+  if(ini && fin && fin < ini){ toast('El término real no puede ser anterior al inicio real.', 'bad'); return; }
+  DB.programa.avances[uid] = { pct:pct, inicioReal:ini, finReal:fin, comentario:valorCampo('avCom'), fecha:hoyISO(), por:valorCampo('avPor') };
+  registrarCorte(); guardarDB(); cerrarModal(); render();
+  toast('Avance registrado: #' + esc(t.i) + ' → ' + pct + ' %. Avance total real: ' + totalReal() + ' %.', 'ok');
+}
+function eliminarAvance(uid){
+  delete DB.programa.avances[uid]; registrarCorte(); guardarDB(); cerrarModal(); render(); toast('Registro de avance eliminado.', 'ok');
+}
+function guardarFechaCorte(v){
+  DB.programa.fechaCorte = str(v); registrarCorte(); guardarDB(); render();
+}
+
+/* ==================================================================
+   5.1 CARTA GANTT
+   ================================================================== */
+function prgNav(actual){
+  const items = [['plan/gantt','5.1 Carta Gantt'],['plan/avance','5.2 Avance y curva S'],['plan/hitos','5.3 Hitos'],['plan/restricciones','5.4 Restricciones'],['plan/informe','5.5 Informe semanal']];
+  return '<div class="toolbar" style="margin-bottom:12px">' + items.map(function(it){ return '<a class="btn sm' + (it[0] === actual ? ' primary' : '') + '" href="#/' + it[0] + '">' + esc(it[1]) + '</a>'; }).join('') +
+    '<span class="spacer"></span><span style="font-size:11.5px;color:var(--text-3)">Programa: ' + esc(PROGRAMA_META.fuente.replace(/\.xml$/i,'')) + ' · guardado ' + fmtCorta(PROGRAMA_META.guardado) + '</span></div>';
+}
+function filasGantt(){
+  if(PRG_UI.colapsadas === null){ PRG_UI.colapsadas = {}; PROGRAMA_TAREAS.forEach(function(t){ if(t.S && t.l >= 3) PRG_UI.colapsadas[t.u] = true; }); }
+  const q = PRG_UI.buscar.trim().toLowerCase(), corte = fechaCorte();
+  const filtrando = !!(q || PRG_UI.etapa || PRG_UI.recurso || PRG_UI.estado || PRG_UI.criticas);
+  function pasa(t){
+    if(q && (t.n.toLowerCase().indexOf(q) < 0 && t.i !== q.replace('#','') && t.w.indexOf(q) !== 0)) return false;
+    if(PRG_UI.etapa && t.ph !== PRG_UI.etapa && t.u !== PRG_UI.etapa) return false;
+    if(PRG_UI.recurso && (t.r||[]).indexOf(PRG_UI.recurso) < 0) return false;
+    if(PRG_UI.estado && estadoActividad(t, corte).id !== PRG_UI.estado) return false;
+    if(PRG_UI.criticas && !t.C) return false;
+    return true;
+  }
+  const out = [];
+  if(filtrando){
+    PROGRAMA_TAREAS.forEach(function(t){ if(!t.S && pasa(t)) out.push(t); });
+    return out;
+  }
+  (function rec(t){
+    out.push(t);
+    if(t.S && !PRG_UI.colapsadas[t.u]) (PRG.hijos[t.u]||[]).forEach(rec);
+  })(PRG.raiz);
+  return out;
+}
+function renderGantt(){
+  const filas = filasGantt(), corte = fechaCorte();
+  const escala = PRG_UI.escala, ini = prgFecha(PRG.inicio), fin = prgFecha(PRG.fin);
+  const t0 = new Date(ini.getFullYear(), ini.getMonth(), 1), t1 = new Date(fin.getFullYear(), fin.getMonth() + 1, 1);
+  const pxDia = escala === 'semanas' ? 6 : 3;
+  const ancho = Math.round((t1 - t0) / 86400000 * pxDia);
+  const x = function(iso){ return Math.round((prgMs(iso) - t0.getTime()) / 86400000 * pxDia); };
+  let h = '<div class="page-title"><h1>5.1 Carta Gantt del programa</h1></div>' + prgNav('plan/gantt');
+  h += '<div class="help"><b>¿Qué es esto?</b> El programa de montaje aprobado (MS Project) con sus 10 etapas, ' + PRG.hojas.length + ' actividades y ' + PRG.hitos.length + ' hitos, ' +
+       'del ' + fmtCorta(PRG.inicio) + ' al ' + fmtCorta(PRG.fin) + '. Las fechas plan son de solo lectura. Un clic en una fila abre la ficha; desde ahí el administrador registra el avance real. ' +
+       'La barra clara es el plan y la barra oscura sobre ella, el avance real registrado; la línea roja es la fecha de corte.</div>';
+  /* filtros */
+  h += '<div class="card card-pad" style="margin-bottom:12px"><div class="fgrid">' +
+    '<div><label class="f">Buscar actividad</label><input class="inp" id="gBuscar" placeholder="Nombre, N° o EDT…" value="' + attr(PRG_UI.buscar) + '" oninput="filtroGantt(\'buscar\',this.value)"></div>' +
+    '<div><label class="f">Etapa</label><select class="inp" onchange="filtroGantt(\'etapa\',this.value)"><option value="">Todas las etapas</option>' +
+      PRG.etapas.map(function(e, i){ return '<option value="' + e.u + '"' + (PRG_UI.etapa === e.u ? ' selected' : '') + '>' + String(i+1).padStart(2,'0') + ' · ' + esc(PROGRAMA_ETAPAS_META[i][1]) + '</option>'; }).join('') + '</select></div>' +
+    '<div><label class="f">Recurso</label><select class="inp" onchange="filtroGantt(\'recurso\',this.value)"><option value="">Todos</option>' + PROGRAMA_RECURSOS.map(function(r){ return '<option' + (PRG_UI.recurso === r ? ' selected' : '') + '>' + esc(r) + '</option>'; }).join('') + '</select></div>' +
+    '<div><label class="f">Estado a la fecha de corte</label><select class="inp" onchange="filtroGantt(\'estado\',this.value)"><option value="">Todos</option>' +
+      [['pendiente','No iniciada / pendiente'],['curso','En curso'],['atrasada','Atrasada / vencido'],['completada','Completada / cumplido']].map(function(o){ return '<option value="' + o[0] + '"' + (PRG_UI.estado === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div>' +
+    '</div><div class="toolbar" style="margin:10px 0 0">' +
+    '<button class="btn sm' + (escala === 'meses' ? ' primary' : '') + '" onclick="escalaGantt(\'meses\')">Meses</button><button class="btn sm' + (escala === 'semanas' ? ' primary' : '') + '" onclick="escalaGantt(\'semanas\')">Semanas</button>' +
+    '<button class="btn sm" onclick="expandirGantt(true)">Expandir todo</button><button class="btn sm" onclick="expandirGantt(false)">Contraer todo</button>' +
+    '<button class="btn sm" onclick="limpiarGantt()">Limpiar filtros</button>' +
+    '<label class="chk" style="margin-left:6px"><input type="checkbox"' + (PRG_UI.criticas ? ' checked' : '') + ' onchange="filtroGantt(\'criticas\',this.checked)"> Solo ruta crítica</label>' +
+    '<span class="spacer"></span><span style="font-size:12px;color:var(--text-2)">' + filas.length + ' filas · corte ' + fmtFecha(corte) + ' · avance real total <b>' + totalReal() + ' %</b> vs plan <b>' + totalPlan(corte) + ' %</b></span></div></div>';
+
+  /* cabecera de tiempo */
+  let cab = '', cab2 = '';
+  for(let d = new Date(t0); d < t1; d.setMonth(d.getMonth() + 1)){
+    const n = new Date(d.getFullYear(), d.getMonth() + 1, 1), w = Math.round((n - d) / 86400000 * pxDia);
+    const M = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+    cab += '<div class="g-mes" style="width:' + w + 'px">' + M[d.getMonth()] + ' ' + String(d.getFullYear()).slice(2) + '</div>';
+  }
+  if(escala === 'semanas'){
+    for(let d = new Date(t0); d < t1; d.setDate(d.getDate() + 7)){ cab2 += '<div class="g-sem" style="width:' + (7 * pxDia) + 'px">' + pad(d.getDate()) + '</div>'; }
+  }
+  const xCorte = x(corte);
+  h += '<div class="gantt" id="gDer"><div class="g-row g-head"><div class="g-izq g-cab">ACTIVIDAD · EDT · N°</div><div class="g-der g-cab" style="width:' + ancho + 'px">' + cab + (cab2 ? '<div class="g-semanas">' + cab2 + '</div>' : '') + '</div></div>';
+  filas.forEach(function(t){
+    const est = estadoActividad(t, corte);
+    const xi = x(t.s), xf = Math.max(x(t.f) + pxDia, xi + 3), w = xf - xi, real = pctReal(t), col = colorEtapa(t);
+    h += '<div class="g-row' + (t.S ? ' g-res' : '') + '" onclick="fichaActividad(\'' + t.u + '\')">';
+    h += '<div class="g-izq g-fila" style="padding-left:' + (8 + (t.l - 1) * 14) + 'px" title="' + attr(t.n) + '">' +
+      (t.S ? '<button class="g-tog" onclick="event.stopPropagation();toggleGantt(\'' + t.u + '\')">' + (PRG_UI.colapsadas[t.u] ? '+' : '−') + '</button>' : '<span class="g-tog"></span>') +
+      '<span class="g-nom">' + (t.M ? '◆ ' : '') + esc(t.n) + '</span>' +
+      '<span class="g-sub">' + esc(t.w) + ' · #' + esc(t.i) + (t.S ? '' : ' · <span class="pill ' + est.cls + '" style="padding:0 6px;font-size:10px">' + esc(est.label) + '</span>') + '</span></div>';
+    h += '<div class="g-der g-linea" style="width:' + ancho + 'px">';
+    if(xCorte >= 0 && xCorte <= ancho) h += '<div class="g-corte" style="left:' + xCorte + 'px"></div>';
+    if(t.M) h += '<div class="g-hito" style="left:' + (xi - 6) + 'px;border-color:' + col + '"></div>';
+    else if(t.S) h += '<div class="g-barra g-resumen" style="left:' + xi + 'px;width:' + w + 'px;background:' + col + '"><div class="g-real" style="width:' + real + '%"></div></div>';
+    else h += '<div class="g-barra' + (t.C && PRG_UI.criticas ? ' g-crit' : '') + '" style="left:' + xi + 'px;width:' + w + 'px;background:' + col + '55;border-color:' + col + '"><div class="g-real" style="width:' + real + '%;background:' + col + '"></div>' + (w > 40 ? '<span class="g-pct">' + real + ' %</span>' : '') + '</div>';
+    h += '</div></div>';
+  });
+  h += '</div>';
+  h += '<div class="legend"><span><i style="background:#17658d55;border:1px solid #17658d"></i>Plan</span><span><i style="background:#17658d"></i>Avance real</span><span>◆ Hito</span><span><i style="background:var(--bad)"></i>Fecha de corte</span><span>Los colores identifican la etapa · deslice horizontalmente para recorrer las fechas</span></div>';
+  return h;
+}
+function renderGanttPost(){
+  const der = document.getElementById('gDer'); if(!der) return;
+  const corte = fechaCorte(), ini = prgFecha(PRG.inicio), t0 = new Date(ini.getFullYear(), ini.getMonth(), 1);
+  const pxDia = PRG_UI.escala === 'semanas' ? 6 : 3;
+  const xc = Math.round((prgMs(corte) - t0.getTime()) / 86400000 * pxDia);
+  if(xc + 380 > der.clientWidth * 0.6) der.scrollLeft = xc + 380 - der.clientWidth * 0.5;
+}
+function filtroGantt(k, v){ PRG_UI[k] = v; if(k === 'buscar'){ clearTimeout(PRG_UI._t); PRG_UI._t = setTimeout(function(){ const i = document.getElementById('gBuscar'); const p = i ? i.selectionStart : null; render(); const n = document.getElementById('gBuscar'); if(n){ n.focus(); if(p != null) n.setSelectionRange(p, p); } }, 200); } else render(); }
+function escalaGantt(e){ PRG_UI.escala = e; render(); }
+function toggleGantt(uid){ PRG_UI.colapsadas[uid] = !PRG_UI.colapsadas[uid]; render(); }
+function expandirGantt(abrir){ PRG_UI.colapsadas = {}; if(!abrir) PROGRAMA_TAREAS.forEach(function(t){ if(t.S && t.l >= 2) PRG_UI.colapsadas[t.u] = true; }); render(); }
+function limpiarGantt(){ PRG_UI.buscar = ''; PRG_UI.etapa = ''; PRG_UI.recurso = ''; PRG_UI.estado = ''; PRG_UI.criticas = false; render(); }
+
+/* ==================================================================
+   5.2 AVANCE FÍSICO Y CURVA S
+   ================================================================== */
+function puntosCurvaS(){
+  const ini = prgFecha(PRG.inicio), fin = prgFecha(PRG.fin), pts = [];
+  const d = new Date(ini); d.setDate(d.getDate() - d.getDay() + 1); /* lunes */
+  while(d <= fin){ const iso = prgISO(d); pts.push({ fecha:iso, plan:totalPlan(iso) }); d.setDate(d.getDate() + 7); }
+  pts.push({ fecha:prgISO(fin), plan:100 });
+  return pts;
+}
+function svgCurvaS(){
+  const pts = puntosCurvaS(), w = 720, hh = 300, ml = 44, mr = 16, mt = 16, mb = 40;
+  const x0 = prgMs(pts[0].fecha), x1 = prgMs(pts[pts.length-1].fecha);
+  const X = function(iso){ return ml + (prgMs(iso) - x0) / (x1 - x0) * (w - ml - mr); };
+  const Y = function(p){ return mt + (100 - p) / 100 * (hh - mt - mb); };
+  let s = '<svg class="chart" viewBox="0 0 ' + w + ' ' + hh + '" style="max-width:100%" role="img" aria-label="Curva S plan vs real">';
+  for(let g = 0; g <= 100; g += 25){ s += '<line x1="' + ml + '" x2="' + (w - mr) + '" y1="' + Y(g) + '" y2="' + Y(g) + '" stroke="var(--border)" stroke-width="1"/><text x="' + (ml - 6) + '" y="' + (Y(g) + 4) + '" text-anchor="end" font-size="11" fill="var(--text-3)">' + g + '%</text>'; }
+  const M = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  const ini = prgFecha(pts[0].fecha);
+  for(let d = new Date(ini.getFullYear(), ini.getMonth(), 1); d.getTime() <= x1; d.setMonth(d.getMonth() + 1)){
+    if(d.getTime() < x0) continue; const xx = X(prgISO(d));
+    s += '<line x1="' + xx + '" x2="' + xx + '" y1="' + mt + '" y2="' + (hh - mb) + '" stroke="var(--border)" stroke-dasharray="2 3"/><text x="' + xx + '" y="' + (hh - mb + 16) + '" text-anchor="middle" font-size="10.5" fill="var(--text-3)">' + M[d.getMonth()] + (d.getMonth() === 0 || d.getTime() === new Date(ini.getFullYear(), ini.getMonth(), 1).getTime() ? ' ' + String(d.getFullYear()).slice(2) : '') + '</text>';
+  }
+  s += '<path d="' + pts.map(function(p, i){ return (i ? 'L' : 'M') + X(p.fecha).toFixed(1) + ' ' + Y(p.plan).toFixed(1); }).join(' ') + '" fill="none" stroke="#17658d" stroke-width="2.5"/>';
+  const cortes = Object.keys(DB.programa.cortes).sort().map(function(f){ return { fecha:f, real:Number(DB.programa.cortes[f]) || 0 }; });
+  const corte = fechaCorte(), realHoy = totalReal();
+  const serie = cortes.filter(function(c){ return c.fecha < corte; }).concat([{ fecha:corte, real:realHoy }]);
+  if(serie.length){
+    s += '<path d="' + serie.map(function(p, i){ return (i ? 'L' : 'M') + X(p.fecha).toFixed(1) + ' ' + Y(p.real).toFixed(1); }).join(' ') + '" fill="none" stroke="#25703c" stroke-width="2.5"/>';
+    serie.forEach(function(p){ s += '<circle cx="' + X(p.fecha) + '" cy="' + Y(p.real) + '" r="3.5" fill="#25703c"/>'; });
+  }
+  const xc = X(corte);
+  s += '<line x1="' + xc + '" x2="' + xc + '" y1="' + mt + '" y2="' + (hh - mb) + '" stroke="var(--bad)" stroke-width="1.5" stroke-dasharray="4 3"/>' +
+       '<text x="' + (xc + 4) + '" y="' + (mt + 12) + '" font-size="11" fill="var(--bad)">corte ' + fmtFecha(corte) + '</text>';
+  s += '<text x="' + (w - mr) + '" y="' + (Y(totalPlan(corte)) - 6) + '" text-anchor="end" font-size="11" fill="#17658d">plan ' + totalPlan(corte) + ' %</text>';
+  s += '<text x="' + (w - mr) + '" y="' + (Y(realHoy) + 14) + '" text-anchor="end" font-size="11" fill="#25703c">real ' + realHoy + ' %</text>';
+  s += '</svg>';
+  return s;
+}
+function renderAvance(){
+  const corte = fechaCorte(), plan = totalPlan(corte), real = totalReal(), desv = Math.round((real - plan) * 10) / 10;
+  const act = PRG.hojas.filter(function(t){ return !t.M; });
+  const porEstado = { pendiente:0, curso:0, atrasada:0, completada:0 };
+  act.forEach(function(t){ porEstado[estadoActividad(t, corte).id]++; });
+  const hitosVenc = PRG.hitos.filter(function(t){ return estadoActividad(t, corte).id === 'atrasada'; }).length;
+  let h = '<div class="page-title"><h1>5.2 Avance físico y curva S</h1></div>' + prgNav('plan/avance');
+  h += '<div class="help"><b>¿Qué es esto?</b> Compara lo que el programa dice que debería estar hecho a la <b>fecha de corte</b> (avance plan, ponderado por horas de trabajo de cada actividad) con lo realmente ejecutado (avance real registrado por actividad). ' +
+       'La curva S verde se dibuja con los cortes que se van guardando. El administrador fija la fecha de corte y registra el avance con el botón ✎ de cada actividad.</div>';
+  h += '<div class="toolbar"><label class="f" style="margin:0" for="fCorte">Fecha de corte</label><input class="inp" style="width:170px" type="date" id="fCorte" value="' + attr(corte) + '" onchange="guardarFechaCorte(this.value)"' + (esAdmin() ? '' : ' disabled') + '>' +
+       '<button class="btn sm" onclick="exportarAvanceCSV()">↓ Exportar avance CSV</button><span class="spacer"></span>' +
+       '<span style="font-size:12px;color:var(--text-2)">' + Object.keys(DB.programa.avances).length + ' actividades con registro · ' + Object.keys(DB.programa.cortes).length + ' cortes guardados</span></div>';
+  h += '<div class="grid kpis" style="margin-bottom:14px">' +
+    kpi('Avance plan a la fecha', plan + ' %', 'según programa', '') +
+    kpi('Avance real', real + ' %', 'registrado', real >= plan ? 'good' : 'warn') +
+    kpi('Desviación', (desv > 0 ? '+' : '') + desv + ' pts', desv < 0 ? 'atraso respecto del plan' : 'adelanto o en plan', desv < -5 ? 'bad' : desv < 0 ? 'warn' : 'good') +
+    kpi('Actividades atrasadas', porEstado.atrasada, 'de ' + act.length + ' actividades', porEstado.atrasada ? 'bad' : 'good') +
+    kpi('En curso', porEstado.curso, 'con avance parcial', '') +
+    kpi('Completadas', porEstado.completada, 'al 100 %', 'good') +
+    kpi('Hitos vencidos', hitosVenc, 'sin cumplir a la fecha', hitosVenc ? 'bad' : 'good') +
+  '</div>';
+  h += '<div class="grid cols2"><div class="card card-pad"><h2>Curva S — plan vs. real</h2>' + svgCurvaS() +
+       '<div class="legend"><span><i style="background:#17658d"></i>Plan (programa)</span><span><i style="background:#25703c"></i>Real (cortes registrados)</span><span><i style="background:var(--bad)"></i>Fecha de corte</span></div></div>';
+  /* avance por etapa */
+  h += '<div class="card card-pad"><h2>Avance por etapa</h2><div class="tbl-wrap" style="border:0"><table><thead><tr><th>Etapa</th><th>Plan</th><th>Real</th><th>Desv.</th><th>Periodo</th></tr></thead><tbody>';
+  PRG.etapas.forEach(function(e, i){
+    const p = pctPlan(e, corte), r = pctReal(e), d = Math.round((r - p) * 10) / 10;
+    h += '<tr style="cursor:pointer" onclick="fichaActividad(\'' + e.u + '\')"><td class="wrap"><span class="tag" style="background:' + PRG_COLORES[i] + ';color:#fff">' + String(i+1).padStart(2,'0') + '</span> ' + esc(PROGRAMA_ETAPAS_META[i][1]) + '</td>' +
+         '<td>' + barraPct(p, '#17658d') + '</td><td>' + barraPct(r, '#25703c') + '</td><td class="num" style="color:' + (d < 0 ? 'var(--bad)' : 'var(--ok)') + '">' + (d > 0 ? '+' : '') + d + '</td><td style="font-size:11.5px">' + fmtCorta(e.s) + ' → ' + fmtCorta(e.f) + '</td></tr>';
+  });
+  h += '</tbody></table></div></div></div>';
+  /* tabla de actividades */
+  const f = PRG_UI.filtroAvance;
+  let lista = act.filter(function(t){ const e = estadoActividad(t, corte).id; return f === 'todas' || (f === 'atrasadas' ? e === 'atrasada' : f === 'curso' ? (e === 'curso' || e === 'atrasada') : f === 'periodo' ? (prgMs(t.s) <= prgMs(corte) && prgMs(t.f) >= prgMs(corte) - 14*86400000) : e === f); });
+  lista.sort(function(a, b){ return (pctReal(a) - pctPlan(a, corte)) - (pctReal(b) - pctPlan(b, corte)); });
+  h += '<div class="card card-pad" style="margin-top:14px"><div class="toolbar"><h2 style="margin:0">Actividades</h2><span class="spacer"></span>' +
+       [['atrasadas','Atrasadas'],['curso','En curso'],['periodo','Del periodo (±2 sem.)'],['completada','Completadas'],['todas','Todas']].map(function(o){ return '<button class="btn sm' + (f === o[0] ? ' primary' : '') + '" onclick="PRG_UI.filtroAvance=\'' + o[0] + '\';render()">' + o[1] + '</button>'; }).join('') + '</div>';
+  if(!lista.length) h += '<div class="empty-state">Sin actividades en esta categoría a la fecha de corte.</div>';
+  else {
+    h += '<div class="tbl-wrap"><table><thead><tr><th>N°</th><th>Actividad</th><th>Etapa</th><th>Plan inicio → término</th><th>Plan</th><th>Real</th><th>Desv.</th><th>Estado</th><th></th></tr></thead><tbody>';
+    lista.slice(0, 300).forEach(function(t){
+      const p = pctPlanHoja(t, corte), r = pctRealHoja(t), d = Math.round((r - p) * 10) / 10, e = estadoActividad(t, corte);
+      h += '<tr><td class="num">#' + esc(t.i) + '</td><td class="wrap"><a class="doclink" href="javascript:void 0" onclick="fichaActividad(\'' + t.u + '\')">' + esc(t.n) + '</a></td>' +
+           '<td><span class="tag" style="background:' + colorEtapa(t) + ';color:#fff">' + String((PRG.etapaIdx[t.ph]||0)+1).padStart(2,'0') + '</span></td>' +
+           '<td style="font-size:11.5px">' + fmtCorta(t.s) + ' → ' + fmtCorta(t.f) + '</td><td>' + barraPct(p, '#17658d') + '</td><td>' + barraPct(r, '#25703c') + '</td>' +
+           '<td class="num" style="color:' + (d < 0 ? 'var(--bad)' : 'var(--ok)') + '">' + (d > 0 ? '+' : '') + d + '</td><td>' + pillEstado2(e) + '</td>' +
+           '<td><button class="btn sm" onclick="formAvance(\'' + t.u + '\')">✎</button></td></tr>';
+    });
+    h += '</tbody></table></div>' + (lista.length > 300 ? '<p class="sub">Se muestran 300 de ' + lista.length + '.</p>' : '');
+  }
+  h += '</div>';
+  return h;
+}
+function kpi(lab, val, nota, cls){ return '<div class="card kpi ' + (cls||'') + '"><div class="k-lab">' + esc(lab) + '</div><div class="k-val">' + val + '</div><div class="k-note">' + esc(nota) + '</div></div>'; }
+function barraPct(p, col){ return '<div class="pbar" title="' + p + ' %"><div style="width:' + Math.max(0, Math.min(100, p)) + '%;background:' + col + '"></div><span>' + p + ' %</span></div>'; }
+function exportarAvanceCSV(){
+  const corte = fechaCorte();
+  const filas = [['N°','EDT','Actividad','Etapa','Inicio plan','Término plan','Hito','Plan % (' + corte + ')','Real %','Desviación','Estado','Inicio real','Término real','Comentario','Registrado','Por']];
+  PRG.hojas.forEach(function(t){ const a = avanceDe(t) || {}, p = pctPlanHoja(t, corte), r = pctRealHoja(t);
+    filas.push([t.i, t.w, t.n, nombreEtapa(t), t.s.slice(0,10), t.f.slice(0,10), t.M ? 'Sí' : 'No', p, r, Math.round((r-p)*10)/10, estadoActividad(t, corte).label, a.inicioReal||'', a.finReal||'', a.comentario||'', a.fecha||'', a.por||'']); });
+  const csv = '﻿' + filas.map(function(f){ return f.map(function(c){ return '"' + String(c).replace(/"/g,'""') + '"'; }).join(';'); }).join('\r\n');
+  descargar('avance_programa_' + corte + '.csv', csv, 'text/csv;charset=utf-8');
+}
+
+/* ==================================================================
+   5.3 HITOS CONTRACTUALES
+   ================================================================== */
+function renderHitos(){
+  const corte = fechaCorte();
+  const hitos = PRG.hitos.slice().sort(function(a, b){ return a.s.localeCompare(b.s); });
+  const cumplidos = hitos.filter(function(t){ return estadoActividad(t, corte).id === 'completada'; }).length;
+  const vencidos = hitos.filter(function(t){ return estadoActividad(t, corte).id === 'atrasada'; }).length;
+  const prox = hitos.filter(function(t){ const e = estadoActividad(t, corte).id; return e === 'pendiente' && prgMs(t.s) - prgMs(corte) <= 30*86400000; }).length;
+  let h = '<div class="page-title"><h1>5.3 Hitos contractuales y del programa</h1></div>' + prgNav('plan/hitos');
+  h += '<div class="help"><b>¿Qué es esto?</b> Los ' + hitos.length + ' hitos del programa: los 10 de las Bases Técnicas (sección 15, cuadro de hitos: movilización día 30, sala eléctrica día 120, equipamiento día 150, tendido día 180, integración, parada de planta, puesta en marcha día 210, post-PEM y desmovilización día 365) y los hitos de inicio de contrato y de suministros. ' +
+       'Un hito se marca cumplido con su fecha real desde la ficha (administrador). Vencido = fecha plan pasada sin cumplir a la fecha de corte.</div>';
+  h += '<div class="grid kpis" style="margin-bottom:14px">' + kpi('Hitos', hitos.length, 'en el programa', '') + kpi('Cumplidos', cumplidos, 'con fecha real', 'good') + kpi('Vencidos', vencidos, 'a la fecha de corte ' + fmtFecha(corte), vencidos ? 'bad' : 'good') + kpi('Próximos 30 días', prox, 'pendientes por vencer', prox ? 'warn' : '') + '</div>';
+  h += '<div class="card"><div class="timeline" style="padding:16px 18px 16px 30px">';
+  hitos.forEach(function(t){
+    const e = estadoActividad(t, corte), a = avanceDe(t), dias = Math.round((prgMs(t.s) - prgMs(corte)) / 86400000);
+    const col = e.id === 'completada' ? 'var(--ok)' : e.id === 'atrasada' ? 'var(--bad)' : 'var(--accent)';
+    h += '<div class="tl-item"><div class="tl-dot" style="border-color:' + col + '"></div><div class="tl-head">' +
+         '<span class="tl-rev">' + fmtCorta(t.s) + '</span>' + pillEstado2(e) +
+         '<span class="tag" style="background:' + colorEtapa(t) + ';color:#fff">' + esc(nombreEtapa(t)) + '</span>' +
+         (e.id === 'pendiente' ? '<span class="sub" style="margin:0">' + (dias >= 0 ? 'faltan ' + dias + ' días' : '') + '</span>' : '') +
+         (e.id === 'atrasada' ? '<span class="sub" style="margin:0;color:var(--bad)">vencido hace ' + Math.abs(dias) + ' días</span>' : '') +
+         (a && a.finReal ? '<span class="sub" style="margin:0;color:var(--ok)">cumplido el ' + fmtFecha(a.finReal) + (a.finReal > t.s.slice(0,10) ? ' (+' + Math.round((prgMs(a.finReal) - prgMs(t.s))/86400000) + ' d)' : '') + '</span>' : '') +
+         '<span class="spacer"></span><button class="btn sm" onclick="fichaActividad(\'' + t.u + '\')">Ficha</button> <button class="btn sm" onclick="formAvance(\'' + t.u + '\')">✎</button></div>' +
+         '<div><a class="doclink" href="javascript:void 0" onclick="fichaActividad(\'' + t.u + '\')">#' + esc(t.i) + ' ' + esc(t.n) + '</a>' + (a && a.comentario ? '<div class="sub" style="margin:4px 0 0">' + esc(a.comentario) + '</div>' : '') + '</div></div>';
+  });
+  h += '</div></div>';
+  return h;
+}
+
+/* ==================================================================
+   5.4 RESTRICCIONES Y DESVIACIONES
+   ================================================================== */
+function renderRestricciones(){
+  const R = DB.programa.restricciones.slice().sort(function(a, b){ return (b.fecha||'').localeCompare(a.fecha||''); });
+  const abiertas = R.filter(function(r){ return r.estado !== 'Cerrada'; });
+  const diasAbiertos = abiertas.reduce(function(s, r){ return s + (Number(r.diasImpacto)||0); }, 0);
+  let h = '<div class="page-title"><h1>5.4 Restricciones y desviaciones</h1></div>' + prgNav('plan/restricciones');
+  h += '<div class="help"><b>¿Qué es esto?</b> Registro de todo lo que impide cumplir el programa: restricciones (accesos, permisos, suministros, ingeniería), desviaciones de plazo y cambios de alcance, con la actividad afectada, el impacto estimado en días, el responsable y la acción acordada. ' +
+       'Es la base del informe semanal y de las cartas de aviso al mandante. Lo registra el administrador.</div>';
+  h += '<div class="grid kpis" style="margin-bottom:14px">' + kpi('Abiertas', abiertas.length, 'restricciones sin cerrar', abiertas.length ? 'warn' : 'good') + kpi('Impacto acumulado', diasAbiertos + ' d', 'días estimados (abiertas)', diasAbiertos ? 'bad' : '') + kpi('Cerradas', R.length - abiertas.length, 'resueltas', '') + '</div>';
+  h += '<div class="toolbar"><button class="btn primary" onclick="formRestriccion()">+ Nueva restricción / desviación</button><button class="btn" onclick="exportarRestrCSV()">↓ Exportar CSV</button></div>';
+  if(!R.length) h += '<div class="card"><div class="empty-state"><div class="big">✔</div>Sin restricciones registradas.</div></div>';
+  else {
+    h += '<div class="tbl-wrap"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Descripción</th><th>Actividad afectada</th><th>Impacto</th><th class="num">Días</th><th>Responsable</th><th>Acción</th><th>Estado</th><th></th></tr></thead><tbody>';
+    R.forEach(function(r){
+      const t = PRG.porUID[r.actividad];
+      h += '<tr><td>' + fmtFecha(r.fecha) + '</td><td>' + esc(r.tipo) + '</td><td class="wrap">' + esc(r.descripcion) + '</td>' +
+           '<td class="wrap">' + (t ? '<a class="doclink" href="javascript:void 0" onclick="fichaActividad(\'' + t.u + '\')">#' + esc(t.i) + ' ' + esc(recorta(t.n, 50)) + '</a>' : '—') + '</td>' +
+           '<td>' + esc(r.impacto) + '</td><td class="num">' + (r.diasImpacto || '—') + '</td><td>' + esc(r.responsable || '—') + '</td><td class="wrap">' + esc(r.accion || '—') + '</td>' +
+           '<td>' + pill(r.estado === 'Cerrada' ? 'ok' : r.estado === 'En gestión' ? 'warn' : 'bad', r.estado + (r.fechaCierre ? ' ' + fmtFecha(r.fechaCierre) : '')) + '</td>' +
+           '<td style="white-space:nowrap"><button class="btn sm" onclick="formRestriccion(\'' + r.id + '\')">Editar</button> <button class="btn sm danger" onclick="eliminarRestriccion(\'' + r.id + '\')">✕</button></td></tr>';
+    });
+    h += '</tbody></table></div>';
+  }
+  return h;
+}
+function formRestriccion(id){
+  const r = DB.programa.restricciones.filter(function(x){ return x.id === id; })[0] || { fecha:hoyISO(), tipo:'Restricción', descripcion:'', actividad:'', impacto:'Plazo', diasImpacto:0, responsable:'', accion:'', estado:'Abierta', fechaCierre:'' };
+  const opAct = '<option value="">— Sin actividad específica —</option>' + PROGRAMA_TAREAS.filter(function(t){ return !t.S; }).map(function(t){ return '<option value="' + t.u + '"' + (r.actividad === t.u ? ' selected' : '') + '>#' + t.i + ' ' + esc(recorta(t.n, 70)) + '</option>'; }).join('');
+  abrirModal(
+    '<div class="modal-head"><h2>' + (id ? 'Editar' : 'Nueva') + ' restricción / desviación</h2><button class="x" onclick="cerrarModal()" aria-label="Cerrar">×</button></div>' +
+    '<div class="modal-body"><div class="fgrid">' +
+      '<div class="field"><label class="f">Fecha de detección</label><input class="inp" id="rFecha" type="date" value="' + attr(r.fecha) + '"></div>' +
+      '<div class="field"><label class="f">Tipo</label><select class="inp" id="rTipo">' + opciones(TIPOS_RESTR, r.tipo) + '</select></div>' +
+      '<div class="field"><label class="f">Impacto principal</label><select class="inp" id="rImp">' + opciones(['Plazo','Costo','Seguridad','Calidad','Alcance'], r.impacto) + '</select></div>' +
+      '<div class="field"><label class="f">Días de impacto estimados</label><input class="inp" id="rDias" type="number" min="0" value="' + attr(r.diasImpacto) + '"></div>' +
+      '<div class="field"><label class="f">Responsable de la gestión</label><input class="inp" id="rResp" value="' + attr(r.responsable) + '"></div>' +
+      '<div class="field"><label class="f">Estado</label><select class="inp" id="rEst">' + opciones(EST_RESTR, r.estado) + '</select></div>' +
+      '<div class="field"><label class="f">Fecha de cierre</label><input class="inp" id="rCierre" type="date" value="' + attr(r.fechaCierre) + '"></div>' +
+    '</div>' +
+    '<div class="field"><label class="f">Actividad del programa afectada</label><select class="inp" id="rAct">' + opAct + '</select></div>' +
+    '<div class="field"><label class="f">Descripción</label><textarea class="inp" id="rDesc">' + esc(r.descripcion) + '</textarea></div>' +
+    '<div class="field"><label class="f">Acción acordada / plan de recuperación</label><textarea class="inp" id="rAcc">' + esc(r.accion) + '</textarea></div>' +
+    '</div>' +
+    '<div class="modal-foot"><button class="btn" onclick="cerrarModal()">Cancelar</button><button class="btn primary" onclick="guardarRestriccion(\'' + (id||'') + '\')">Guardar</button></div>');
+}
+function guardarRestriccion(id){
+  const desc = valorCampo('rDesc').trim(); if(!desc){ toast('Describa la restricción.', 'bad'); return; }
+  const obj = { id: id || uid(), fecha:valorCampo('rFecha'), tipo:valorCampo('rTipo'), descripcion:desc, actividad:valorCampo('rAct'), impacto:valorCampo('rImp'),
+                diasImpacto:Number(valorCampo('rDias'))||0, responsable:valorCampo('rResp'), accion:valorCampo('rAcc'), estado:valorCampo('rEst'), fechaCierre:valorCampo('rCierre') };
+  if(obj.estado === 'Cerrada' && !obj.fechaCierre) obj.fechaCierre = hoyISO();
+  const i = DB.programa.restricciones.map(function(x){ return x.id; }).indexOf(obj.id);
+  if(i >= 0) DB.programa.restricciones[i] = obj; else DB.programa.restricciones.push(obj);
+  guardarDB(); cerrarModal(); render(); toast('Restricción guardada.', 'ok');
+}
+function eliminarRestriccion(id){
+  confirmar('Eliminar restricción', '<p>¿Eliminar este registro? No se puede deshacer.</p>', function(){
+    DB.programa.restricciones = DB.programa.restricciones.filter(function(x){ return x.id !== id; }); guardarDB(); render(); toast('Registro eliminado.', 'ok');
+  });
+}
+function exportarRestrCSV(){
+  const filas = [['Fecha','Tipo','Descripción','Actividad','Impacto','Días','Responsable','Acción','Estado','Cierre']];
+  DB.programa.restricciones.forEach(function(r){ const t = PRG.porUID[r.actividad]; filas.push([r.fecha, r.tipo, r.descripcion, t ? '#' + t.i + ' ' + t.n : '', r.impacto, r.diasImpacto, r.responsable, r.accion, r.estado, r.fechaCierre]); });
+  descargar('restricciones_' + hoyISO() + '.csv', '﻿' + filas.map(function(f){ return f.map(function(c){ return '"' + String(c==null?'':c).replace(/"/g,'""') + '"'; }).join(';'); }).join('\r\n'), 'text/csv;charset=utf-8');
+}
+
+/* ==================================================================
+   5.5 INFORME SEMANAL
+   ================================================================== */
+function renderInforme(){
+  const corte = fechaCorte(), plan = totalPlan(corte), real = totalReal(), desv = Math.round((real - plan) * 10) / 10;
+  const semIni = prgISO(new Date(prgMs(corte) - 6*86400000));
+  const act = PRG.hojas.filter(function(t){ return !t.M; });
+  const atrasadas = act.filter(function(t){ return estadoActividad(t, corte).id === 'atrasada'; }).sort(function(a,b){ return (pctReal(a)-pctPlan(a,corte)) - (pctReal(b)-pctPlan(b,corte)); });
+  const enCurso = act.filter(function(t){ return estadoActividad(t, corte).id === 'curso'; });
+  const cerradas = act.filter(function(t){ const a = avanceDe(t); return a && a.pct >= 100 && a.fecha >= semIni; });
+  const proxHitos = PRG.hitos.filter(function(t){ const e = estadoActividad(t, corte).id; return e !== 'completada' && prgMs(t.s) <= prgMs(corte) + 28*86400000; }).sort(function(a,b){ return a.s.localeCompare(b.s); });
+  const prox2 = act.filter(function(t){ const e = estadoActividad(t, corte).id; return e === 'pendiente' && prgMs(t.s) > prgMs(corte) && prgMs(t.s) <= prgMs(corte) + 14*86400000; }).sort(function(a,b){ return a.s.localeCompare(b.s); });
+  const restr = DB.programa.restricciones.filter(function(r){ return r.estado !== 'Cerrada'; });
+  const c = DB.contrato;
+  let h = '<div class="page-title"><h1>5.5 Informe semanal de avance</h1></div>' + prgNav('plan/informe');
+  h += '<div class="help no-print"><b>¿Qué es esto?</b> Resumen listo para la reunión semanal con el mandante, generado con los datos registrados: avance plan vs. real a la fecha de corte, actividades atrasadas y en curso, hitos próximos, restricciones abiertas y lo que viene en las próximas dos semanas. ' +
+       'Use <b>Imprimir / PDF</b> para emitirlo.</div>';
+  h += '<div class="toolbar no-print"><button class="btn primary" onclick="window.print()">🖨 Imprimir / guardar PDF</button><span class="spacer"></span><span style="font-size:12px;color:var(--text-2)">Fecha de corte: ' + fmtFecha(corte) + ' (se cambia en 5.2)</span></div>';
+  h += '<div class="card card-pad informe">';
+  h += '<div class="inf-cab"><div><div class="sub" style="margin:0">' + esc(c.contratista) + ' · Oficina Técnica</div><h2 style="font-size:17px;margin:2px 0">Informe semanal de avance — ' + esc(c.proyecto) + '</h2><div class="sub" style="margin:0">' + esc(c.mandante) + (c.nContrato ? ' · Contrato ' + esc(c.nContrato) : '') + ' · Semana ' + fmtFecha(semIni) + ' al ' + fmtFecha(corte) + '</div></div>' +
+       '<div style="text-align:right"><div class="sub" style="margin:0">Avance real</div><div style="font-size:30px;font-weight:700;color:' + (desv < 0 ? 'var(--bad)' : 'var(--ok)') + '">' + real + ' %</div><div class="sub" style="margin:0">plan ' + plan + ' % · desv. ' + (desv > 0 ? '+' : '') + desv + ' pts</div></div></div>';
+  h += '<div class="grid cols2" style="margin-top:12px"><div>' + svgCurvaS() + '</div><div>' +
+       '<h3>Avance por etapa</h3><table style="font-size:12px"><thead><tr><th>Etapa</th><th>Plan</th><th>Real</th></tr></thead><tbody>' +
+       PRG.etapas.map(function(e, i){ const p = pctPlan(e, corte), r = pctReal(e); if(!p && !r) return ''; return '<tr><td class="wrap">' + String(i+1).padStart(2,'0') + ' ' + esc(PROGRAMA_ETAPAS_META[i][1]) + '</td><td>' + barraPct(p, '#17658d') + '</td><td>' + barraPct(r, '#25703c') + '</td></tr>'; }).join('') + '</tbody></table></div></div>';
+  h += '<div class="sec"><h3>1. Actividades atrasadas (' + atrasadas.length + ')</h3>' + (atrasadas.length ? '<table style="font-size:12px"><thead><tr><th>N°</th><th>Actividad</th><th>Plan término</th><th>Plan %</th><th>Real %</th><th>Comentario</th></tr></thead><tbody>' +
+       atrasadas.slice(0, 40).map(function(t){ const a = avanceDe(t)||{}; return '<tr><td>#' + esc(t.i) + '</td><td class="wrap">' + esc(t.n) + '</td><td>' + fmtCorta(t.f) + '</td><td>' + pctPlanHoja(t, corte) + '</td><td>' + pctRealHoja(t) + '</td><td class="wrap">' + esc(a.comentario||'') + '</td></tr>'; }).join('') + '</tbody></table>' : '<p class="sub">Sin atrasos a la fecha de corte.</p>') + '</div>';
+  h += '<div class="sec"><h3>2. Actividades en curso (' + enCurso.length + ') y cerradas en la semana (' + cerradas.length + ')</h3>' +
+       (enCurso.length ? '<ul class="wip-list">' + enCurso.slice(0, 40).map(function(t){ return '<li>#' + esc(t.i) + ' ' + esc(t.n) + ' — ' + pctRealHoja(t) + ' % (plan ' + pctPlanHoja(t, corte) + ' %)</li>'; }).join('') + '</ul>' : '<p class="sub">Sin actividades en curso registradas.</p>') +
+       (cerradas.length ? '<p style="font-size:12.5px;margin:8px 0 0"><b>Cerradas esta semana:</b> ' + cerradas.map(function(t){ return '#' + esc(t.i) + ' ' + esc(t.n); }).join('; ') + '.</p>' : '') + '</div>';
+  h += '<div class="sec"><h3>3. Hitos próximos y vencidos</h3>' + (proxHitos.length ? '<ul class="wip-list">' + proxHitos.map(function(t){ const e = estadoActividad(t, corte); return '<li>' + fmtCorta(t.s) + ' — #' + esc(t.i) + ' ' + esc(t.n) + ' ' + pillEstado2(e) + '</li>'; }).join('') + '</ul>' : '<p class="sub">Sin hitos en las próximas 4 semanas.</p>') + '</div>';
+  h += '<div class="sec"><h3>4. Restricciones y desviaciones abiertas (' + restr.length + ')</h3>' + (restr.length ? '<table style="font-size:12px"><thead><tr><th>Fecha</th><th>Tipo</th><th>Descripción</th><th>Impacto</th><th>Responsable</th><th>Acción</th></tr></thead><tbody>' +
+       restr.map(function(r){ return '<tr><td>' + fmtFecha(r.fecha) + '</td><td>' + esc(r.tipo) + '</td><td class="wrap">' + esc(r.descripcion) + '</td><td>' + esc(r.impacto) + (r.diasImpacto ? ' · ' + r.diasImpacto + ' d' : '') + '</td><td>' + esc(r.responsable||'') + '</td><td class="wrap">' + esc(r.accion||'') + '</td></tr>'; }).join('') + '</tbody></table>' : '<p class="sub">Sin restricciones abiertas.</p>') + '</div>';
+  h += '<div class="sec"><h3>5. Próximas dos semanas — actividades que inician (' + prox2.length + ')</h3>' + (prox2.length ? '<ul class="wip-list">' + prox2.slice(0, 40).map(function(t){ return '<li>' + fmtCorta(t.s) + ' — #' + esc(t.i) + ' ' + esc(t.n) + (t.r && t.r.length ? ' <span class="sub" style="display:inline">(' + esc(t.r.join(', ')) + ')</span>' : '') + '</li>'; }).join('') + '</ul>' : '<p class="sub">Sin inicios programados en el periodo.</p>') + '</div>';
+  h += '<div class="sec" style="font-size:11.5px;color:var(--text-3)">Fuente: ' + esc(PROGRAMA_META.fuente) + ' (guardado ' + fmtCorta(PROGRAMA_META.guardado) + '). Avance plan ponderado por horas de trabajo; avance real según registros de la oficina técnica. Emitido ' + fmtFecha(hoyISO()) + (c.jefeOT ? ' · ' + esc(c.jefeOT) : '') + '.</div>';
+  h += '</div>';
+  return h;
 }
 /* ==================================================================
    ===============  VISTA 1.4 — ESTADÍSTICAS DE INGENIERÍA  =========

@@ -64,7 +64,8 @@ const FUNCIONES_EDICION = [
   'formComentario','guardarComentario','eliminarComentario',
   'formTerreno','guardarTerreno','formDiscrepancia','guardarDiscrepancia','eliminarDiscrepancia',
   'guardarFichaCircuito','guardarContrato','guardarParams',
-  'dialogoCargaMasiva','procesarCargaMasiva','importarJSON','recargarBase','limpiarEjemplo','borrarTodo'
+  'dialogoCargaMasiva','procesarCargaMasiva','importarJSON','recargarBase','limpiarEjemplo','borrarTodo',
+  'formAvance','guardarAvance','eliminarAvance','formRestriccion','guardarRestriccion','eliminarRestriccion','guardarFechaCorte'
 ];
 
 /* SHA-256 (WebCrypto si existe; si no, implementación propia para file://) */

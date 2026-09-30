@@ -301,6 +301,43 @@ body.lectura .solo-admin{display:none!important}
 .sim-card p{margin:0;font-size:12.5px;color:var(--text-2)}
 .sim-card .sim-src{font-size:11.5px;color:var(--text-3)}
 .sim-card .toolbar{margin:auto 0 0}
+/* módulo 05: carta Gantt, avance, informe */
+.gantt{border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);overflow:auto;max-height:calc(100vh - 120px);scrollbar-width:thin}
+.g-row{display:flex;width:max-content;min-width:100%}
+.g-row.g-head{position:sticky;top:0;z-index:4}
+.g-izq{position:sticky;left:0;z-index:2;flex:0 0 380px;width:380px;background:var(--surface);border-right:1px solid var(--border);box-sizing:border-box}
+.g-row.g-res .g-izq{background:var(--surface-2)}
+.g-der{flex:0 0 auto}
+.g-cab{background:var(--surface-2);border-bottom:1px solid var(--border);height:34px;display:flex;align-items:center;font-size:11px;font-weight:650;text-transform:uppercase;letter-spacing:.3px;color:var(--text-2);padding:0 10px;white-space:nowrap;box-sizing:border-box}
+.g-izq.g-cab{z-index:5}
+.g-der.g-cab{padding:0;flex-wrap:wrap;height:auto;min-height:34px;align-items:stretch}
+.g-mes{border-right:1px solid var(--border);text-align:center;font-size:11px;padding:3px 0 2px;box-sizing:border-box;text-transform:none;letter-spacing:0;flex:0 0 auto}
+.g-semanas{display:flex;width:100%;border-top:1px solid var(--border)}
+.g-sem{border-right:1px solid var(--border);text-align:center;font-size:9.5px;font-weight:500;color:var(--text-3);box-sizing:border-box;flex:0 0 auto}
+.g-fila{height:34px;display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--border);cursor:pointer;font-size:12.5px;white-space:nowrap;overflow:hidden;padding-right:8px}
+.g-row:hover .g-izq,.g-row:hover .g-linea{background-color:var(--surface-3)}
+.g-row.g-res .g-fila{font-weight:650}
+.g-tog{flex:0 0 16px;width:16px;height:16px;border:1px solid var(--border-2);border-radius:3px;background:var(--surface);font-size:11px;line-height:1;cursor:pointer;padding:0;color:var(--text-2)}
+.g-row:not(.g-res) .g-tog{border:0;background:none}
+.g-nom{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.g-sub{flex:0 0 auto;font-size:10.5px;color:var(--text-3);font-weight:400}
+.g-linea{position:relative;height:34px;border-bottom:1px solid var(--border);cursor:pointer;background-image:linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:90px 100%}
+.g-barra{position:absolute;top:9px;height:16px;border-radius:3px;border:1px solid;box-sizing:border-box;overflow:hidden}
+.g-barra.g-resumen{top:12px;height:8px;border:0;border-radius:2px}
+.g-barra.g-crit{outline:2px solid var(--bad);outline-offset:1px}
+.g-real{position:absolute;left:0;top:0;bottom:0;background:rgba(0,0,0,.35)}
+.g-resumen .g-real{background:rgba(255,255,255,.55)}
+.g-pct{position:absolute;left:5px;top:0;line-height:14px;font-size:10px;font-weight:700;color:#fff;text-shadow:0 0 2px rgba(0,0,0,.6)}
+.g-hito{position:absolute;top:11px;width:10px;height:10px;transform:rotate(45deg);border:2px solid;background:var(--surface);box-sizing:border-box}
+.g-corte{position:absolute;top:0;bottom:0;width:0;border-left:2px dashed var(--bad);z-index:1;pointer-events:none}
+.pbar{position:relative;width:90px;height:14px;background:var(--surface-3);border-radius:3px;overflow:hidden;font-size:10.5px;line-height:14px}
+.pbar div{position:absolute;left:0;top:0;bottom:0}
+.pbar span{position:relative;padding-left:5px;color:var(--text);font-weight:600}
+.informe h3{margin-top:0}
+.inf-cab{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;border-bottom:2px solid var(--accent);padding-bottom:10px}
+.informe table{width:100%}
+.informe .sec{margin-top:14px;padding-top:12px}
+@media print{.no-print,.help,.sidebar,.topbar,.toolbar,.fsbar{display:none!important}.content{padding:0}.card{box-shadow:none;border:0}.informe .card{border:0}body{background:#fff}}
 /* explorador de carpeta de calidad (Drive) */
 .migas{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:13px;margin:0 0 10px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm)}
 .migas a{text-decoration:none;color:var(--accent-2)}
@@ -330,6 +367,7 @@ body.lectura .solo-admin{display:none!important}
 .wip-list li{margin-bottom:4px}
 
 @media (max-width:860px){
+  .g-izq{flex-basis:230px;width:230px}
   .sidebar{position:fixed;z-index:80;left:0;top:0;transform:translateX(-100%);box-shadow:var(--shadow)}
   .sidebar.open{transform:none}
   .hamb{display:grid;place-items:center}
