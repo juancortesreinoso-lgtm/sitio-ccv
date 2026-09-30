@@ -513,6 +513,7 @@ const EMISORES_POR_PREFIJO = [
 /* ---- Simuladores 3D (archivos independientes en la subcarpeta "simuladores") ----
    Cada simulador es un HTML autónomo. Para agregar otro: copie el archivo a la
    carpeta simuladores/ y sume una fila aquí. */
+const DOCS_CONTRACTUALES_URL = 'https://onedrive.live.com/shared?id=%2Fpersonal%2Fc88a64b78aebfbee%2FDocuments%2FCCV%2F03%2E%20OFICINA%20TECNICA%2F07%2E%20Documentos%20contractuales&listurl=%2Fpersonal%2Fc88a64b78aebfbee%2FDocuments&viewid=681b2fe9%2Da725%2D4921%2Dad03%2Db85477106f85&ithint=folder&migratedtospo=true&ga=1';
 const OFERTA_ARCHIVO = 'oferta/Control_Oferta_ECO_Cicloconvertidor_Rev2_3.html';
 const SIMULADORES = [
   { id:'molino',    archivo:'simuladores/Simulador_Molino_Siemens.html', icono:'⚙️',
@@ -701,9 +702,10 @@ function contratoPorDefecto(){
     fechaAdjudicacion: '2026-09-15',
     fechaAceptacion: '2026-09-15',
     plazoFirmaDias: 5,
-    fechaInicio: '',
-    fechaTermino:'',
+    fechaInicio: '2026-10-09',
+    fechaTermino:'2027-10-08',
     adminContrato:'Javier Cornejo',
+    carpetaContractual: DOCS_CONTRACTUALES_URL,
     representanteLegal: 'David Mies Moreno — Gerente General',
     contactoMandante: 'Gerardo Quintana O. — Ingeniero Especialista, Depto. de Abastecimiento Codelco Andina',
     rutContratista: '79.532.470-4',
@@ -725,6 +727,8 @@ function migrarContrato(c){
   if(c.contratista === 'MIES' || !c.contratista) c.contratista = d.contratista;
   ['licitacion','fechaPropuesta','fechaAdjudicacion','fechaAceptacion','representanteLegal','contactoMandante','rutContratista','direccionContratista'].forEach(function(k){ if(!c[k]) c[k] = d[k]; });
   if(!c.plazoFirmaDias) c.plazoFirmaDias = d.plazoFirmaDias;
+  if(!c.fechaInicio && !c.fechaTermino){ c.fechaInicio = d.fechaInicio; c.fechaTermino = d.fechaTermino; }
+  if(!c.carpetaContractual) c.carpetaContractual = d.carpetaContractual;
   if(c.cartaAdjudicacionUrl === undefined) c.cartaAdjudicacionUrl = '';
   return c;
 }
@@ -803,6 +807,7 @@ function normalizarPrograma(p){
     fechaCorte: str(p.fechaCorte),
     avances: av,
     cortes: (p.cortes && typeof p.cortes === 'object') ? p.cortes : {},
+    docs: (function(){ const o = {}; Object.keys(p.docs || {}).forEach(function(k){ const d = p.docs[k] || {}; o[k] = { estado: str(d.estado), fechaDoc: str(d.fechaDoc), url: str(d.url), nota: str(d.nota), fecha: str(d.fecha), por: str(d.por) }; }); return o; })(),
     restricciones: Array.isArray(p.restricciones) ? p.restricciones.map(function(r){
       return { id: r.id || uid(), fecha: str(r.fecha), tipo: str(r.tipo) || 'Restricción', descripcion: str(r.descripcion),
                actividad: str(r.actividad), impacto: str(r.impacto) || 'Plazo', diasImpacto: Number(r.diasImpacto) || 0,
@@ -4337,7 +4342,7 @@ const FUNCIONES_EDICION = [
   'formTerreno','guardarTerreno','formDiscrepancia','guardarDiscrepancia','eliminarDiscrepancia',
   'guardarFichaCircuito','guardarContrato','guardarParams',
   'dialogoCargaMasiva','procesarCargaMasiva','importarJSON','recargarBase','limpiarEjemplo','borrarTodo',
-  'formAvance','guardarAvance','eliminarAvance','formRestriccion','guardarRestriccion','eliminarRestriccion','guardarFechaCorte'
+  'formAvance','guardarAvance','eliminarAvance','formDocContractual','guardarDocContractual','formRestriccion','guardarRestriccion','eliminarRestriccion','guardarFechaCorte'
 ];
 
 /* SHA-256 (WebCrypto si existe; si no, implementación propia para file://) */
@@ -4946,9 +4951,28 @@ const PROGRAMA_TAREAS = [
    administrador para la misma actividad tiene prioridad). Fuente: carta de
    adjudicación CW449427, Ref. 4600032755, Los Andes 15-09-2026. */
 const PROGRAMA_HECHOS = {
+  '185': { pct: 100, inicioReal: '2026-09-24', finReal: '2026-09-24', fecha: '2026-09-30', por: 'Documentos contractuales (OneDrive)',
+           comentario: 'Aviso de inicio de actividades SERNAGEOMIN (DS N°72) realizado el 24-09-2026: contrato 4600032755, inicio 09-10-2026, término 08-10-2027, dotación 55, administrador Javier Cornejo Alegría. Archivo en OneDrive 07. Documentos contractuales / 02. CARTA SERNAGEOMIN.' },
   '184': { pct: 100, inicioReal: '2026-09-15', finReal: '2026-09-15', fecha: '2026-09-15', por: 'Carta de adjudicación',
            comentario: 'Carta de adjudicación CW449427 (Ref. 4600032755) emitida por Codelco el 15-09-2026 y aceptada por MIES (David Mies Moreno) el mismo día. Administrador de contrato designado: Javier Cornejo. La carta autoriza trámites previos (acreditación, permisos) pero no el inicio de la ejecución.' }
 };
+
+/* Documentos contractuales esperados y su carpeta en OneDrive (07. Documentos contractuales).
+   'estado' es el resultado de la última verificación manual; el administrador puede
+   actualizarlo desde 5.3 (queda compartido para todos). */
+const DOCS_CONTRACTUALES = [
+  { id:'adjudicacion', n:'01', carpeta:'01. CARTA DE ADJUDICACION', doc:'Carta de adjudicación CW449427 (Ref. 4600032755)', hito:'184',
+    archivo:'CW449427_-_Carta_de_adjudicación_4600032755_M.pdf', estado:'encontrado', fechaDoc:'2026-09-15', verificado:'2026-09-30',
+    url:'https://onedrive.live.com/shared?listurl=%2Fpersonal%2Fc88a64b78aebfbee%2FDocuments&viewid=681b2fe9%2Da725%2D4921%2Dad03%2Db85477106f85&ga=1&id=%2Fpersonal%2Fc88a64b78aebfbee%2FDocuments%2FCCV%2F03%2E%20OFICINA%20TECNICA%2F07%2E%20Documentos%20contractuales%2F01%2E%20CARTA%20DE%20ADJUDICACION%2FCW449427_%2D_Carta_de_adjudicaci%C3%B3n_4600032755_M%2Epdf&parent=%2Fpersonal%2Fc88a64b78aebfbee%2FDocuments%2FCCV%2F03%2E%20OFICINA%20TECNICA%2F07%2E%20Documentos%20contractuales%2F01%2E%20CARTA%20DE%20ADJUDICACION', carpetaUrl:'https://onedrive.live.com/shared?id=%2Fpersonal%2Fc88a64b78aebfbee%2FDocuments%2FCCV%2F03%2E%20OFICINA%20TECNICA%2F07%2E%20Documentos%20contractuales%2F01%2E%20CARTA%20DE%20ADJUDICACION&listurl=%2Fpersonal%2Fc88a64b78aebfbee%2FDocuments&viewid=681b2fe9%2Da725%2D4921%2Dad03%2Db85477106f85&ithint=folder&migratedtospo=true&ga=1' },
+  { id:'sernageomin', n:'02', carpeta:'02. CARTA SERNAGEOMIN', doc:'Aviso de inicio de actividades SERNAGEOMIN (DS N°72, art. 21)', hito:'185',
+    archivo:'260924 MIES CODELCO DAND Formulario-Inicio-de-Actividades Cicloconvertidores.pdf', estado:'encontrado', fechaDoc:'2026-09-24', verificado:'2026-09-30',
+    url:'https://onedrive.live.com/shared?listurl=%2Fpersonal%2Fc88a64b78aebfbee%2FDocuments&viewid=681b2fe9%2Da725%2D4921%2Dad03%2Db85477106f85&ga=1&id=%2Fpersonal%2Fc88a64b78aebfbee%2FDocuments%2FCCV%2F03%2E%20OFICINA%20TECNICA%2F07%2E%20Documentos%20contractuales%2F02%2E%20CARTA%20SERNAGEOMIN%2F260924%20MIES%20CODELCO%20DAND%20Formulario%2DInicio%2Dde%2DActividades%20Cicloconvertidores%2Epdf&parent=%2Fpersonal%2Fc88a64b78aebfbee%2FDocuments%2FCCV%2F03%2E%20OFICINA%20TECNICA%2F07%2E%20Documentos%20contractuales%2F02%2E%20CARTA%20SERNAGEOMIN', carpetaUrl:'https://onedrive.live.com/shared?id=%2Fpersonal%2Fc88a64b78aebfbee%2FDocuments%2FCCV%2F03%2E%20OFICINA%20TECNICA%2F07%2E%20Documentos%20contractuales%2F02%2E%20CARTA%20SERNAGEOMIN&listurl=%2Fpersonal%2Fc88a64b78aebfbee%2FDocuments&viewid=681b2fe9%2Da725%2D4921%2Dad03%2Db85477106f85&ithint=folder&migratedtospo=true&ga=1' },
+  { id:'jornada', n:'03', carpeta:'03. JORNADA LABORAL', doc:'Resolución de jornada excepcional 7x7 (Dirección del Trabajo)', hito:'189',
+    archivo:'', estado:'faltante', fechaDoc:'', verificado:'2026-09-30', url:'', carpetaUrl:'https://onedrive.live.com/shared?id=%2Fpersonal%2Fc88a64b78aebfbee%2FDocuments%2FCCV%2F03%2E%20OFICINA%20TECNICA%2F07%2E%20Documentos%20contractuales%2F03%2E%20JORNADA%20LABORAL&listurl=%2Fpersonal%2Fc88a64b78aebfbee%2FDocuments&viewid=681b2fe9%2Da725%2D4921%2Dad03%2Db85477106f85&ithint=folder&migratedtospo=true&ga=1' },
+  { id:'contrato', n:'—', carpeta:'(sin carpeta aún)', doc:'Contrato firmado por ambas partes', hito:'217', archivo:'', estado:'sin-carpeta', fechaDoc:'', verificado:'2026-09-30', url:'', carpetaUrl:'' },
+  { id:'boleta', n:'—', carpeta:'(sin carpeta aún)', doc:'Boleta de garantía de fiel cumplimiento', hito:'187', archivo:'', estado:'sin-carpeta', fechaDoc:'', verificado:'2026-09-30', url:'', carpetaUrl:'' },
+  { id:'seguros', n:'—', carpeta:'(sin carpeta aún)', doc:'Pólizas de seguros del contrato', hito:'188', archivo:'', estado:'sin-carpeta', fechaDoc:'', verificado:'2026-09-30', url:'', carpetaUrl:'' }
+];
 /* ==================================================================
    ===============   05 PLANIFICACIÓN Y AVANCE            ===========
    ==================================================================
@@ -5006,6 +5030,7 @@ function combinarPrograma(base, local, version){
     if(!b || (a.fecha || '') >= (b.fecha || '')) r.avances[k] = a;
   });
   Object.keys(local.cortes || {}).forEach(function(f){ if(!(f in r.cortes)) r.cortes[f] = local.cortes[f]; });
+  Object.keys(local.docs || {}).forEach(function(k){ const a = local.docs[k], b = r.docs[k]; if(!b || (a.fecha || '') >= (b.fecha || '')) r.docs[k] = a; });
   (local.restricciones || []).forEach(function(x){
     const i = r.restricciones.map(function(y){ return y.id; }).indexOf(x.id);
     if(i >= 0) r.restricciones[i] = x; else r.restricciones.push(x);
@@ -5423,6 +5448,7 @@ function renderHitos(){
   h += '<div class="help"><b>¿Qué es esto?</b> Los ' + hitos.length + ' hitos del programa: los 10 de las Bases Técnicas (sección 15, cuadro de hitos: movilización día 30, sala eléctrica día 120, equipamiento día 150, tendido día 180, integración, parada de planta, puesta en marcha día 210, post-PEM y desmovilización día 365) y los hitos de inicio de contrato y de suministros. ' +
        'Un hito se marca cumplido con su fecha real desde la ficha (administrador). Vencido = fecha plan pasada sin cumplir a la fecha de corte.</div>';
   h += '<div class="grid kpis" style="margin-bottom:14px">' + kpi('Hitos', hitos.length, 'en el programa', '') + kpi('Cumplidos', cumplidos, 'con fecha real', 'good') + kpi('Vencidos', vencidos, 'a la fecha de corte ' + fmtFecha(corte), vencidos ? 'bad' : 'good') + kpi('Próximos 30 días', prox, 'pendientes por vencer', prox ? 'warn' : '') + '</div>';
+  h += tablaDocsContractuales(corte);
   h += '<div class="card"><div class="timeline" style="padding:16px 18px 16px 30px">';
   hitos.forEach(function(t){
     const e = estadoActividad(t, corte), a = avanceDe(t), dias = Math.round((prgMs(t.s) - prgMs(corte)) / 86400000);
@@ -5438,6 +5464,67 @@ function renderHitos(){
   });
   h += '</div></div>';
   return h;
+}
+
+/* ---------- documentos contractuales (OneDrive) ---------- */
+function docContractual(d){
+  const o = DB.programa.docs[d.id];
+  return o ? Object.assign({}, d, { estado: o.estado || d.estado, fechaDoc: o.fechaDoc || d.fechaDoc, url: o.url || d.url, nota: o.nota, verificado: (o.fecha || '').slice(0,10) || d.verificado, por: o.por }) : d;
+}
+function pillDoc(estado){
+  return estado === 'encontrado' ? pill('aprobado', '✓ Encontrado') : estado === 'faltante' ? pill('rechazado', '✗ No está en la carpeta') : estado === 'sin-carpeta' ? pill('recibido', '○ Sin carpeta / pendiente') : pill('recibido', esc(estado || 'Pendiente'));
+}
+function tablaDocsContractuales(corte){
+  const carpeta = DB.contrato.carpetaContractual || DOCS_CONTRACTUALES_URL;
+  const docs = DOCS_CONTRACTUALES.map(docContractual);
+  const ok = docs.filter(function(d){ return d.estado === 'encontrado'; }).length;
+  const ult = docs.map(function(d){ return d.verificado || ''; }).sort().slice(-1)[0];
+  let h = '<div class="card card-pad" style="margin-bottom:14px"><div class="toolbar" style="margin-bottom:8px"><h2 style="margin:0">Documentos contractuales en OneDrive</h2>' +
+          '<span class="sub" style="margin:0">' + ok + ' de ' + docs.length + ' documentos encontrados · última verificación ' + fmtFecha(ult) + '</span><span class="spacer"></span>' +
+          '<a class="btn sm primary" href="' + attr(carpeta) + '" target="_blank" rel="noopener">📂 Abrir carpeta "07. Documentos contractuales"</a></div>' +
+          '<p class="sub">Carpeta CCV / 03. OFICINA TECNICA / 07. Documentos contractuales (OneDrive, compartida por la administración). Cada documento respalda un hito de inicio del contrato: cuando está en su carpeta, el hito se da por cumplido con la fecha del documento. ' +
+          'OneDrive personal no permite leer la carpeta automáticamente desde la app; el administrador actualiza el estado con ✎ tras revisarla (queda compartido para todos).</p>';
+  h += '<div class="tbl-wrap"><table><thead><tr><th style="cursor:default">Documento</th><th style="cursor:default">Hito que respalda</th><th style="cursor:default">Estado</th><th style="cursor:default">Ver</th></tr></thead><tbody>';
+  docs.forEach(function(d){
+    const t = PRG.porUID[d.hito], e = t ? estadoActividad(t, corte) : null;
+    h += '<tr><td class="wrap" style="max-width:460px"><b>' + esc(d.doc) + '</b><div class="sub" style="margin:2px 0 0">📁 ' + esc(d.carpeta) + (d.archivo ? ' · <span class="mono" style="font-size:11px;word-break:break-all">' + esc(d.archivo) + '</span>' : '') + '</div>' + (d.nota ? '<div class="sub" style="margin:2px 0 0">' + esc(d.nota) + '</div>' : '') + '</td>' +
+         '<td class="wrap" style="max-width:300px">' + (t ? '<a class="doclink" href="javascript:void 0" onclick="fichaActividad(\'' + t.u + '\')">#' + esc(t.i) + ' ' + esc(t.n) + '</a><div style="margin-top:3px">' + pillEstado2(e) + ' <span class="sub" style="margin:0">plan ' + fmtCorta(t.s) + '</span></div>' : '—') + '</td>' +
+         '<td>' + pillDoc(d.estado) + (d.fechaDoc ? '<div class="sub" style="margin:3px 0 0">documento del ' + fmtFecha(d.fechaDoc) + '</div>' : '') + '</td>' +
+         '<td style="white-space:nowrap">' + (d.url ? '<a class="btn sm primary" href="' + attr(d.url) + '" target="_blank" rel="noopener">👁 Ver en línea</a> ' : '') +
+           (d.carpetaUrl ? '<a class="btn sm" href="' + attr(d.carpetaUrl) + '" target="_blank" rel="noopener">📂</a> ' : '') +
+           '<button class="btn sm solo-admin" onclick="formDocContractual(\'' + d.id + '\')">✎</button></td></tr>';
+  });
+  h += '</tbody></table></div></div>';
+  return h;
+}
+function formDocContractual(id){
+  const base = DOCS_CONTRACTUALES.filter(function(x){ return x.id === id; })[0]; if(!base) return;
+  const d = docContractual(base), t = PRG.porUID[d.hito];
+  abrirModal(
+    '<div class="modal-head"><h2>Documento contractual — ' + esc(d.doc) + '</h2><button class="x" onclick="cerrarModal()" aria-label="Cerrar">×</button></div>' +
+    '<div class="modal-body"><p class="sub">Carpeta esperada: <b>' + esc(d.carpeta) + '</b>' + (t ? ' · respalda el hito #' + esc(t.i) + ' ' + esc(t.n) + ' (plan ' + fmtCorta(t.s) + ')' : '') + '. Si lo marca como encontrado con fecha, el hito se registra como cumplido en esa fecha.</p>' +
+      '<div class="fgrid">' +
+        '<div class="field"><label class="f" for="dcEstado">Estado</label><select class="inp" id="dcEstado">' +
+          ['encontrado','faltante','sin-carpeta'].map(function(v){ return '<option value="' + v + '"' + (d.estado === v ? ' selected' : '') + '>' + (v === 'encontrado' ? 'Encontrado en la carpeta' : v === 'faltante' ? 'No está en la carpeta' : 'Sin carpeta / pendiente') + '</option>'; }).join('') + '</select></div>' +
+        '<div class="field"><label class="f" for="dcFecha">Fecha del documento</label><input class="inp" id="dcFecha" type="date" value="' + attr(d.fechaDoc) + '"></div>' +
+        '<div class="field"><label class="f" for="dcPor">Verificado por</label><input class="inp" id="dcPor" value="' + attr(d.por || DB.contrato.jefeOT || '') + '"></div>' +
+      '</div>' +
+      '<div class="field"><label class="f" for="dcUrl">Enlace para verlo en línea (OneDrive)</label><input class="inp" id="dcUrl" value="' + attr(d.url) + '" placeholder="https://onedrive.live.com/…"></div>' +
+      '<div class="field"><label class="f" for="dcNota">Nota</label><textarea class="inp" id="dcNota">' + esc(d.nota || '') + '</textarea></div>' +
+    '</div>' +
+    '<div class="modal-foot"><span class="spacer"></span><button class="btn" onclick="cerrarModal()">Cancelar</button>' +
+      '<button class="btn primary" onclick="guardarDocContractual(\'' + d.id + '\')">Guardar verificación</button></div>');
+}
+function guardarDocContractual(id){
+  const base = DOCS_CONTRACTUALES.filter(function(x){ return x.id === id; })[0]; if(!base) return;
+  const estado = valorCampo('dcEstado'), fechaDoc = valorCampo('dcFecha'), por = valorCampo('dcPor');
+  DB.programa.docs[id] = { estado: estado, fechaDoc: fechaDoc, url: valorCampo('dcUrl'), nota: valorCampo('dcNota'), fecha: hoyISO(), por: por };
+  const t = PRG.porUID[base.hito];
+  if(t && estado === 'encontrado' && fechaDoc){
+    DB.programa.avances[t.u] = { pct:100, inicioReal:fechaDoc, finReal:fechaDoc, comentario:'Respaldado por documento en OneDrive: ' + base.doc + (valorCampo('dcNota') ? ' — ' + valorCampo('dcNota') : ''), fecha:hoyISO(), por:por };
+    registrarCorte();
+  }
+  guardarPrograma(); cerrarModal(); render(); toast('Verificación guardada.', 'ok');
 }
 
 /* ==================================================================
@@ -5771,7 +5858,7 @@ function renderEstadisticas(){
    adjudicación → contrato firmado → boleta/seguros → KOM → acta de entrega de terreno. */
 function tarjetaEstadoContractual(){
   if(typeof PRG === 'undefined' || !PRG.porUID) return '';
-  const pasos = [['184','Carta de adjudicación'],['217','Contrato firmado'],['187','Boleta de garantía'],['189','Seguros del contrato'],['191','Reunión de inicio (KOM)'],['3','Acta de entrega de terreno']];
+  const pasos = [['184','Carta de adjudicación'],['217','Contrato firmado'],['187','Boleta de garantía'],['188','Seguros del contrato'],['190','Reunión de inicio (KOM)'],['3','Acta de entrega de terreno']];
   const corte = fechaCorte();
   let h = '<div class="card card-pad" style="margin-bottom:16px"><h2>Estado contractual <span class="sub" style="margin:0;font-weight:400">· hitos de inicio del contrato a la fecha de corte ' + fmtFecha(corte) + '</span></h2><div class="pasos">';
   pasos.forEach(function(pr){
@@ -5811,7 +5898,7 @@ function renderDashboard(){
       fila('ODS', ct.ods ? esc(ct.ods) : '<span style="color:var(--text-3)">no aplica (contrato adjudicado por licitación)</span>') +
       fila('Adjudicación', ct.fechaAdjudicacion ? 'Carta de adjudicación del ' + fmtFecha(ct.fechaAdjudicacion) + (ct.fechaAceptacion ? ', aceptada por MIES el ' + fmtFecha(ct.fechaAceptacion) : '') + (ct.fechaPropuesta ? ' · propuesta del ' + fmtFecha(ct.fechaPropuesta) : '') + (ct.cartaAdjudicacionUrl ? ' · <a class="doclink" href="' + attr(ct.cartaAdjudicacionUrl) + '" target="_blank" rel="noopener">ver carta ↗</a>' : '') : '<span style="color:var(--text-3)">por completar</span>') +
       fila('Plazo del contrato', (ct.fechaInicio || ct.fechaTermino)
-          ? (fmtFecha(ct.fechaInicio) + ' → ' + fmtFecha(ct.fechaTermino)) : '<span style="color:var(--text-3)">365 días desde el Acta de Entrega de Terreno · según programa ' + fmtFecha(PROGRAMA_META.inicio.slice(0,10)) + ' → ' + fmtFecha(PROGRAMA_META.fin.slice(0,10)) + ' (la carta de adjudicación no autoriza el inicio de la ejecución)</span>') +
+          ? (fmtFecha(ct.fechaInicio) + ' → ' + fmtFecha(ct.fechaTermino) + ' <span class="sub" style="margin:0">(365 días · según aviso de inicio de actividades SERNAGEOMIN del 24-09-2026 y programa)</span>') : '<span style="color:var(--text-3)">365 días desde el Acta de Entrega de Terreno · según programa ' + fmtFecha(PROGRAMA_META.inicio.slice(0,10)) + ' → ' + fmtFecha(PROGRAMA_META.fin.slice(0,10)) + ' (la carta de adjudicación no autoriza el inicio de la ejecución)</span>') +
       fila('Administrador de contrato', ct.adminContrato ? esc(ct.adminContrato) + ' <span class="sub" style="margin:0">(designado en la carta de adjudicación)</span>' : '<span style="color:var(--text-3)">por completar</span>') +
       fila('Representante legal', ct.representanteLegal ? esc(ct.representanteLegal) : '<span style="color:var(--text-3)">por completar</span>') +
       fila('Contraparte Codelco (adjudicación)', ct.contactoMandante ? esc(ct.contactoMandante) : '<span style="color:var(--text-3)">por completar</span>') +
@@ -5934,6 +6021,8 @@ function renderConfig(){
       campo('cJefeCal', 'Jefe de calidad', '<input class="inp" id="cJefeCal" value="' + attr(c.jefeCalidad) + '">', 'Responsable del PIE, protocolos y NCR.') +
       campo('cDrive', 'Carpeta del contrato en Google Drive (URL)', '<input class="inp" id="cDrive" value="' + attr(c.carpetaDrive) + '" placeholder="https://drive.google.com/drive/folders/…">',
         'Se abre con el botón "Drive" de la cabecera. Mantenga esta app y los PDF dentro de esa carpeta sincronizada con Google Drive para escritorio: así cada documento se abre con un clic desde cualquier PC.') +
+      campo('cContractual', 'Carpeta "07. Documentos contractuales" en OneDrive (URL)', '<input class="inp" id="cContractual" value="' + attr(c.carpetaContractual || '') + '" placeholder="https://onedrive.live.com/…">',
+        'Se abre desde 5.3 Hitos contractuales. Los enlaces de cada documento se editan en esa misma página (✎).') +
       campo('cCalidad', 'Carpeta de Calidad en Google Drive (URL)', '<input class="inp" id="cCalidad" value="' + attr(c.carpetaCalidad || '') + '" placeholder="https://drive.google.com/drive/folders/…">',
         'La muestra el Módulo 02 en modo lectura. La carpeta debe estar compartida como "Cualquier persona con el enlace: Lector" para que todos la vean.') +
       campo('cServCal', 'Servicio de lectura de la carpeta de Calidad (URL de Apps Script)', '<input class="inp" id="cServCal" value="' + attr(c.servicioCalidad || '') + '" placeholder="https://script.google.com/macros/s/…/exec">',
@@ -6000,6 +6089,7 @@ function guardarContrato(){
     adminContrato: valorCampo('cAdmin'), jefeOT: valorCampo('cJefeOT'), jefeCalidad: valorCampo('cJefeCal'),
     carpetaDrive: valorCampo('cDrive'),
     carpetaCalidad: valorCampo('cCalidad'),
+    carpetaContractual: valorCampo('cContractual'),
     servicioCalidad: valorCampo('cServCal')
   };
   CALIDAD.arbol = null;
