@@ -135,8 +135,12 @@ function escanearCarpeta(avisar){
     CARPETA.archivos = archivos; CARPETA.conectada = true; CARPETA.ultimaSync = new Date();
     const inf = sincronizarDocumentos(Object.keys(archivos));
     CARPETA.ultimoInforme = inf;
-    if(inf.nuevos.length || inf.revisiones.length || inf.vinculados.length){ guardarDB(); render(); }
-    else if(document.getElementById('content')) render();
+    /* Solo se vuelve a dibujar la pantalla si hubo cambios y estamos en una vista de
+       ingeniería o en el panel; nunca en la guía / simuladores (reiniciaría el 3D). */
+    const hayCambios = !!(inf.nuevos.length || inf.revisiones.length || inf.vinculados.length);
+    if(hayCambios){ guardarDB(); if(/^(ingenieria|dashboard)/.test(ESTADO_UI.ruta)) render(); }
+    else if(!CARPETA.pintadaUnaVez && /^(ingenieria|dashboard)/.test(ESTADO_UI.ruta)) render();
+    CARPETA.pintadaUnaVez = true;
     pintarEstadoCarpeta();
     if(avisar){
       const partes = [];

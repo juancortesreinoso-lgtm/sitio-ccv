@@ -168,7 +168,8 @@ function dialogoAdmin(){
       if(h === ADMIN_HASH){
         ADMIN.activo = true;
         try{ sessionStorage.setItem(ADMIN_SESION_KEY, h); }catch(e){}
-        sha256Hex('ccv-servidor|' + v).then(function(tk){ ADMIN.token = tk; try{ sessionStorage.setItem(ADMIN_TOKEN_KEY, tk); }catch(e){} });
+        sha256Hex('ccv-servidor|' + v).then(function(tk){ ADMIN.token = tk; try{ sessionStorage.setItem(ADMIN_TOKEN_KEY, tk); }catch(e){}
+          if(typeof subirPrograma === 'function' && DB.programa && DB.programa.pendiente) subirPrograma(); });
         cerrarModal(); render(); toast('🔓 Edición habilitada para esta pestaña. Pulse el botón de administrador para volver a bloquear.', 'ok', 6000);
       }else{
         ok.disabled = false; inp.value = ''; inp.focus();

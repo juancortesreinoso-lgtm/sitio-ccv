@@ -342,6 +342,7 @@ function normalizarPrograma(p){
   });
   return {
     version: Number(p.version) || 0,
+    pendiente: !!p.pendiente,
     fechaCorte: str(p.fechaCorte),
     avances: av,
     cortes: (p.cortes && typeof p.cortes === 'object') ? p.cortes : {},

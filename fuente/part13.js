@@ -29,33 +29,58 @@ function bajarPrograma(forzar){
     .then(function(j){
       if(!j || !j.ok) throw new Error((j && j.error) || 'respuesta inválida');
       SINC.error = ''; SINC.hora = new Date(); SINC.version = j.version || 0;
-      if(j.datos && (j.version || 0) >= (DB.programa.version || 0) && !SINC.pendiente){
+      if(DB.programa.pendiente){
+        /* hay registros locales que aún no se han subido: nunca se pisan. Se combinan con lo
+           compartido (gana el registro más reciente) y, si hay token, se suben ahora. */
+        if(j.datos) DB.programa = combinarPrograma(normalizarPrograma(j.datos), DB.programa, j.version || 0);
+        guardarDB();
+        if(ADMIN.token) return subirPrograma();
+        SINC.estado = 'error'; SINC.error = 'hay registros sin sincronizar: ingrese la clave de administrador para subirlos'; SINC.pendiente = true; pintarSinc(); return false;
+      }
+      if(j.datos && (j.version || 0) >= (DB.programa.version || 0)){
         const nuevo = normalizarPrograma(j.datos); nuevo.version = j.version || 0;
         const cambio = JSON.stringify(nuevo) !== JSON.stringify(DB.programa);
-        if(cambio){ DB.programa = nuevo; guardarDB(); if(/^plan/.test(ESTADO_UI.ruta)) render(); }
+        if(cambio){ DB.programa = nuevo; guardarDB(); if(/^plan/.test(ESTADO_UI.ruta) && !document.querySelector('#modalRoot .modal')) render(); }
       }
       SINC.estado = 'ok'; pintarSinc(); return true;
     })
     .catch(function(e){ SINC.estado = 'error'; SINC.error = String(e && e.message || e); pintarSinc(); return false; });
 }
+/* Combina lo compartido (base) con lo local no subido: por actividad gana el registro con fecha
+   de registro más reciente; las restricciones se unen por id; los cortes se unen. */
+function combinarPrograma(base, local, version){
+  const r = normalizarPrograma(base);
+  Object.keys(local.avances || {}).forEach(function(k){
+    const a = local.avances[k], b = r.avances[k];
+    if(!b || (a.fecha || '') >= (b.fecha || '')) r.avances[k] = a;
+  });
+  Object.keys(local.cortes || {}).forEach(function(f){ if(!(f in r.cortes)) r.cortes[f] = local.cortes[f]; });
+  (local.restricciones || []).forEach(function(x){
+    const i = r.restricciones.map(function(y){ return y.id; }).indexOf(x.id);
+    if(i >= 0) r.restricciones[i] = x; else r.restricciones.push(x);
+  });
+  if(local.fechaCorte && (!r.fechaCorte || local.fechaCorte > r.fechaCorte)) r.fechaCorte = local.fechaCorte;
+  r.version = version; r.pendiente = true;
+  return r;
+}
 function subirPrograma(){
   if(!servicioDatosOK()) return Promise.resolve(false);
-  if(!ADMIN.token){ SINC.estado = 'error'; SINC.error = 'sin token de administrador (vuelva a ingresar la clave)'; SINC.pendiente = true; pintarSinc(); return Promise.resolve(false); }
+  if(!ADMIN.token){ DB.programa.pendiente = true; guardarDB(); SINC.estado = 'error'; SINC.error = 'hay registros sin sincronizar: ingrese la clave de administrador (botón 🔒) para subirlos'; SINC.pendiente = true; pintarSinc(); return Promise.resolve(false); }
   SINC.estado = 'subiendo'; pintarSinc();
-  const datos = JSON.parse(JSON.stringify(DB.programa)); delete datos.version;
+  const datos = JSON.parse(JSON.stringify(DB.programa)); delete datos.version; delete datos.pendiente;
   return fetch(servicioDatos(), { method:'POST', redirect:'follow', headers:{ 'Content-Type':'text/plain;charset=utf-8' },
       body: JSON.stringify({ accion:'guardar', clave:'programa', token:ADMIN.token, datos:datos, por:(DB.contrato.jefeOT || '') }) })
     .then(function(r){ return r.json(); })
     .then(function(j){
       if(!j || !j.ok) throw new Error((j && j.error) || 'respuesta inválida');
-      DB.programa.version = j.version || 0; guardarDB();
+      DB.programa.version = j.version || 0; DB.programa.pendiente = false; guardarDB();
       SINC.estado = 'ok'; SINC.error = ''; SINC.pendiente = false; SINC.hora = new Date(); SINC.version = j.version || 0; pintarSinc();
       toast('Avance sincronizado para todos (versión ' + SINC.version + ').', 'ok', 2500); return true;
     })
-    .catch(function(e){ SINC.estado = 'error'; SINC.error = String(e && e.message || e); SINC.pendiente = true; pintarSinc();
+    .catch(function(e){ DB.programa.pendiente = true; guardarDB(); SINC.estado = 'error'; SINC.error = String(e && e.message || e); SINC.pendiente = true; pintarSinc();
       toast('Guardado en este navegador, pero no se pudo sincronizar (' + esc(SINC.error) + '). Se reintentará al guardar de nuevo.', 'bad', 6000); return false; });
 }
-function guardarPrograma(){ guardarDB(); subirPrograma(); }
+function guardarPrograma(){ DB.programa.pendiente = true; guardarDB(); subirPrograma(); }
 function pintarSinc(){
   const el = document.getElementById('sincEstado'); if(!el) return;
   el.innerHTML = textoSinc();
