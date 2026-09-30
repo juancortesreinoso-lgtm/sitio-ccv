@@ -354,6 +354,8 @@ body.lectura .solo-admin{display:none!important}
 .visor-doc{width:100%;height:calc(100vh - 190px);min-height:480px;border:0;display:block;background:#fff}
 .drive-frame{width:100%;height:calc(100vh - 260px);min-height:480px;border:0;display:block;background:#fff}
 .sim-frame{width:100%;height:calc(100vh - 150px);min-height:520px;border:1px solid var(--border);border-radius:var(--radius);background:#fff}
+.oferta-frame{height:calc(100vh - 230px);min-height:600px}
+@media print{.oferta-frame{display:none}}
 /* toast */
 #toasts{position:fixed;right:16px;bottom:16px;z-index:200;display:flex;flex-direction:column;gap:8px}
 .toast{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);
@@ -503,6 +505,7 @@ const EMISORES_POR_PREFIJO = [
 /* ---- Simuladores 3D (archivos independientes en la subcarpeta "simuladores") ----
    Cada simulador es un HTML autónomo. Para agregar otro: copie el archivo a la
    carpeta simuladores/ y sume una fila aquí. */
+const OFERTA_ARCHIVO = 'oferta/Control_Oferta_ECO_Cicloconvertidor_Rev2_3.html';
 const SIMULADORES = [
   { id:'molino',    archivo:'simuladores/Simulador_Molino_Siemens.html', icono:'⚙️',
     titulo:'Simulador del molino y cicloconvertidor Siemens',
@@ -573,7 +576,8 @@ const MENU = [
       { id: 'avance',  label: '5.2 Avance físico y curva S',         route: 'plan/avance',        render: 'renderAvance' },
       { id: 'hitos',   label: '5.3 Hitos contractuales',             route: 'plan/hitos',         render: 'renderHitos' },
       { id: 'restr',   label: '5.4 Restricciones y desviaciones',    route: 'plan/restricciones', render: 'renderRestricciones' },
-      { id: 'informe', label: '5.5 Informe semanal de avance',       route: 'plan/informe',       render: 'renderInforme' }
+      { id: 'informe', label: '5.5 Informe semanal de avance',       route: 'plan/informe',       render: 'renderInforme' },
+      { id: 'oferta',  label: '5.6 Control de oferta económica',     route: 'plan/oferta',        render: 'renderOferta' }
     ]
   },
   {
@@ -4949,7 +4953,7 @@ function bajarPrograma(forzar){
       if(j.datos && (j.version || 0) >= (DB.programa.version || 0)){
         const nuevo = normalizarPrograma(j.datos); nuevo.version = j.version || 0;
         const cambio = JSON.stringify(nuevo) !== JSON.stringify(DB.programa);
-        if(cambio){ DB.programa = nuevo; guardarDB(); if(/^plan/.test(ESTADO_UI.ruta) && !document.querySelector('#modalRoot .modal')) render(); }
+        if(cambio){ DB.programa = nuevo; guardarDB(); if(/^plan/.test(ESTADO_UI.ruta) && ESTADO_UI.ruta !== 'plan/oferta' && !document.querySelector('#modalRoot .modal')) render(); }
       }
       SINC.estado = 'ok'; pintarSinc(); return true;
     })
@@ -5152,7 +5156,7 @@ function guardarFechaCorte(v){
    5.1 CARTA GANTT
    ================================================================== */
 function prgNav(actual){
-  const items = [['plan/gantt','5.1 Carta Gantt'],['plan/avance','5.2 Avance y curva S'],['plan/hitos','5.3 Hitos'],['plan/restricciones','5.4 Restricciones'],['plan/informe','5.5 Informe semanal']];
+  const items = [['plan/gantt','5.1 Carta Gantt'],['plan/avance','5.2 Avance y curva S'],['plan/hitos','5.3 Hitos'],['plan/restricciones','5.4 Restricciones'],['plan/informe','5.5 Informe semanal'],['plan/oferta','5.6 Control de oferta']];
   return '<div class="toolbar" style="margin-bottom:12px">' + items.map(function(it){ return '<a class="btn sm' + (it[0] === actual ? ' primary' : '') + '" href="#/' + it[0] + '">' + esc(it[1]) + '</a>'; }).join('') +
     '<span class="spacer"></span><span id="sincEstado">' + textoSinc() + '</span><span style="font-size:11.5px;color:var(--text-3);margin-left:8px">Programa: ' + esc(PROGRAMA_META.fuente.replace(/\.xml$/i,'')) + ' · guardado ' + fmtCorta(PROGRAMA_META.guardado) + '</span></div>';
 }
@@ -5160,6 +5164,17 @@ function renderAvancePost(){ bajarPrograma(); }
 function renderHitosPost(){ bajarPrograma(); }
 function renderRestriccionesPost(){ bajarPrograma(); }
 function renderInformePost(){ bajarPrograma(); }
+function renderOferta(){
+  let h = '<div class="page-title"><h1>5.6 Control de oferta económica (formularios ECO)</h1></div>' + prgNav('plan/oferta');
+  h += '<div class="help"><b>¿Qué es esto?</b> Lectura de la oferta económica presentada (formularios ECO-00 a ECO-11, Rev 2): monto, composición del precio, ' +
+       'flujo de caja ofertado, reglas de pago, riesgos y decisiones pendientes. Es la línea base económica contra la que se controla el contrato; ' +
+       'los datos vienen del Excel de la oferta y no se editan aquí. La primera pestaña, <b>El contrato en una mirada</b>, resume todo en dos minutos.</div>';
+  h += '<div class="toolbar"><a class="btn sm primary" href="' + attr(OFERTA_ARCHIVO) + '" target="_blank" rel="noopener">⧉ Abrir en pestaña nueva (pantalla completa)</a>' +
+       '<span class="spacer"></span><span style="font-size:11.5px;color:var(--text-3)">Fuente: Form ECO Montaje cicloconvertidor Rev 2 27-08-2026.xlsx</span></div>';
+  h += '<iframe class="sim-frame oferta-frame" src="' + attr(OFERTA_ARCHIVO) + '" title="Control de oferta económica"></iframe>';
+  return h;
+}
+function renderOfertaPost(){}
 function filasGantt(){
   if(PRG_UI.colapsadas === null){ PRG_UI.colapsadas = {}; PROGRAMA_TAREAS.forEach(function(t){ if(t.S && t.l >= 3) PRG_UI.colapsadas[t.u] = true; }); }
   const q = PRG_UI.buscar.trim().toLowerCase(), corte = fechaCorte();
