@@ -385,6 +385,16 @@ body.lectura .solo-admin{display:none!important}
 .sdi-chip{display:flex;gap:6px;align-items:center;font-size:12px;text-decoration:none;color:var(--text);padding:4px 6px;border-radius:4px;background:var(--surface)}
 .sdi-chip:hover{background:var(--surface-2)}
 .sdi-chip span:last-child{color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.doc-galeria{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-top:8px}
+.doc-card{display:block;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--bg);text-decoration:none;color:var(--text);transition:box-shadow .15s}
+.doc-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.15)}
+.doc-thumb{position:relative;height:190px;background:#e9ecef;overflow:hidden}
+.doc-thumb iframe{width:200%;height:200%;border:0;transform:scale(.5);transform-origin:0 0;pointer-events:none;background:#fff}
+.doc-thumb-capa{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;font-size:12px;color:#fff;background:linear-gradient(transparent 60%,rgba(0,0,0,.45));opacity:0;transition:opacity .15s}
+.doc-card:hover .doc-thumb-capa{opacity:1}
+.doc-card-txt{display:flex;flex-direction:column;gap:2px;padding:8px 10px;font-size:12px}
+.doc-card-txt span{color:var(--text-2);font-size:11.5px}
+@media print{.doc-galeria{display:none}}
 @media print{.sdi-row .btn{display:none}}
 @media print{.oferta-frame{display:none}}
 /* toast */
@@ -5481,6 +5491,7 @@ function renderHitos(){
   h += '<div class="help"><b>¿Qué es esto?</b> Los ' + hitos.length + ' hitos del programa: los 10 de las Bases Técnicas (sección 15, cuadro de hitos: movilización día 30, sala eléctrica día 120, equipamiento día 150, tendido día 180, integración, parada de planta, puesta en marcha día 210, post-PEM y desmovilización día 365) y los hitos de inicio de contrato y de suministros. ' +
        'Un hito se marca cumplido con su fecha real desde la ficha (administrador). Vencido = fecha plan pasada sin cumplir a la fecha de corte.</div>';
   h += '<div class="grid kpis" style="margin-bottom:14px">' + kpi('Hitos', hitos.length, 'en el programa', '') + kpi('Cumplidos', cumplidos, 'con fecha real', 'good') + kpi('Vencidos', vencidos, 'a la fecha de corte ' + fmtFecha(corte), vencidos ? 'bad' : 'good') + kpi('Próximos 30 días', prox, 'pendientes por vencer', prox ? 'warn' : '') + '</div>';
+  h += galeriaDocsContractuales();
   h += tablaDocsContractuales(corte);
   h += bloqueNovedadesContractual();
   h += '<div class="card"><div class="timeline" style="padding:16px 18px 16px 30px">';
@@ -5814,6 +5825,31 @@ function bloqueNovedadesContractual(){
       CONTR.sueltos.map(function(s){ return '<tr><td>📄 ' + esc(s.nombre) + (s.esNuevo ? ' <span class="pill enrev"><span class="dot"></span>NUEVO</span>' : '') + '</td><td class="sub" style="margin:0">archivo en la raíz de la carpeta · ' + fmtFecha(String(s.mod || '').slice(0,10)) + '</td><td><button class="btn sm primary" onclick="verArchivoContractual(\'' + attr(s.url) + '\',\'' + attr(s.nombre) + '\')">👁</button></td></tr>'; }).join('') +
       '</tbody></table></div></div>';
   }
+  return h;
+}
+
+/* Galería con vista previa inmediata de los documentos encontrados (clic = abrir en grande) */
+function galeriaDocsContractuales(){
+  if(!carpetaContractualDriveId() || !CONTR.arbol) return '';
+  const items = [];
+  DOCS_CONTRACTUALES.forEach(function(base){
+    const d = docContractual(base), live = CONTR.docs[base.id];
+    if(live && live.estado === 'encontrado' && d.estado === 'encontrado'){
+      (live.archivos || []).forEach(function(a, i){
+        items.push({ url: urlVisor(a) || a.url, nombre: a.nombre, carpeta: d.carpeta, fecha: i === 0 ? d.fechaDoc : fechaDeArchivo(a) || String(a.mod || '').slice(0,10), titulo: d.doc, nuevo: d.esNuevo });
+      });
+    }
+  });
+  CONTR.otras.forEach(function(o){ o.archivos.forEach(function(a){ items.push({ url: urlVisor(a) || a.url, nombre: a.nombre, carpeta: o.nombre, fecha: fechaDeArchivo(a) || String(a.mod || '').slice(0,10), titulo: o.nombre, nuevo: o.esNuevo }); }); });
+  CONTR.sueltos.forEach(function(s){ items.push({ url: s.url, nombre: s.nombre, carpeta: '(raíz)', fecha: String(s.mod || '').slice(0,10), titulo: s.nombre, nuevo: s.esNuevo }); });
+  if(!items.length) return '';
+  let h = '<div class="card card-pad" style="margin-bottom:14px"><h2>Documentos en la carpeta <span class="sub" style="margin:0;font-weight:400">· ' + items.length + ' archivo(s) · vista previa inmediata, clic para abrir en grande</span></h2><div class="doc-galeria">';
+  items.forEach(function(it){
+    h += '<a class="doc-card" href="javascript:void 0" onclick="verArchivoContractual(\'' + attr(it.url) + '\',\'' + attr(it.nombre) + '\')" title="' + attr(it.nombre) + '">' +
+         '<div class="doc-thumb">' + (it.url ? '<iframe src="' + attr(it.url) + '" tabindex="-1" loading="lazy" title="' + attr(it.nombre) + '"></iframe>' : '<div class="empty-state">sin vista previa</div>') + '<div class="doc-thumb-capa">🔍 Ver en grande</div></div>' +
+         '<div class="doc-card-txt">' + (it.nuevo ? '<span class="pill enrev" style="float:right"><span class="dot"></span>NUEVO</span>' : '') + '<b>' + esc(it.titulo) + '</b><span>📁 ' + esc(it.carpeta) + ' · ' + fmtFecha(it.fecha) + '</span><span class="mono" style="font-size:10.5px;word-break:break-all">' + esc(it.nombre) + '</span></div></a>';
+  });
+  h += '</div></div>';
   return h;
 }
 /* ==================================================================
