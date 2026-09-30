@@ -5706,11 +5706,16 @@ function cargarContractual(forzar){
   if(CONTR.cargando) return Promise.resolve(false);
   if(!forzar && CONTR.hora && (Date.now() - CONTR.hora.getTime()) < 20000) return Promise.resolve(false);
   CONTR.cargando = true;
-  const u = servicioCalidad() + (servicioCalidad().indexOf('?') > 0 ? '&' : '?') + 'id=' + encodeURIComponent(id) + '&t=' + Date.now();
-  return fetch(u, { method:'GET', redirect:'follow', cache:'no-store' })
-    .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+  const urlDe = function(fid){ return servicioCalidad() + (servicioCalidad().indexOf('?') > 0 ? '&' : '?') + 'id=' + encodeURIComponent(fid) + '&t=' + Date.now(); };
+  const leer = function(fid){ return fetch(urlDe(fid), { method:'GET', redirect:'follow', cache:'no-store' }).then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }); };
+  return leer(id)
     .then(function(j){
       if(!j || !j.ok) throw new Error((j && j.error) || 'Respuesta inválida');
+      /* el servicio entrega solo un nivel por consulta: se leen las subcarpetas una a una */
+      const subs = (j.arbol.carpetas || []);
+      return Promise.all(subs.map(function(c){ return leer(c.id).then(function(k){ if(k && k.ok && k.arbol){ c.archivos = k.arbol.archivos || []; c.carpetas = k.arbol.carpetas || []; } return c; }).catch(function(){ return c; }); })).then(function(){ return j; });
+    })
+    .then(function(j){
       const firma = JSON.stringify(j.arbol);
       const cambio = firma !== CONTR.firma;
       CONTR.arbol = j.arbol; CONTR.firma = firma; CONTR.error = ''; CONTR.hora = new Date();
