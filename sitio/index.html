@@ -355,6 +355,14 @@ body.lectura .solo-admin{display:none!important}
 .drive-frame{width:100%;height:calc(100vh - 260px);min-height:480px;border:0;display:block;background:#fff}
 .sim-frame{width:100%;height:calc(100vh - 150px);min-height:520px;border:1px solid var(--border);border-radius:var(--radius);background:#fff}
 .oferta-frame{height:calc(100vh - 230px);min-height:600px}
+.pasos{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:8px}
+.paso{display:flex;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);text-decoration:none;color:var(--text);background:var(--bg)}
+.paso-ico{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;border:2px solid var(--accent);color:var(--accent);flex:none}
+.paso.ok .paso-ico{background:var(--ok);border-color:var(--ok);color:#fff}
+.paso.bad .paso-ico{background:var(--bad);border-color:var(--bad);color:#fff}
+.paso-txt{display:flex;flex-direction:column;min-width:0}
+.paso-txt b{font-size:12.5px}
+.paso-txt span{font-size:11.5px;color:var(--text-2)}
 @media print{.oferta-frame{display:none}}
 /* toast */
 #toasts{position:fixed;right:16px;bottom:16px;z-index:200;display:flex;flex-direction:column;gap:8px}
@@ -685,18 +693,40 @@ function contratoPorDefecto(){
   return {
     proyecto:    'Reemplazo de Cicloconvertidores — Molino SAG',
     mandante:    'CODELCO División Andina',
-    contratista: 'MIES',
-    nContrato:   '',
+    contratista: 'MIES SERVICIOS INDUSTRIALES LTDA',
+    nContrato:   '4600032755',
     ods:         '',
+    licitacion:  'CW449427',
+    fechaPropuesta: '2026-07-24',
+    fechaAdjudicacion: '2026-09-15',
+    fechaAceptacion: '2026-09-15',
+    plazoFirmaDias: 5,
     fechaInicio: '',
     fechaTermino:'',
-    adminContrato:'',
+    adminContrato:'Javier Cornejo',
+    representanteLegal: 'David Mies Moreno — Gerente General',
+    contactoMandante: 'Gerardo Quintana O. — Ingeniero Especialista, Depto. de Abastecimiento Codelco Andina',
+    rutContratista: '79.532.470-4',
+    direccionContratista: 'Av. Freire N.° 1320, Quilpué',
+    cartaAdjudicacionUrl: '',
     jefeOT:      '',
     jefeCalidad: '',
     carpetaDrive: CARPETA_DRIVE_URL,
     carpetaCalidad: CARPETA_CALIDAD_URL,
     servicioCalidad: ''
   };
+}
+/* Datos que vienen de la carta de adjudicación (CW449427, 15-09-2026): si un navegador
+   guardó la configuración antes de conocerlos, se completan los campos que sigan vacíos. */
+function migrarContrato(c){
+  const d = contratoPorDefecto();
+  if(!c.nContrato) c.nContrato = d.nContrato;
+  if(!c.adminContrato) c.adminContrato = d.adminContrato;
+  if(c.contratista === 'MIES' || !c.contratista) c.contratista = d.contratista;
+  ['licitacion','fechaPropuesta','fechaAdjudicacion','fechaAceptacion','representanteLegal','contactoMandante','rutContratista','direccionContratista'].forEach(function(k){ if(!c[k]) c[k] = d[k]; });
+  if(!c.plazoFirmaDias) c.plazoFirmaDias = d.plazoFirmaDias;
+  if(c.cartaAdjudicacionUrl === undefined) c.cartaAdjudicacionUrl = '';
+  return c;
 }
 function paramsPorDefecto(){
   return { plazoRevisionDias: 10, usarDiasHabiles: true };
@@ -745,7 +775,7 @@ function guardarDB(){
 function normalizarDB(obj){
   const base = dbVacia();
   const db = {
-    contrato: Object.assign(contratoPorDefecto(), (obj && obj.contrato) || {}),
+    contrato: migrarContrato(Object.assign(contratoPorDefecto(), (obj && obj.contrato) || {})),
     params:   Object.assign(paramsPorDefecto(),   (obj && obj.params)   || {}),
     correlativo: (obj && Number(obj.correlativo)) || 1,
     documentos: Array.isArray(obj && obj.documentos) ? obj.documentos : [],
@@ -4911,6 +4941,14 @@ const PROGRAMA_TAREAS = [
 {"u":"214","i":"204","n":"8.3 - Montaje de linea de alta y baja presión (5/8\"), c.a.g. 3/4, cable 4x1,5 mm2, soportación y fitting de sistema refrigeración / aire acondicionado","w":"1.10.2.3","l":4,"s":"2027-02-06T18:48:42","f":"2027-02-14T18:48:42","d":72.0,"k":144.0,"S":0,"M":0,"C":0,"p":"211","ph":"138","r":["MM Eléctrico","M1 Eléctrico"],"L":[{"p":"163","t":"1","g":0}],"sl":"1279913","ct":"0","cd":null},
 {"u":"221","i":"205","n":null,"w":"1.10.2.4","l":4,"s":"2026-10-09T09:00:00","f":"2026-10-09T18:00:00","d":8.0,"k":0.0,"S":0,"M":0,"C":0,"p":"211","ph":"138","r":[],"L":[],"sl":"1971600","ct":"0","cd":null}
 ];
+
+/* Hechos contractuales documentados (no editables desde la app; un registro del
+   administrador para la misma actividad tiene prioridad). Fuente: carta de
+   adjudicación CW449427, Ref. 4600032755, Los Andes 15-09-2026. */
+const PROGRAMA_HECHOS = {
+  '184': { pct: 100, inicioReal: '2026-09-15', finReal: '2026-09-15', fecha: '2026-09-15', por: 'Carta de adjudicación',
+           comentario: 'Carta de adjudicación CW449427 (Ref. 4600032755) emitida por Codelco el 15-09-2026 y aceptada por MIES (David Mies Moreno) el mismo día. Administrador de contrato designado: Javier Cornejo. La carta autoriza trámites previos (acreditación, permisos) pero no el inicio de la ejecución.' }
+};
 /* ==================================================================
    ===============   05 PLANIFICACIÓN Y AVANCE            ===========
    ==================================================================
@@ -5041,7 +5079,7 @@ function fmtH(h){ return Number(h).toLocaleString('es-CL', { maximumFractionDigi
 function fmtDias(h){ return Number(h / 8).toLocaleString('es-CL', { maximumFractionDigits:1 }) + ' d'; }
 
 /* ---------- avance ---------- */
-function avanceDe(t){ return DB.programa.avances[t.u] || null; }
+function avanceDe(t){ return DB.programa.avances[t.u] || (typeof PROGRAMA_HECHOS !== 'undefined' && PROGRAMA_HECHOS[t.u]) || null; }
 function pesoHoja(t){ if(t.M) return 0; return t.k > 0 ? t.k : (t.d > 0 ? t.d : 0); }
 function descendientesHoja(t){
   if(!t.S) return [t];
@@ -5729,6 +5767,24 @@ function renderEstadisticas(){
    ===============    VISTA 00 — PANEL DE CONTROL     ===============
    ================================================================== */
 
+/* Hitos de puesta en marcha del contrato (del programa, etapa "Gestión inicial"):
+   adjudicación → contrato firmado → boleta/seguros → KOM → acta de entrega de terreno. */
+function tarjetaEstadoContractual(){
+  if(typeof PRG === 'undefined' || !PRG.porUID) return '';
+  const pasos = [['184','Carta de adjudicación'],['217','Contrato firmado'],['187','Boleta de garantía'],['189','Seguros del contrato'],['191','Reunión de inicio (KOM)'],['3','Acta de entrega de terreno']];
+  const corte = fechaCorte();
+  let h = '<div class="card card-pad" style="margin-bottom:16px"><h2>Estado contractual <span class="sub" style="margin:0;font-weight:400">· hitos de inicio del contrato a la fecha de corte ' + fmtFecha(corte) + '</span></h2><div class="pasos">';
+  pasos.forEach(function(pr){
+    const t = PRG.porUID[pr[0]]; if(!t) return;
+    const e = estadoActividad(t, corte), a = avanceDe(t);
+    const cls = e.id === 'completada' ? 'ok' : e.id === 'atrasada' ? 'bad' : '';
+    h += '<a class="paso ' + cls + '" href="#/plan/hitos" title="' + attr(t.n) + '"><div class="paso-ico">' + (e.id === 'completada' ? '✓' : e.id === 'atrasada' ? '!' : '○') + '</div>' +
+         '<div class="paso-txt"><b>' + esc(pr[1]) + '</b><span>' + (e.id === 'completada' && a && a.finReal ? 'cumplido ' + fmtCorta(a.finReal) : e.id === 'atrasada' ? 'vencido · plan ' + fmtCorta(t.s) : 'plan ' + fmtCorta(t.s)) + '</span></div></a>';
+  });
+  h += '</div></div>';
+  return h;
+}
+
 function renderDashboard(){
   const docs = DB.documentos;
   const ct = DB.contrato;
@@ -5751,14 +5807,19 @@ function renderDashboard(){
       fila('Proyecto', esc(ct.proyecto)) +
       fila('Mandante', esc(ct.mandante)) +
       fila('Contratista / Oficina Técnica', esc(ct.contratista)) +
-      fila('N° de contrato', ct.nContrato ? esc(ct.nContrato) : '<span style="color:var(--text-3)">por completar en el Módulo 09</span>') +
-      fila('ODS', ct.ods ? esc(ct.ods) : '<span style="color:var(--text-3)">por completar</span>') +
+      fila('N° de contrato', ct.nContrato ? '<span class="mono">' + esc(ct.nContrato) + '</span>' + (ct.licitacion ? ' <span class="sub" style="margin:0">· licitación ' + esc(ct.licitacion) + '</span>' : '') : '<span style="color:var(--text-3)">por completar en el Módulo 09</span>') +
+      fila('ODS', ct.ods ? esc(ct.ods) : '<span style="color:var(--text-3)">no aplica (contrato adjudicado por licitación)</span>') +
+      fila('Adjudicación', ct.fechaAdjudicacion ? 'Carta de adjudicación del ' + fmtFecha(ct.fechaAdjudicacion) + (ct.fechaAceptacion ? ', aceptada por MIES el ' + fmtFecha(ct.fechaAceptacion) : '') + (ct.fechaPropuesta ? ' · propuesta del ' + fmtFecha(ct.fechaPropuesta) : '') + (ct.cartaAdjudicacionUrl ? ' · <a class="doclink" href="' + attr(ct.cartaAdjudicacionUrl) + '" target="_blank" rel="noopener">ver carta ↗</a>' : '') : '<span style="color:var(--text-3)">por completar</span>') +
       fila('Plazo del contrato', (ct.fechaInicio || ct.fechaTermino)
-          ? (fmtFecha(ct.fechaInicio) + ' → ' + fmtFecha(ct.fechaTermino)) : '<span style="color:var(--text-3)">por completar</span>') +
-      fila('Administrador de contrato', ct.adminContrato ? esc(ct.adminContrato) : '<span style="color:var(--text-3)">por completar</span>') +
+          ? (fmtFecha(ct.fechaInicio) + ' → ' + fmtFecha(ct.fechaTermino)) : '<span style="color:var(--text-3)">365 días desde el Acta de Entrega de Terreno · según programa ' + fmtFecha(PROGRAMA_META.inicio.slice(0,10)) + ' → ' + fmtFecha(PROGRAMA_META.fin.slice(0,10)) + ' (la carta de adjudicación no autoriza el inicio de la ejecución)</span>') +
+      fila('Administrador de contrato', ct.adminContrato ? esc(ct.adminContrato) + ' <span class="sub" style="margin:0">(designado en la carta de adjudicación)</span>' : '<span style="color:var(--text-3)">por completar</span>') +
+      fila('Representante legal', ct.representanteLegal ? esc(ct.representanteLegal) : '<span style="color:var(--text-3)">por completar</span>') +
+      fila('Contraparte Codelco (adjudicación)', ct.contactoMandante ? esc(ct.contactoMandante) : '<span style="color:var(--text-3)">por completar</span>') +
       fila('Jefe de oficina técnica', ct.jefeOT ? esc(ct.jefeOT) : '<span style="color:var(--text-3)">por completar</span>') +
       fila('Jefe de calidad', ct.jefeCalidad ? esc(ct.jefeCalidad) : '<span style="color:var(--text-3)">por completar</span>') +
     '</dl></div>';
+
+  html += tarjetaEstadoContractual();
 
   html += '<div class="grid kpis" style="margin-bottom:16px">' +
     kpi('Ingeniería recibida', total, 'Documentos en la matriz', '') +
@@ -5859,6 +5920,13 @@ function renderConfig(){
       campo('cContratista', 'Contratista / Oficina Técnica', '<input class="inp" id="cContratista" value="' + attr(c.contratista) + '">', '') +
       campo('cNContrato', 'N° de contrato', '<input class="inp" id="cNContrato" value="' + attr(c.nContrato) + '" placeholder="4600027889">', '') +
       campo('cOds', 'N° de ODS / orden de servicio', '<input class="inp" id="cOds" value="' + attr(c.ods) + '" placeholder="ODS-69">', '') +
+      campo('cLic', 'N° de licitación / carta de adjudicación', '<input class="inp" id="cLic" value="' + attr(c.licitacion || '') + '" placeholder="CW449427">', '') +
+      campo('cFProp', 'Fecha de la propuesta', '<input class="inp" id="cFProp" type="date" value="' + attr(c.fechaPropuesta || '') + '">', '') +
+      campo('cFAdj', 'Fecha de la carta de adjudicación', '<input class="inp" id="cFAdj" type="date" value="' + attr(c.fechaAdjudicacion || '') + '">', '') +
+      campo('cFAcep', 'Fecha de aceptación por el contratista', '<input class="inp" id="cFAcep" type="date" value="' + attr(c.fechaAceptacion || '') + '">', '') +
+      campo('cRepLegal', 'Representante legal del contratista', '<input class="inp" id="cRepLegal" value="' + attr(c.representanteLegal || '') + '">', '') +
+      campo('cContacto', 'Contraparte del mandante (adjudicación)', '<input class="inp" id="cContacto" value="' + attr(c.contactoMandante || '') + '">', '') +
+      campo('cCartaUrl', 'Carta de adjudicación (URL en Google Drive)', '<input class="inp" id="cCartaUrl" value="' + attr(c.cartaAdjudicacionUrl || '') + '" placeholder="https://drive.google.com/file/d/…/view">', 'Opcional: enlace al PDF firmado para abrirlo desde el Panel de Control.') +
       campo('cIni', 'Fecha de inicio', '<input class="inp" id="cIni" type="date" value="' + attr(c.fechaInicio) + '">', '') +
       campo('cTer', 'Fecha de término', '<input class="inp" id="cTer" type="date" value="' + attr(c.fechaTermino) + '">', '') +
       campo('cAdmin', 'Administrador de contrato', '<input class="inp" id="cAdmin" value="' + attr(c.adminContrato) + '">', 'Responsable contractual ante el mandante.') +
@@ -5925,6 +5993,9 @@ function guardarContrato(){
   DB.contrato = {
     proyecto: valorCampo('cProyecto'), mandante: valorCampo('cMandante'), contratista: valorCampo('cContratista'),
     nContrato: valorCampo('cNContrato'), ods: valorCampo('cOds'),
+    licitacion: valorCampo('cLic'), fechaPropuesta: valorCampo('cFProp'), fechaAdjudicacion: valorCampo('cFAdj'), fechaAceptacion: valorCampo('cFAcep'),
+    representanteLegal: valorCampo('cRepLegal'), contactoMandante: valorCampo('cContacto'), cartaAdjudicacionUrl: valorCampo('cCartaUrl'),
+    plazoFirmaDias: DB.contrato.plazoFirmaDias, rutContratista: DB.contrato.rutContratista, direccionContratista: DB.contrato.direccionContratista,
     fechaInicio: valorCampo('cIni'), fechaTermino: valorCampo('cTer'),
     adminContrato: valorCampo('cAdmin'), jefeOT: valorCampo('cJefeOT'), jefeCalidad: valorCampo('cJefeCal'),
     carpetaDrive: valorCampo('cDrive'),

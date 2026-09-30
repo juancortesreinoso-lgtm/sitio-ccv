@@ -879,7 +879,7 @@ function renderMirada() {
   renderCapDetail(B);
   // 2. Tiempo
   miradaTimeline();
-  $('#tiempoNota').innerHTML = `<span><b>Mes de mayor gasto:</b> ${esc(peak.mes)} (${fmtPct(peak.parcial_pct, 1)} del total, ${fmtCLP(peak.parcial)})</span><span>·</span><span><b>Al mes 6:</b> ${fmtPct(m[5].acum_pct, 1)} acumulado</span><span>·</span><span><b>Hitos contractuales y fechas:</b> <span class="pend">dato pendiente</span> (no están en los formularios ECO)</span><span>·</span><span class="badge warn">El flujo declarado suma ${fmtMM(D.eco09.base)}, ${fmtMM(D.eco09.base - T)} más que la oferta</span>`;
+  $('#tiempoNota').innerHTML = `<span><b>Mes de mayor gasto:</b> ${esc(peak.mes)} (${fmtPct(peak.parcial_pct, 1)} del total, ${fmtCLP(peak.parcial)})</span><span>·</span><span><b>Al mes 6:</b> ${fmtPct(m[5].acum_pct, 1)} acumulado</span><span>·</span><span><b>Adjudicación:</b> carta CW449427 del 15-09-2026 (contrato 4600032755)</span><span>·</span><span><b>Inicio de ejecución y fechas calendario:</b> <span class="pend">dato pendiente</span> (acta de entrega de terreno; no están en los formularios ECO)</span><span>·</span><span class="badge warn">El flujo declarado suma ${fmtMM(D.eco09.base)}, ${fmtMM(D.eco09.base - T)} más que la oferta</span>`;
   // 3. Recursos y top 10 (sobre las 106 partidas, sin filtros)
   hbar('#chartRecursosM', [
     {label: 'Mano de obra directa', value: R.mod, color: 'var(--s1)', tip: `Mano de obra directa: ${fmtCLP(R.mod)} · ${fmtPct(R.mod / R.directo)} del costo directo · ${fmtNum(R.hh_total, 0)} HH (ECO-01!R)`, onClick: () => goExplorer('mo')},
