@@ -726,7 +726,7 @@ function contratoPorDefecto(){
     fechaTermino:'2027-10-08',
     adminContrato:'Javier Cornejo',
     carpetaContractual: DOCS_CONTRACTUALES_URL,
-    carpetaSDI: 'https://drive.google.com/drive/folders/1Zt2FqLWzCwnnPX2egFuHfsQUBmhJjao1',
+    carpetaSDI: 'https://drive.google.com/drive/folders/1QJ6jMIi23U9P9SkiG9-QBktAYSv4th3Z',
     representanteLegal: 'David Mies Moreno — Gerente General',
     contactoMandante: 'Gerardo Quintana O. — Ingeniero Especialista, Depto. de Abastecimiento Codelco Andina',
     rutContratista: '79.532.470-4',
@@ -750,7 +750,7 @@ function migrarContrato(c){
   if(!c.plazoFirmaDias) c.plazoFirmaDias = d.plazoFirmaDias;
   if(!c.fechaInicio && !c.fechaTermino){ c.fechaInicio = d.fechaInicio; c.fechaTermino = d.fechaTermino; }
   if(!c.carpetaContractual) c.carpetaContractual = d.carpetaContractual;
-  if(!c.carpetaSDI) c.carpetaSDI = d.carpetaSDI;
+  if(!c.carpetaSDI || c.carpetaSDI.indexOf('1Zt2FqLWzCwnnPX2egFuHfsQUBmhJjao1') >= 0) c.carpetaSDI = d.carpetaSDI;
   if(c.cartaAdjudicacionUrl === undefined) c.cartaAdjudicacionUrl = '';
   return c;
 }
@@ -5662,9 +5662,9 @@ function renderInforme(){
    fechas de envío y respuesta se actualizan desde la app (administrador)
    y quedan compartidos para todos.
    ================================================================== */
-const SDI_CARPETA_URL = "https://drive.google.com/drive/folders/1Zt2FqLWzCwnnPX2egFuHfsQUBmhJjao1";
-const SDI_REGISTRO_ID = "1q-VXW3MRf-ruZbRnEC9Y8NVTw5ZOKvtI";
-const SDI_LEIDO = '2026-09-30';
+const SDI_CARPETA_URL = "https://drive.google.com/drive/folders/1QJ6jMIi23U9P9SkiG9-QBktAYSv4th3Z";
+const SDI_REGISTRO_ID = "1oR1AD8Sg2eQxq1UvHRMMWm_8ISAQWd6a";
+const SDI_LEIDO = '2026-10-01';
 const SDI_REV = 'Rev A · 01-10-2026';
 const SDI_DISCIPLINAS = ['MINERÍA','CIVIL','ESTRUCTURA','TOPOGRAFÍA','MECÁNICA','PIPING','ELÉCTRICO','INSTRUMENTACIÓN','OTRO'];
 const SDI_ESTADOS = ['Borrador','Enviada','Respondida','Cerrada'];
@@ -5815,7 +5815,7 @@ const SDI_DATA = [
   ],
   "refp": "4600029647-028-03221-205EL-00001 Rev B",
   "actividad": "Documental contractual / KOM",
-  "fid": "1OqzH2kFFokDGkdUPb03VVzVQ9IL_ygFx",
+  "fid": "1MV6W6bqEUk1f697Gllwj_2248FxEjTyF",
   "archivo": "SDI-CCV-001_Emision-APC-ingenieria-terreno.xlsx",
   "estado": "Borrador"
  },
@@ -5856,7 +5856,7 @@ const SDI_DATA = [
   ],
   "refp": "BT §5.2, §6.2.1, §10.1",
   "actividad": "Hito 1 – Instalación de faenas (día 30)",
-  "fid": "11alMJd3igAyTqTHMb_flMx6kWZLeaPpd",
+  "fid": "1d9rFCNcTgCuyTu8y14KaLDD0a_j4hF6H",
   "archivo": "SDI-CCV-002_Ubicacion-instalacion-de-faena.xlsx",
   "estado": "Borrador"
  },
@@ -5899,7 +5899,7 @@ const SDI_DATA = [
   ],
   "refp": "BT §4.3.2, §6.2.17, §6.2.19, §15",
   "actividad": "Programa de trabajo – Hitos 5 y 6 / parada de planta",
-  "fid": "10L5iQOa3HnsbwN0SDG3Fe_xkbNucyjMW",
+  "fid": "1SIlMAoqjgYY3O9UaEm7zW45v2lYT7tVy",
   "archivo": "SDI-CCV-003_Fecha-parada-planta-y-tie-in-enfriamiento.xlsx",
   "estado": "Borrador"
  },
@@ -5941,7 +5941,7 @@ const SDI_DATA = [
   ],
   "refp": "4600029647-028-03221-205EL-00001 Rev B (notas 2, 5, 6)",
   "actividad": "4.2 Canalizaciones / 3.1 Armado E-House (10-11-2026)",
-  "fid": "1Sh6OeVYNDmRxY9PK3HWijEsZmdjDo-5X",
+  "fid": "1sn4yItSZvb568iu_rdg8UwNhzNXIIswZ",
   "archivo": "SDI-CCV-004_205ES-00001-y-cielo-existente.xlsx",
   "estado": "Borrador"
  },
@@ -5989,7 +5989,7 @@ const SDI_DATA = [
   ],
   "refp": "4600029647-028-03221-300CI-00002 Rev 1; 400ME-00001 Rev 0",
   "actividad": "3.1 Armado E-House de cicloconvertidores (10-11-2026)",
-  "fid": "14aG2XIyCljRNLoXwOS_wtq2dG1dzv1FN",
+  "fid": "1zHZkZFFyRWRrYPVQZc18XJRWIb6P9Cnw",
   "archivo": "SDI-CCV-005_Exoesqueleto-interfaz-y-reacciones.xlsx",
   "estado": "Borrador"
  },
@@ -6030,7 +6030,7 @@ const SDI_DATA = [
   ],
   "refp": "BT §4.2, §6.2.3 (ítems 2.2 y 2.3)",
   "actividad": "2 Extensión muro cortafuego (10-11-2026)",
-  "fid": "1HE10BfhaRbhZHK-zS9RinIF2vfRHX-du",
+  "fid": "1y805jZQu7Gbo8NsJYxQ2WvJHKEsjShvp",
   "archivo": "SDI-CCV-006_Muro-cortafuego-especificacion.xlsx",
   "estado": "Borrador"
  },
@@ -6075,7 +6075,7 @@ const SDI_DATA = [
   ],
   "refp": "4600029647-028-03221-LSTEL-00003 Rev B",
   "actividad": "4.2 Suministro y montaje de canalizaciones (10-11-2026)",
-  "fid": "1LUmb_HKWfxwt3LcYzUtYTOV-CqVOX8iI",
+  "fid": "1JE58yb1n0Zmre5aSRKGC42PH77DTttaT",
   "archivo": "SDI-CCV-007_LSTEL-00003-canalizaciones.xlsx",
   "estado": "Borrador"
  },
@@ -6115,7 +6115,7 @@ const SDI_DATA = [
   ],
   "refp": "BT §5.4, §6.2.5; MNLME-0001 Rev 0 §12",
   "actividad": "3.1 Armado E-House de cicloconvertidores (10-11-2026)",
-  "fid": "19M2ISTBr3Xq1x6CvL9oRDP4p8-CsRG5J",
+  "fid": "1bJWsYrgAroir7fh0UqpEW-6QaKEacr8Q",
   "archivo": "SDI-CCV-008_Izaje-en-caverna-anclajes-techo.xlsx",
   "estado": "Borrador"
  },
@@ -6160,7 +6160,7 @@ const SDI_DATA = [
   ],
   "refp": "4600029647-028-03221-300CI-00002 Rev 1 (APC 14-09-2026)",
   "actividad": "3.1 Armado E-House / 4.2 canalizaciones (10-11-2026)",
-  "fid": "1UHZslZI5hZeWAg1fqsq2IWD1mXRyKY9t",
+  "fid": "1BZoRyZ7lkAJMYpjhuo4x_wZv2-Ty_v2L",
   "archivo": "SDI-CCV-009_Puesta-tierra-sala-y-exoesqueleto.xlsx",
   "estado": "Borrador"
  },
@@ -6199,7 +6199,7 @@ const SDI_DATA = [
   ],
   "refp": "4600029647-028-03221-INFEL-00010 Rev B",
   "actividad": "3.1 Armado E-House / puesta a tierra (nov-2026)",
-  "fid": "1XEcta8NbqSFqu9v79HxJuWswOWec_TgG",
+  "fid": "1l9FslH2E23B8_U215PNhd0svvBxnpUnU",
   "archivo": "SDI-CCV-010_Malla-tierra-INFEL-00010.xlsx",
   "estado": "Borrador"
  },
@@ -6238,7 +6238,7 @@ const SDI_DATA = [
   ],
   "refp": "4600029647-028-03221-LSTEL-00002 Rev B (Tabla 5.1, nota 4)",
   "actividad": "4.3 Montaje de cables, conexionado y pruebas (10-11-2026)",
-  "fid": "1_3ojMwNasEscoUrbuD_YR_e9YHHVPcVY",
+  "fid": "191GvTGOMVFjtlTaSksjAUJcMM_KhMVre",
   "archivo": "SDI-CCV-011_LSTEL-00002-cables-y-largos.xlsx",
   "estado": "Borrador"
  },
@@ -6283,7 +6283,7 @@ const SDI_DATA = [
   ],
   "refp": "4502319491-03221-202EL-00001 Rev 0; LSTEL-00002 Rev B",
   "actividad": "4.3 Montaje de cables (10-11-2026)",
-  "fid": "1qBiTi9IFc9uDnnOvYj2jXtqR--PM5kF_",
+  "fid": "1QxAF38toDFuq0aN-y8kNwxVm7NTIDU-w",
   "archivo": "SDI-CCV-012_Cable-alimentacion-excitacion.xlsx",
   "estado": "Borrador"
  },
@@ -6326,7 +6326,7 @@ const SDI_DATA = [
   ],
   "refp": "4502319491-03221-202EL-00001 Rev 0; LSTEL-00004/00005 Rev B",
   "actividad": "4.3 Montaje de cables / 4.4 equipos eléctricos",
-  "fid": "1y_-ND7Xfwo7uNfnWO9gIzIMxP9-fRleo",
+  "fid": "10kH7LO4OzWvqEiJqCzBEQomx_1tr2Ysa",
   "archivo": "SDI-CCV-013_Datos-placa-tags-RQ-vs-Innomotics.xlsx",
   "estado": "Borrador"
  },
@@ -6365,7 +6365,7 @@ const SDI_DATA = [
   ],
   "refp": "4600029647-028-03221-LSTEL-00002 Rev B (nota 3)",
   "actividad": "4.3 Montaje de cables, conexionado y pruebas",
-  "fid": "1JL9wiaL6ebOQRep5lk6rm3wSuRIRslvC",
+  "fid": "1HNWjjbQI3_GWlGUzVaYBksUx17ECCqU_",
   "archivo": "SDI-CCV-014_Circuitos-de-control.xlsx",
   "estado": "Borrador"
  },
@@ -6410,7 +6410,7 @@ const SDI_DATA = [
   ],
   "refp": "4502319491-03221-202EL-0002 Rev 0 (APC 25-08-2025)",
   "actividad": "4.3 Montaje de cables / 4.4 equipos eléctricos",
-  "fid": "1_Mlo34XKL5JRwJ_tKKA9gnnz44oaxkgk",
+  "fid": "1Ycs7cIIlH0M-y0wSAgmsthH64hIwZ_L5",
   "archivo": "SDI-CCV-015_Alimentaciones-SSAA-y-HVAC.xlsx",
   "estado": "Borrador"
  },
@@ -6455,7 +6455,7 @@ const SDI_DATA = [
   ],
   "refp": "4502319491-03221-413AT-00001 Rev 0 (APC 03-09-2025)",
   "actividad": "4.3 Montaje de cables, conexionado y pruebas",
-  "fid": "1I-t5GNzpaKv72r27tJ1Y9OGGt4-c6zmI",
+  "fid": "1KcUefLybRNn8BIp6HDgJgpG-047MpYSj",
   "archivo": "SDI-CCV-016_Fibra-optica-sala-de-control.xlsx",
   "estado": "Borrador"
  },
@@ -6497,7 +6497,7 @@ const SDI_DATA = [
   ],
   "refp": "BT §4.2, §5.5, §6.2.6 a §6.2.8, §6.2.23",
   "actividad": "4.1 Cañería de agua, sistema de enfriamiento (16-01-2027)",
-  "fid": "1Or4EYVQF2n8IzYu0OR87B-sW9850QwQX",
+  "fid": "1RqGhKG1sTeHjKBsDg9N4L-tW-vmul5rN",
   "archivo": "SDI-CCV-017_Piping-enfriamiento.xlsx",
   "estado": "Borrador"
  },
@@ -6543,7 +6543,7 @@ const SDI_DATA = [
   ],
   "refp": "4502319491-03221-100EL-00001 Rev 0 (AFC 24-02-2026)",
   "actividad": "7.1 Instalación red de incendio (25-01-2027)",
-  "fid": "1HAKbIfEpFPINBktCPEr0RDSQbxB4D_zd",
+  "fid": "1AazM08b6x1-1xXzZLWsct1iIrDb5cmA1",
   "archivo": "SDI-CCV-018_Red-incendio-interconexion.xlsx",
   "estado": "Borrador"
  },
@@ -6583,7 +6583,7 @@ const SDI_DATA = [
   ],
   "refp": "4600029647-028-03221-LSTEL-00005 Rev B (Tabla 5.1, notas 1 y 2)",
   "actividad": "4.4 Montaje de equipos eléctricos (25-01-2027) / 5.1 parada de planta",
-  "fid": "1e5gfI4rxx4NQYkseMsHRkpNm0aeUoxR4",
+  "fid": "1sRP8w1BkKzpT6-Z_Kt_-ZEhusibIH3jf",
   "archivo": "SDI-CCV-019_Tie-ins-definicion.xlsx",
   "estado": "Borrador"
  },
@@ -6624,7 +6624,7 @@ const SDI_DATA = [
   ],
   "refp": "4600029647-028-03221-LSTEL-00002 Rev B; LSTEL-00004 Rev B",
   "actividad": "5.1 Retiro y montaje de equipos (15-03-2027) / 6.1 retiro post parada",
-  "fid": "1VSE4AMcLZSqg4unzBiZVpJ0YTRJFClnp",
+  "fid": "1lnkMiiAPtPZwfWRQkO5oVC6fnRf-7Ahu",
   "archivo": "SDI-CCV-020_Retiro-equipos-y-cables-existentes.xlsx",
   "estado": "Borrador"
  }
@@ -6727,7 +6727,7 @@ function renderSDI(){
        'El administrador registra envío, respuesta y cierre con ✎ (queda compartido para todos).<br><b>' + esc(SDI_REV) + ':</b> set depurado — no se consulta la ingeniería interior de la sala (Innomotics, aprobada y con suministros comprados) ni temas de alcance contractual; las consultas apuntan a la ingeniería de terreno en desarrollo (R&Q / DAND), sin proponer soluciones, y se envían por lotes según el programa de obra.</div>';
 
   h += '<div class="toolbar" style="margin-bottom:12px"><a class="btn sm primary" href="' + attr(carpeta) + '" target="_blank" rel="noopener">📂 Abrir carpeta SDI en Drive</a>' +
-       '<a class="btn sm" href="https://drive.google.com/file/d/' + SDI_REGISTRO_ID + '/view" target="_blank" rel="noopener">📋 Registro_SDI_CCV.xlsx</a>' +
+       '<a class="btn sm" href="https://drive.google.com/file/d/' + SDI_REGISTRO_ID + '/view" target="_blank" rel="noopener">📋 Registro_SDI_CCV_RevA.xlsx</a>' +
        '<button class="btn sm" onclick="exportarSDICSV()">⬇ Exportar registro (CSV)</button>' +
        '<button class="btn sm" onclick="window.print()">🖨 Imprimir</button>' +
        '<span class="spacer"></span><span id="sincEstado">' + textoSinc() + '</span><span style="font-size:11.5px;color:var(--text-3);margin-left:8px">Carpeta leída el ' + fmtFecha(SDI_LEIDO) + ' · ' + T.length + ' formularios</span></div>';
