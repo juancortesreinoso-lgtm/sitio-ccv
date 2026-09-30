@@ -1422,6 +1422,8 @@ function buscarRuta(ruta){
     const m = MENU[i];
     if(m.route === ruta) return { nodo:m, padre:null };
     if(m.children){
+      /* ruta del módulo padre (p. ej. #/plan o #/guia): abre su primera página */
+      if(ruta === m.id || ruta === m.children[0].route.split('/')[0]) return { nodo:m.children[0], padre:m };
       for(let j=0;j<m.children.length;j++){
         if(m.children[j].route === ruta) return { nodo:m.children[j], padre:m };
       }
