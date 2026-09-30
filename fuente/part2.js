@@ -264,7 +264,8 @@ function contratoPorDefecto(){
     jefeOT:      '',
     jefeCalidad: '',
     carpetaDrive: CARPETA_DRIVE_URL,
-    carpetaCalidad: CARPETA_CALIDAD_URL
+    carpetaCalidad: CARPETA_CALIDAD_URL,
+    servicioCalidad: ''
   };
 }
 function paramsPorDefecto(){

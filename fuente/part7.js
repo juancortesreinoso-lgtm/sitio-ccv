@@ -360,6 +360,8 @@ function renderConfig(){
         'Se abre con el botón "Drive" de la cabecera. Mantenga esta app y los PDF dentro de esa carpeta sincronizada con Google Drive para escritorio: así cada documento se abre con un clic desde cualquier PC.') +
       campo('cCalidad', 'Carpeta de Calidad en Google Drive (URL)', '<input class="inp" id="cCalidad" value="' + attr(c.carpetaCalidad || '') + '" placeholder="https://drive.google.com/drive/folders/…">',
         'La muestra el Módulo 02 en modo lectura. La carpeta debe estar compartida como "Cualquier persona con el enlace: Lector" para que todos la vean.') +
+      campo('cServCal', 'Servicio de lectura de la carpeta de Calidad (URL de Apps Script)', '<input class="inp" id="cServCal" value="' + attr(c.servicioCalidad || '') + '" placeholder="https://script.google.com/macros/s/…/exec">',
+        'Opcional. Si está vacío se usa el servicio configurado en la app. Permite navegar la carpeta dentro de la app (subcarpetas, buscador, visor). Sin servicio se muestra la vista incrustada de Drive.') +
     '</div>' +
     '<button class="btn primary" onclick="guardarContrato()">Guardar datos del contrato</button>' +
   '</div>';
@@ -418,8 +420,10 @@ function guardarContrato(){
     fechaInicio: valorCampo('cIni'), fechaTermino: valorCampo('cTer'),
     adminContrato: valorCampo('cAdmin'), jefeOT: valorCampo('cJefeOT'), jefeCalidad: valorCampo('cJefeCal'),
     carpetaDrive: valorCampo('cDrive'),
-    carpetaCalidad: valorCampo('cCalidad')
+    carpetaCalidad: valorCampo('cCalidad'),
+    servicioCalidad: valorCampo('cServCal')
   };
+  CALIDAD.arbol = null;
   if(DB.contrato.fechaInicio && DB.contrato.fechaTermino && DB.contrato.fechaTermino < DB.contrato.fechaInicio){
     toast('La fecha de término no puede ser anterior a la de inicio.', 'bad'); return;
   }
