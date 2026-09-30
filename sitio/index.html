@@ -726,6 +726,7 @@ function contratoPorDefecto(){
     fechaTermino:'2027-10-08',
     adminContrato:'Javier Cornejo',
     carpetaContractual: DOCS_CONTRACTUALES_URL,
+    carpetaContractualDrive: 'https://drive.google.com/drive/folders/1Wp5-wksTy8Gaa5L3LukTblzPA2t6jshJ',
     carpetaSDI: 'https://drive.google.com/drive/folders/1QJ6jMIi23U9P9SkiG9-QBktAYSv4th3Z',
     representanteLegal: 'David Mies Moreno — Gerente General',
     contactoMandante: 'Gerardo Quintana O. — Ingeniero Especialista, Depto. de Abastecimiento Codelco Andina',
@@ -750,6 +751,7 @@ function migrarContrato(c){
   if(!c.plazoFirmaDias) c.plazoFirmaDias = d.plazoFirmaDias;
   if(!c.fechaInicio && !c.fechaTermino){ c.fechaInicio = d.fechaInicio; c.fechaTermino = d.fechaTermino; }
   if(!c.carpetaContractual) c.carpetaContractual = d.carpetaContractual;
+  if(c.carpetaContractualDrive === undefined || c.carpetaContractualDrive === '') c.carpetaContractualDrive = d.carpetaContractualDrive;
   if(!c.carpetaSDI || c.carpetaSDI.indexOf('1Zt2FqLWzCwnnPX2egFuHfsQUBmhJjao1') >= 0) c.carpetaSDI = d.carpetaSDI;
   if(c.cartaAdjudicacionUrl === undefined) c.cartaAdjudicacionUrl = '';
   return c;
@@ -5128,7 +5130,7 @@ function fmtH(h){ return Number(h).toLocaleString('es-CL', { maximumFractionDigi
 function fmtDias(h){ return Number(h / 8).toLocaleString('es-CL', { maximumFractionDigits:1 }) + ' d'; }
 
 /* ---------- avance ---------- */
-function avanceDe(t){ return DB.programa.avances[t.u] || (typeof PROGRAMA_HECHOS !== 'undefined' && PROGRAMA_HECHOS[t.u]) || null; }
+function avanceDe(t){ return DB.programa.avances[t.u] || (typeof CONTR !== 'undefined' && CONTR.hechos[t.u]) || (typeof PROGRAMA_HECHOS !== 'undefined' && PROGRAMA_HECHOS[t.u]) || null; }
 function pesoHoja(t){ if(t.M) return 0; return t.k > 0 ? t.k : (t.d > 0 ? t.d : 0); }
 function descendientesHoja(t){
   if(!t.S) return [t];
@@ -5248,7 +5250,7 @@ function prgNav(actual){
     '<span class="spacer"></span><span id="sincEstado">' + textoSinc() + '</span><span style="font-size:11.5px;color:var(--text-3);margin-left:8px">Programa: ' + esc(PROGRAMA_META.fuente.replace(/\.xml$/i,'')) + ' · guardado ' + fmtCorta(PROGRAMA_META.guardado) + '</span></div>';
 }
 function renderAvancePost(){ bajarPrograma(); }
-function renderHitosPost(){ bajarPrograma(); }
+function renderHitosPost(){ bajarPrograma(); cargarContractual(); }
 function renderRestriccionesPost(){ bajarPrograma(); }
 function renderInformePost(){ bajarPrograma(); }
 function renderOferta(){
@@ -5473,6 +5475,7 @@ function renderHitos(){
        'Un hito se marca cumplido con su fecha real desde la ficha (administrador). Vencido = fecha plan pasada sin cumplir a la fecha de corte.</div>';
   h += '<div class="grid kpis" style="margin-bottom:14px">' + kpi('Hitos', hitos.length, 'en el programa', '') + kpi('Cumplidos', cumplidos, 'con fecha real', 'good') + kpi('Vencidos', vencidos, 'a la fecha de corte ' + fmtFecha(corte), vencidos ? 'bad' : 'good') + kpi('Próximos 30 días', prox, 'pendientes por vencer', prox ? 'warn' : '') + '</div>';
   h += tablaDocsContractuales(corte);
+  h += bloqueNovedadesContractual();
   h += '<div class="card"><div class="timeline" style="padding:16px 18px 16px 30px">';
   hitos.forEach(function(t){
     const e = estadoActividad(t, corte), a = avanceDe(t), dias = Math.round((prgMs(t.s) - prgMs(corte)) / 86400000);
@@ -5492,8 +5495,12 @@ function renderHitos(){
 
 /* ---------- documentos contractuales (OneDrive) ---------- */
 function docContractual(d){
-  const o = DB.programa.docs[d.id];
-  return o ? Object.assign({}, d, { estado: o.estado || d.estado, fechaDoc: o.fechaDoc || d.fechaDoc, url: o.url || d.url, nota: o.nota, verificado: (o.fecha || '').slice(0,10) || d.verificado, por: o.por }) : d;
+  const o = DB.programa.docs[d.id], live = (typeof CONTR !== 'undefined') ? CONTR.docs[d.id] : null;
+  let r = d;
+  if(live && live.estado === 'faltante' && d.estado === 'encontrado') r = Object.assign({}, d, { carpeta: live.carpeta, carpetaUrl: live.carpetaUrl, faltaEnDrive: true, esNuevo: live.esNuevo });
+  else if(live) r = Object.assign({}, d, { estado: live.estado, fechaDoc: live.fechaDoc, url: live.url, urlDrive: live.urlDrive, archivo: live.archivo, carpeta: live.carpeta, carpetaUrl: live.carpetaUrl, verificado: live.verificado, por: live.por, enDrive: true, esNuevo: live.esNuevo, nArchivos: live.n });
+  if(o) r = Object.assign({}, r, { estado: o.estado || r.estado, fechaDoc: o.fechaDoc || r.fechaDoc, url: o.url || r.url, nota: o.nota, verificado: (o.fecha || '').slice(0,10) || r.verificado, por: o.por });
+  return r;
 }
 function pillDoc(estado){
   return estado === 'encontrado' ? pill('aprobado', '✓ Encontrado') : estado === 'faltante' ? pill('rechazado', '✗ No está en la carpeta') : estado === 'sin-carpeta' ? pill('recibido', '○ Sin carpeta / pendiente') : pill('recibido', esc(estado || 'Pendiente'));
@@ -5505,16 +5512,18 @@ function tablaDocsContractuales(corte){
   const ult = docs.map(function(d){ return d.verificado || ''; }).sort().slice(-1)[0];
   let h = '<div class="card card-pad" style="margin-bottom:14px"><div class="toolbar" style="margin-bottom:8px"><h2 style="margin:0">Documentos contractuales en OneDrive</h2>' +
           '<span class="sub" style="margin:0">' + ok + ' de ' + docs.length + ' documentos encontrados · última verificación ' + fmtFecha(ult) + '</span><span class="spacer"></span>' +
-          '<a class="btn sm primary" href="' + attr(carpeta) + '" target="_blank" rel="noopener">📂 Abrir carpeta "07. Documentos contractuales"</a></div>' +
-          '<p class="sub">Carpeta CCV / 03. OFICINA TECNICA / 07. Documentos contractuales (OneDrive, compartida por la administración). Cada documento respalda un hito de inicio del contrato: cuando está en su carpeta, el hito se da por cumplido con la fecha del documento. ' +
-          'OneDrive personal no permite leer la carpeta automáticamente desde la app; el administrador actualiza el estado con ✎ tras revisarla (queda compartido para todos).</p>';
+          (DB.contrato.carpetaContractualDrive ? '<a class="btn sm primary" href="' + attr(DB.contrato.carpetaContractualDrive) + '" target="_blank" rel="noopener">📂 Carpeta en Google Drive</a> <button class="btn sm" onclick="cargarContractual(true)" title="Volver a leer la carpeta">↻ Actualizar</button> ' : '') +
+          '<a class="btn sm" href="' + attr(carpeta) + '" target="_blank" rel="noopener">☁ Carpeta OneDrive (origen)</a></div>' +
+          '<div class="toolbar" style="margin-bottom:8px"><span id="contrEstado">' + textoEstadoContractual() + '</span></div>' +
+          '<p class="sub">Cada documento respalda un hito de inicio del contrato: cuando su archivo está en la subcarpeta correspondiente de <b>07. Documentos contractuales</b> en Google Drive, el hito se da por cumplido con la fecha del documento (fecha en el nombre del archivo, p. ej. 260924, o fecha de modificación). ' +
+          'La carpeta se lee automáticamente cada 2 minutos; las carpetas o archivos nuevos aparecen como <b>NUEVO</b> hasta marcarlos como revisados. El administrador puede corregir cualquier estado con ✎ (queda compartido para todos).</p>';
   h += '<div class="tbl-wrap"><table><thead><tr><th style="cursor:default">Documento</th><th style="cursor:default">Hito que respalda</th><th style="cursor:default">Estado</th><th style="cursor:default">Ver</th></tr></thead><tbody>';
   docs.forEach(function(d){
     const t = PRG.porUID[d.hito], e = t ? estadoActividad(t, corte) : null;
-    h += '<tr><td class="wrap" style="max-width:460px"><b>' + esc(d.doc) + '</b><div class="sub" style="margin:2px 0 0">📁 ' + esc(d.carpeta) + (d.archivo ? ' · <span class="mono" style="font-size:11px;word-break:break-all">' + esc(d.archivo) + '</span>' : '') + '</div>' + (d.nota ? '<div class="sub" style="margin:2px 0 0">' + esc(d.nota) + '</div>' : '') + '</td>' +
+    h += '<tr><td class="wrap" style="max-width:460px"><b>' + esc(d.doc) + '</b>' + (d.esNuevo ? ' <span class="pill enrev"><span class="dot"></span>NUEVO</span>' : '') + '<div class="sub" style="margin:2px 0 0">📁 ' + esc(d.carpeta) + (d.archivo ? ' · <span class="mono" style="font-size:11px;word-break:break-all">' + esc(d.archivo) + '</span>' : '') + (d.nArchivos > 1 ? ' <span class="sub" style="margin:0">(+' + (d.nArchivos - 1) + ' más)</span>' : '') + '</div>' + (d.nota ? '<div class="sub" style="margin:2px 0 0">' + esc(d.nota) + '</div>' : '') + '</td>' +
          '<td class="wrap" style="max-width:300px">' + (t ? '<a class="doclink" href="javascript:void 0" onclick="fichaActividad(\'' + t.u + '\')">#' + esc(t.i) + ' ' + esc(t.n) + '</a><div style="margin-top:3px">' + pillEstado2(e) + ' <span class="sub" style="margin:0">plan ' + fmtCorta(t.s) + '</span></div>' : '—') + '</td>' +
-         '<td>' + pillDoc(d.estado) + (d.fechaDoc ? '<div class="sub" style="margin:3px 0 0">documento del ' + fmtFecha(d.fechaDoc) + '</div>' : '') + '</td>' +
-         '<td style="white-space:nowrap">' + (d.url ? '<a class="btn sm primary" href="' + attr(d.url) + '" target="_blank" rel="noopener">👁 Ver en línea</a> ' : '') +
+         '<td>' + pillDoc(d.estado) + (d.fechaDoc ? '<div class="sub" style="margin:3px 0 0">documento del ' + fmtFecha(d.fechaDoc) + '</div>' : '') + (d.faltaEnDrive ? '<div class="sub" style="margin:3px 0 0;color:var(--warn)">verificado en OneDrive; aún no está en la carpeta de Drive</div>' : '') + '</td>' +
+         '<td style="white-space:nowrap">' + (d.url ? (d.enDrive ? '<button class="btn sm primary" onclick="verArchivoContractual(\'' + attr(d.url) + '\',\'' + attr(d.archivo) + '\')">👁 Ver en línea</button> ' : '<a class="btn sm primary" href="' + attr(d.url) + '" target="_blank" rel="noopener">👁 Ver en línea</a> ') : '') +
            (d.carpetaUrl ? '<a class="btn sm" href="' + attr(d.carpetaUrl) + '" target="_blank" rel="noopener">📂</a> ' : '') +
            '<button class="btn sm solo-admin" onclick="formDocContractual(\'' + d.id + '\')">✎</button></td></tr>';
   });
@@ -5653,6 +5662,143 @@ function renderInforme(){
   h += '<div class="sec"><h3>5. Próximas dos semanas — actividades que inician (' + prox2.length + ')</h3>' + (prox2.length ? '<ul class="wip-list">' + prox2.slice(0, 40).map(function(t){ return '<li>' + fmtCorta(t.s) + ' — #' + esc(t.i) + ' ' + esc(t.n) + (t.r && t.r.length ? ' <span class="sub" style="display:inline">(' + esc(t.r.join(', ')) + ')</span>' : '') + '</li>'; }).join('') + '</ul>' : '<p class="sub">Sin inicios programados en el periodo.</p>') + '</div>';
   h += '<div class="sec" style="font-size:11.5px;color:var(--text-3)">Fuente: ' + esc(PROGRAMA_META.fuente) + ' (guardado ' + fmtCorta(PROGRAMA_META.guardado) + '). Avance plan ponderado por horas de trabajo; avance real según registros de la oficina técnica. Emitido ' + fmtFecha(hoyISO()) + (c.jefeOT ? ' · ' + esc(c.jefeOT) : '') + '.</div>';
   h += '</div>';
+  return h;
+}
+/* ==================================================================
+   5.3 — DOCUMENTOS CONTRACTUALES EN GOOGLE DRIVE (lectura automática)
+   ==================================================================
+   La carpeta "07. Documentos contractuales" en Google Drive se lee con
+   el mismo servicio (Apps Script) del Módulo 02. Cada subcarpeta se
+   asocia a un documento esperado por palabras clave; si contiene
+   archivos, el documento se da por encontrado y el hito asociado por
+   cumplido con la fecha del documento (fecha en el nombre del archivo
+   o fecha de modificación). Las carpetas nuevas o desconocidas se
+   listan para revisión y se marcan como "NUEVO" hasta que alguien
+   pulse "Marcar como revisado". Se actualiza sola cada 2 minutos
+   mientras la página 5.3 (o el Panel) esté abierta.
+   ================================================================== */
+
+const CONTR = { arbol:null, hora:null, error:'', cargando:false, hechos:{}, docs:{}, otras:[], sueltos:[], firma:'', nuevos:[] };
+const CONTR_CLAVES = {
+  adjudicacion: ['adjudicac'],
+  sernageomin:  ['sernageomin', 'inicio de actividades', 'inicio-de-actividades'],
+  jornada:      ['jornada', '7x7'],
+  contrato:     ['contrato firmado', 'contrato'],
+  boleta:       ['boleta', 'garantia'],
+  seguros:      ['seguro', 'poliza']
+};
+function idCarpetaDrive(u){ const m = String(u || '').match(/[-\w]{25,}/); return m ? m[0] : ''; }
+function carpetaContractualDriveId(){ return idCarpetaDrive(DB.contrato.carpetaContractualDrive || ''); }
+function normTxt(s){ return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+function fechaDeArchivo(a){
+  const n = a.nombre || '';
+  let m = n.match(/^(\d{2})(\d{2})(\d{2})[ _\-.]/);            // 260924 → 24-09-2026
+  if(m) return '20' + m[1] + '-' + m[2] + '-' + m[3];
+  m = n.match(/(\d{2})[-._](\d{2})[-._](20\d{2})/);            // 24-09-2026
+  if(m) return m[3] + '-' + m[2] + '-' + m[1];
+  m = n.match(/(20\d{2})[-._](\d{2})[-._](\d{2})/);            // 2026-09-24
+  if(m) return m[1] + '-' + m[2] + '-' + m[3];
+  return '';
+}
+function cargarContractual(forzar){
+  const id = carpetaContractualDriveId();
+  if(!id || !servicioCalidadOK()){ CONTR.error = id ? 'sin-servicio' : ''; return Promise.resolve(false); }
+  if(CONTR.cargando) return Promise.resolve(false);
+  if(!forzar && CONTR.hora && (Date.now() - CONTR.hora.getTime()) < 20000) return Promise.resolve(false);
+  CONTR.cargando = true;
+  const u = servicioCalidad() + (servicioCalidad().indexOf('?') > 0 ? '&' : '?') + 'id=' + encodeURIComponent(id) + '&t=' + Date.now();
+  return fetch(u, { method:'GET', redirect:'follow', cache:'no-store' })
+    .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function(j){
+      if(!j || !j.ok) throw new Error((j && j.error) || 'Respuesta inválida');
+      const firma = JSON.stringify(j.arbol);
+      const cambio = firma !== CONTR.firma;
+      CONTR.arbol = j.arbol; CONTR.firma = firma; CONTR.error = ''; CONTR.hora = new Date();
+      procesarContractual();
+      return cambio;
+    })
+    .catch(function(e){ CONTR.error = String(e && e.message || e); CONTR.hora = new Date(); return false; })
+    .then(function(cambio){
+      CONTR.cargando = false;
+      const r = ESTADO_UI.ruta || '';
+      if(cambio && (r === 'plan/hitos' || r === 'dashboard') && !document.querySelector('#modalRoot .modal')) render();
+      else pintarEstadoContractual();
+      return cambio;
+    });
+}
+function procesarContractual(){
+  CONTR.docs = {}; CONTR.hechos = {}; CONTR.otras = []; CONTR.sueltos = [];
+  const raiz = CONTR.arbol; if(!raiz) return;
+  const visto = contrVisto();
+  CONTR.nuevos = [];
+  (raiz.carpetas || []).forEach(function(c){
+    const nn = normTxt(c.nombre);
+    let doc = null;
+    for(let i = 0; i < DOCS_CONTRACTUALES.length && !doc; i++){
+      const d = DOCS_CONTRACTUALES[i];
+      if((CONTR_CLAVES[d.id] || []).some(function(k){ return nn.indexOf(k) >= 0; })) doc = d;
+    }
+    const archivos = (c.archivos || []).slice().sort(function(a, b){ return String(b.mod || '').localeCompare(String(a.mod || '')); });
+    const carpetaUrl = 'https://drive.google.com/drive/folders/' + c.id;
+    const nuevosAqui = archivos.filter(function(a){ return !(visto[c.id] || []).some(function(x){ return x === a.id; }); }).map(function(a){ return a.nombre; });
+    if(!(c.id in visto)) CONTR.nuevos.push({ tipo:'carpeta', nombre:c.nombre, id:c.id, url:carpetaUrl, archivos:archivos.map(function(a){ return a.nombre; }) });
+    else nuevosAqui.forEach(function(n){ CONTR.nuevos.push({ tipo:'archivo', nombre:n, carpeta:c.nombre, url:carpetaUrl }); });
+    if(doc){
+      if(archivos.length){
+        const a = archivos[0], f = fechaDeArchivo(a) || doc.fechaDoc || String(a.mod || '').slice(0, 10);
+        CONTR.docs[doc.id] = { estado:'encontrado', fechaDoc:f, url:urlVisor(a) || a.url, urlDrive:a.url, archivo:a.nombre, carpeta:c.nombre, carpetaUrl:carpetaUrl, verificado:hoyISO(), por:'Carpeta Drive', n:archivos.length, archivos:archivos, esNuevo:nuevosAqui.length > 0 || !(c.id in visto) };
+        CONTR.hechos[doc.hito] = { pct:100, inicioReal:f, finReal:f, fecha:f, por:'Carpeta Drive', comentario:'Documento en Google Drive: ' + a.nombre + ' (carpeta ' + c.nombre + ').' };
+      } else {
+        CONTR.docs[doc.id] = { estado:'faltante', fechaDoc:'', url:'', archivo:'', carpeta:c.nombre, carpetaUrl:carpetaUrl, verificado:hoyISO(), por:'Carpeta Drive', n:0, archivos:[], esNuevo:!(c.id in visto) };
+      }
+    } else {
+      CONTR.otras.push({ nombre:c.nombre, id:c.id, url:carpetaUrl, archivos:archivos, esNuevo:!(c.id in visto) || nuevosAqui.length > 0 });
+    }
+  });
+  (raiz.archivos || []).forEach(function(a){ CONTR.sueltos.push({ nombre:a.nombre, url:urlVisor(a) || a.url, urlDrive:a.url, mod:a.mod, esNuevo:!(visto['_raiz'] || []).some(function(x){ return x === a.id; }) }); });
+  if(CONTR.sueltos.some(function(s){ return s.esNuevo; })) CONTR.nuevos.push({ tipo:'archivo', nombre:CONTR.sueltos.filter(function(s){ return s.esNuevo; }).map(function(s){ return s.nombre; }).join(', '), carpeta:'(raíz)', url:'https://drive.google.com/drive/folders/' + raiz.id });
+}
+function contrVisto(){ try { return JSON.parse(localStorage.getItem('ccv_contr_visto') || '{}'); } catch(e){ return {}; } }
+function marcarContractualRevisado(){
+  const raiz = CONTR.arbol; if(!raiz) return;
+  const v = {};
+  (raiz.carpetas || []).forEach(function(c){ v[c.id] = (c.archivos || []).map(function(a){ return a.id; }); });
+  v['_raiz'] = (raiz.archivos || []).map(function(a){ return a.id; });
+  try { localStorage.setItem('ccv_contr_visto', JSON.stringify(v)); } catch(e){}
+  procesarContractual(); render(); toast('Carpeta marcada como revisada en este navegador.', 'ok');
+}
+function pintarEstadoContractual(){
+  const el = document.getElementById('contrEstado'); if(el) el.innerHTML = textoEstadoContractual();
+}
+function textoEstadoContractual(){
+  if(!carpetaContractualDriveId()) return '<span class="sub" style="margin:0">Sin carpeta de Google Drive configurada (Módulo 09)</span>';
+  if(CONTR.cargando && !CONTR.arbol) return '<span class="sub" style="margin:0">⏳ leyendo la carpeta de Drive…</span>';
+  if(CONTR.error) return '<span class="pill rechazado"><span class="dot"></span>no se pudo leer la carpeta</span> <span class="sub" style="margin:0">' + esc(CONTR.error === 'sin-servicio' ? 'sin servicio de lectura' : CONTR.error) + '</span>';
+  if(CONTR.hora) return '<span class="pill aprobado"><span class="dot"></span>carpeta de Drive leída ' + CONTR.hora.toLocaleTimeString('es-CL', { hour:'2-digit', minute:'2-digit' }) + '</span> <span class="sub" style="margin:0">se actualiza sola cada 2 min</span>';
+  return '';
+}
+function verArchivoContractual(url, nombre){
+  abrirModal(
+    '<div class="modal-head"><h2 style="font-size:14px">📄 ' + esc(nombre) + '</h2><span class="pill neutral">solo lectura</span><button class="x" onclick="cerrarModal()" aria-label="Cerrar">×</button></div>' +
+    '<div class="modal-body" style="padding:0"><iframe class="visor-doc" src="' + attr(url) + '" title="' + attr(nombre) + '" allow="autoplay"></iframe></div>' +
+    '<div class="modal-foot"><span class="spacer"></span><button class="btn primary" onclick="cerrarModal()">Cerrar</button></div>');
+  const m = document.querySelector('#modalRoot .modal'); if(m) m.classList.add('wide');
+}
+/* Bloque de novedades y carpetas no reconocidas (se inserta en 5.3) */
+function bloqueNovedadesContractual(){
+  if(!carpetaContractualDriveId() || !CONTR.arbol) return '';
+  let h = '';
+  if(CONTR.nuevos.length){
+    h += '<div class="card card-pad" style="margin-bottom:14px;border-left:3px solid var(--warn)"><div class="toolbar" style="margin-bottom:6px"><h2 style="margin:0">Novedades en la carpeta de Drive <span class="sub" style="margin:0;font-weight:400">· ' + CONTR.nuevos.length + ' desde la última revisión en este navegador</span></h2><span class="spacer"></span><button class="btn sm primary" onclick="marcarContractualRevisado()">✓ Marcar como revisado</button></div><ul class="sdi-ol" style="padding-left:18px">' +
+      CONTR.nuevos.map(function(n){ return '<li>' + (n.tipo === 'carpeta' ? '📁 Carpeta nueva <b>' + esc(n.nombre) + '</b>' + (n.archivos.length ? ' con ' + n.archivos.length + ' archivo(s): ' + esc(n.archivos.join(', ')) : ' (vacía)') : '📄 Archivo nuevo <b>' + esc(n.nombre) + '</b> en ' + esc(n.carpeta)) + ' · <a class="doclink" href="' + attr(n.url) + '" target="_blank" rel="noopener">abrir en Drive ↗</a></li>'; }).join('') + '</ul></div>';
+  }
+  if(CONTR.otras.length || CONTR.sueltos.length){
+    h += '<div class="card card-pad" style="margin-bottom:14px"><h2>Otras carpetas y archivos en "' + esc(CONTR.arbol.nombre) + '" <span class="sub" style="margin:0;font-weight:400">· no asociados a un documento esperado; revisar y, si corresponde, registrar con ✎</span></h2>' +
+      '<div class="tbl-wrap"><table><thead><tr><th style="cursor:default">Carpeta / archivo</th><th style="cursor:default">Contenido</th><th style="cursor:default">Ver</th></tr></thead><tbody>' +
+      CONTR.otras.map(function(o){ return '<tr><td>📁 <b>' + esc(o.nombre) + '</b>' + (o.esNuevo ? ' <span class="pill enrev"><span class="dot"></span>NUEVO</span>' : '') + '</td><td class="wrap">' + (o.archivos.length ? o.archivos.map(function(a){ return '<div>' + esc(a.nombre) + ' <span class="sub" style="margin:0">' + fmtFecha(String(a.mod || '').slice(0,10)) + '</span> <a class="doclink" href="javascript:void 0" onclick="verArchivoContractual(\'' + attr(urlVisor(a) || a.url) + '\',\'' + attr(a.nombre) + '\')">ver</a></div>'; }).join('') : '<span class="sub" style="margin:0">carpeta vacía</span>') + '</td><td><a class="btn sm" href="' + attr(o.url) + '" target="_blank" rel="noopener">📂</a></td></tr>'; }).join('') +
+      CONTR.sueltos.map(function(s){ return '<tr><td>📄 ' + esc(s.nombre) + (s.esNuevo ? ' <span class="pill enrev"><span class="dot"></span>NUEVO</span>' : '') + '</td><td class="sub" style="margin:0">archivo en la raíz de la carpeta · ' + fmtFecha(String(s.mod || '').slice(0,10)) + '</td><td><button class="btn sm primary" onclick="verArchivoContractual(\'' + attr(s.url) + '\',\'' + attr(s.nombre) + '\')">👁</button></td></tr>'; }).join('') +
+      '</tbody></table></div></div>';
+  }
   return h;
 }
 /* ==================================================================
@@ -7283,7 +7429,9 @@ function renderConfig(){
       campo('cJefeCal', 'Jefe de calidad', '<input class="inp" id="cJefeCal" value="' + attr(c.jefeCalidad) + '">', 'Responsable del PIE, protocolos y NCR.') +
       campo('cDrive', 'Carpeta del contrato en Google Drive (URL)', '<input class="inp" id="cDrive" value="' + attr(c.carpetaDrive) + '" placeholder="https://drive.google.com/drive/folders/…">',
         'Se abre con el botón "Drive" de la cabecera. Mantenga esta app y los PDF dentro de esa carpeta sincronizada con Google Drive para escritorio: así cada documento se abre con un clic desde cualquier PC.') +
-      campo('cContractual', 'Carpeta "07. Documentos contractuales" en OneDrive (URL)', '<input class="inp" id="cContractual" value="' + attr(c.carpetaContractual || '') + '" placeholder="https://onedrive.live.com/…">',
+      campo('cContrDrive', 'Carpeta "07. Documentos contractuales" en Google Drive (URL)', '<input class="inp" id="cContrDrive" value="' + attr(c.carpetaContractualDrive || '') + '" placeholder="https://drive.google.com/drive/folders/…">',
+        'La app la lee automáticamente (subcarpetas 01. CARTA DE ADJUDICACION, 02. CARTA SERNAGEOMIN, 03. JORNADA LABORAL, etc.). Debe estar compartida como "Cualquier persona con el enlace: Lector". Vacío = no se lee.') +
+      campo('cContractual', 'Carpeta "07. Documentos contractuales" en OneDrive (URL de origen)', '<input class="inp" id="cContractual" value="' + attr(c.carpetaContractual || '') + '" placeholder="https://onedrive.live.com/…">',
         'Se abre desde 5.3 Hitos contractuales. Los enlaces de cada documento se editan en esa misma página (✎).') +
       campo('cSDI', 'Carpeta de SDI en Google Drive (URL)', '<input class="inp" id="cSDI" value="' + attr(c.carpetaSDI || '') + '" placeholder="https://drive.google.com/drive/folders/…">',
         'Se abre desde el Módulo 08. Los formularios nuevos se incorporan al registro de la app con la siguiente actualización.') +
@@ -7354,10 +7502,11 @@ function guardarContrato(){
     carpetaDrive: valorCampo('cDrive'),
     carpetaCalidad: valorCampo('cCalidad'),
     carpetaContractual: valorCampo('cContractual'),
+    carpetaContractualDrive: valorCampo('cContrDrive'),
     carpetaSDI: valorCampo('cSDI'),
     servicioCalidad: valorCampo('cServCal')
   };
-  CALIDAD.arbol = null;
+  CALIDAD.arbol = null; if(typeof CONTR !== 'undefined'){ CONTR.arbol = null; CONTR.firma = ''; CONTR.hora = null; CONTR.docs = {}; CONTR.hechos = {}; }
   if(DB.contrato.fechaInicio && DB.contrato.fechaTermino && DB.contrato.fechaTermino < DB.contrato.fechaInicio){
     toast('La fecha de término no puede ser anterior a la de inicio.', 'bad'); return;
   }
@@ -7418,6 +7567,10 @@ function borrarTodo(){
   initCarpeta();
   initAdmin();
   if(typeof bajarPrograma === 'function') setTimeout(function(){ bajarPrograma(); }, 800);
+  if(typeof cargarContractual === 'function'){
+    setTimeout(function(){ cargarContractual(true); }, 1500);
+    setInterval(function(){ const r = ESTADO_UI.ruta || ''; if(r === 'plan/hitos' || r === 'dashboard') cargarContractual(true); }, 120000);
+  }
   window.addEventListener('hashchange', onHashChange);
   ESTADO_UI.ruta = buscarRuta(rutaActual()) ? rutaActual() : 'dashboard';
   const info = buscarRuta(ESTADO_UI.ruta);
