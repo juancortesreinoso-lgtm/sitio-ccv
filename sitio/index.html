@@ -376,6 +376,15 @@ body.lectura .solo-admin{display:none!important}
 .sdi-row{cursor:pointer}
 .sdi-refs{width:auto;font-size:12px}.sdi-refs td{padding:3px 8px 3px 0;border:0;vertical-align:top;white-space:normal}
 .sdi-ol{margin:0;padding-left:18px}.sdi-ol li{margin:2px 0}
+.sdi-lotes{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.sdi-lote{border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:var(--radius);padding:8px 10px;background:var(--bg)}
+.sdi-lote.tarde{border-left-color:var(--bad)}
+.sdi-lote-cab{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px}
+.sdi-lote-n{background:var(--accent);color:#fff;border-radius:4px;padding:1px 7px;font-size:11.5px;font-weight:650}
+.sdi-lote-items{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:6px}
+.sdi-chip{display:flex;gap:6px;align-items:center;font-size:12px;text-decoration:none;color:var(--text);padding:4px 6px;border-radius:4px;background:var(--surface)}
+.sdi-chip:hover{background:var(--surface-2)}
+.sdi-chip span:last-child{color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media print{.sdi-row .btn{display:none}}
 @media print{.oferta-frame{display:none}}
 /* toast */
@@ -5647,23 +5656,130 @@ function renderInforme(){
   return h;
 }
 /* ==================================================================
-   MÓDULO 08 — SOLICITUDES DE INFORMACIÓN (SDI): datos leídos de la
-   carpeta de Google Drive el 30-09-2026 (Registro_SDI_CCV.xlsx y los
-   32 formularios SDI-CCV-001 a 032). El estado, fechas de envío y
-   respuesta se actualizan desde la app (administrador) y quedan
-   compartidos para todos.
+   MÓDULO 08 — SOLICITUDES DE INFORMACIÓN (SDI) — Rev A (01-10-2026)
+   Set depurado y secuenciado según el programa de obra: 20 SDI en 5
+   lotes de envío; 12 SDI de la Rev 0 (30-09-2026) diferidas. El estado,
+   fechas de envío y respuesta se actualizan desde la app (administrador)
+   y quedan compartidos para todos.
    ================================================================== */
 const SDI_CARPETA_URL = "https://drive.google.com/drive/folders/1Zt2FqLWzCwnnPX2egFuHfsQUBmhJjao1";
 const SDI_REGISTRO_ID = "1q-VXW3MRf-ruZbRnEC9Y8NVTw5ZOKvtI";
 const SDI_LEIDO = '2026-09-30';
+const SDI_REV = 'Rev A · 01-10-2026';
 const SDI_DISCIPLINAS = ['MINERÍA','CIVIL','ESTRUCTURA','TOPOGRAFÍA','MECÁNICA','PIPING','ELÉCTRICO','INSTRUMENTACIÓN','OTRO'];
 const SDI_ESTADOS = ['Borrador','Enviada','Respondida','Cerrada'];
+const SDI_LOTES = [
+ {
+  "n": 1,
+  "nombre": "Inicio del contrato (KOM)",
+  "enviar": "2026-10-05",
+  "uid": "190",
+  "hito": "Reunión de inicio KOM (05-10-2026)",
+  "porque": "Definiciones base del contrato: ingeniería vigente, terreno de faena, fecha de parada, exoesqueleto y planos de referencia. Sin esto no se puede programar ni comprar."
+ },
+ {
+  "n": 2,
+  "nombre": "Antes de canalizaciones, muro cortafuego y armado de sala",
+  "enviar": "2026-10-15",
+  "uid": "71",
+  "hito": "Inicio 4.2 canalizaciones / 2 muro cortafuego / 3.1 armado E-House (10-11-2026)",
+  "porque": "Trabajos que parten el 10-11-2026 y requieren plano de canalizaciones APC, especificación del muro, izaje en caverna y puesta a tierra."
+ },
+ {
+  "n": 3,
+  "nombre": "Antes del montaje de cables",
+  "enviar": "2026-10-26",
+  "uid": "80",
+  "hito": "Inicio 4.3 montaje de cables, conexionado y pruebas (10-11-2026)",
+  "porque": "Los carretes DAND ya están comprados: hay que confirmar largos, secciones, tags y circuitos de control y SSAA antes de cortar."
+ },
+ {
+  "n": 4,
+  "nombre": "Antes de cañerías de enfriamiento y red de incendio",
+  "enviar": "2026-12-01",
+  "uid": "58",
+  "hito": "Inicio 4.1 cañería de agua (16-01-2027) y 7.1 red de incendio (25-01-2027)",
+  "porque": "Ingeniería de piping y definiciones de interconexión del sistema de incendio aún no entregadas."
+ },
+ {
+  "n": 5,
+  "nombre": "Antes de equipos eléctricos y parada de planta",
+  "enviar": "2027-01-04",
+  "uid": "108",
+  "hito": "Inicio 4.4 equipos eléctricos (25-01-2027) y 5.1 parada de planta (15-03-2027)",
+  "porque": "Plan de tie-ins y secuencia de retiro deben estar cerrados antes de la parada."
+ }
+];
+const SDI_DIFERIDAS = [
+ [
+  "SDI-CCV-002",
+  "Plano layout y arquitectura sala eléctrica 100ME-00001 en Rev C",
+  "Ingeniería interior de la sala (Innomotics) aprobada — no se consulta."
+ ],
+ [
+  "SDI-CCV-003",
+  "Documentos referenciados no entregados, ilegibles y sin revisión AFC (paquete Innomotics)",
+  "Ingeniería Innomotics aprobada; los documentos faltantes se siguen por control documental. El plano 205ES-00002 se pide en SDI-CCV-005."
+ ],
+ [
+  "SDI-CCV-007",
+  "Cantidad de soportes de anclaje (16 vs 14) y quincallería",
+  "Suministro Innomotics ya adquirido — no se consulta."
+ ],
+ [
+  "SDI-CCV-008",
+  "Vigencia de reacciones de anclaje 400ME-00001 vs memoria Rev 2",
+  "Incorporada en SDI-CCV-005 (validación por el diseñador del exoesqueleto)."
+ ],
+ [
+  "SDI-CCV-009",
+  "Inconsistencia de dimensiones y peso total de la sala",
+  "Ingeniería Innomotics aprobada — no se consulta."
+ ],
+ [
+  "SDI-CCV-010",
+  "Tabla de torques de apriete (manual Innomotics)",
+  "Ingeniería Innomotics aprobada — no se consulta."
+ ],
+ [
+  "SDI-CCV-013",
+  "Resistencia al fuego por elemento y sellos Roxtec",
+  "Ingeniería y suministros Innomotics — no se consulta."
+ ],
+ [
+  "SDI-CCV-015",
+  "HVAC: memoria vs plano, drenajes, pasadas",
+  "Ingeniería Innomotics aprobada; la alimentación 380 V del HVAC se pide en SDI-CCV-015 (SSAA)."
+ ],
+ [
+  "SDI-CCV-016",
+  "Pintura de retoque, kit touch-up",
+  "Suministro Innomotics — no se consulta."
+ ],
+ [
+  "SDI-CCV-018",
+  "Hermeticidad del recinto para inundación total",
+  "Diseño del sistema Innomotics — no se consulta."
+ ],
+ [
+  "SDI-CCV-019",
+  "Matriz de límites de suministro DAND / Innomotics / contratista",
+  "Suministros ya definidos y adquiridos — no se consulta por ahora."
+ ],
+ [
+  "SDI-CCV-032",
+  "Alcance y dotación del apoyo a integración, SAT y PEM",
+  "Tema contractual (alcance/pago) — no se consulta por ahora."
+ ]
+];
 const SDI_DATA = [
  {
   "id": "SDI-CCV-001",
   "n": 1,
-  "fecha": "2026-09-30",
-  "tema": "Emisión para construcción (APC) de ingeniería de terreno R&Q y especificación de cables, actualmente en Rev B",
+  "nAnt": "SDI-CCV-001",
+  "lote": 1,
+  "fecha": "2026-10-01",
+  "tema": "Emisión para construcción (APC) de la ingeniería de terreno R&Q y de la especificación de cables, actualmente en Rev B",
   "disc": [
    "ELÉCTRICO",
    "OTRO"
@@ -5673,7 +5789,7 @@ const SDI_DATA = [
    "Plazo",
    "Costo"
   ],
-  "ubic": "Ingeniería de terreno R&Q (Contrato 4600029647 ODS 028) y especificación de cables Innomotics",
+  "ubic": "Ingeniería de terreno R&Q (Contrato 4600029647 ODS 028) y especificación de cables 106EL-00001",
   "refs": [
    [
     "Planos",
@@ -5691,151 +5807,24 @@ const SDI_DATA = [
     "Listados de circuitos, canalizaciones, equipos, tie-in e informe malla a tierra; listado de planos y documentos"
    ]
   ],
-  "ant": "Los documentos R&Q están emitidos \"para revisión CODELCO\" (Rev B, julio 2026) con observaciones abiertas; la especificación de cables 106EL-00001 está en Rev B \"Emitido para cliente\", sin sello APC. En licitación (R122) solo se confirmó que eran la última revisión \"para ofertar\".",
+  "ant": "Los documentos de ingeniería de terreno R&Q entregados al contratista están emitidos \"para revisión CODELCO\" (Rev B, julio 2026) y sus portadas mantienen observaciones abiertas de CODELCO. La especificación de cables 106EL-00001 está en Rev B \"Emitido para cliente\", sin sello de aprobación para construcción. En licitación (R122) solo se confirmó que eran la última revisión vigente \"para ofertar\".",
   "cons": [
-   "Fecha comprometida de emisión Rev 0 APC de 205EL-00001, LSTEL-00002/3/4/5, INFEL-00010 y 106EL-00001.",
-   "Anexo 5 (listado de planos y documentos) actualizado con la revisión vigente para construcción.",
-   "Confirmar si MIES puede iniciar adquisiciones o trabajos con documentos Rev B y bajo qué condición."
+   "Indicar la fecha comprometida de emisión Rev 0 \"Apto para Construcción\" de 205EL-00001, LSTEL-00002, LSTEL-00003, LSTEL-00004, LSTEL-00005, INFEL-00010 y 106EL-00001.",
+   "Entregar el Anexo 5 (Listado de Planos y Documentos) actualizado con la revisión vigente de cada documento para construcción.",
+   "Confirmar si MIES puede iniciar trabajos en terreno con documentos en Rev B y bajo qué condición."
   ],
-  "prop": "No ejecutar trabajos ni compras basados en documentos Rev B salvo instrucción escrita del AdC DAND; constancia del plazo de 7 días (BT §8.1) para reportar discrepancias.",
+  "refp": "4600029647-028-03221-205EL-00001 Rev B",
+  "actividad": "Documental contractual / KOM",
   "fid": "1OqzH2kFFokDGkdUPb03VVzVQ9IL_ygFx",
   "archivo": "SDI-CCV-001_Emision-APC-ingenieria-terreno.xlsx",
-  "refp": "4600029647-028-03221-205EL-00001 Rev B",
   "estado": "Borrador"
  },
  {
   "id": "SDI-CCV-002",
   "n": 2,
-  "fecha": "2026-09-30",
-  "tema": "Plano layout y arquitectura sala eléctrica 100ME-00001 en Rev C 'Para aprobación' con comentarios abiertos",
-  "disc": [
-   "ESTRUCTURA",
-   "MECÁNICA"
-  ],
-  "urg": "Inmediata",
-  "imp": [
-   "Plazo"
-  ],
-  "ubic": "Sala eléctrica modular CCV (E-House) 2° piso – layout general, zócalos y pasadas",
-  "refs": [
-   [
-    "Planos",
-    "4502319491-03221-100ME-00001 Rev C; 100ME-00002 Rev 0 (nota 3)",
-    "Layout y arquitectura sala eléctrica 2° piso; calado de piso, base y muro"
-   ],
-   [
-    "Especificación",
-    "4502319491-03221-MNLME-0001 Rev 0 (§7.2)",
-    "Manual de montaje en terreno sala eléctrica modular"
-   ],
-   [
-    "Otros",
-    "4502319491-03221-100ME-00003 Rev 0 (lám. 02 y 15)",
-    "Disposición y montaje de equipos HVAC"
-   ]
-  ],
-  "ant": "Los dos archivos recibidos de 100ME-00001 corresponden a la Rev C \"PARA APROBACIÓN\" (23-05-2025) con timbre \"Con observaciones\" (puertas antipánico, zócalos de pasada, interferencia líneas de enfriamiento); sin embargo, documentos Rev 0 aprobados y las respuestas 2R6/2R7 lo usan como referencia.",
-  "cons": [
-   "Entregar 100ME-00001 en Rev 0 APC con los comentarios CODELCO cerrados.",
-   "Confirmar cuál de los dos archivos recibidos es el vigente.",
-   "Confirmar solución final de puertas antipánico, zócalos de pasada de cables e interferencia de líneas de enfriamiento con la estructura base."
-  ],
-  "prop": "No liberar montaje de zócalos, pasadas ni elementos HVAC dependientes de este plano hasta recibir la Rev 0; corregir la referencia de código en 100ME-00003.",
-  "fid": "1HdSA3teNHOZ04couGSDuCDHa5RbWcJAA",
-  "archivo": "SDI-CCV-002_Layout-100ME-00001-RevC.xlsx",
-  "refp": "4502319491-03221-100ME-00001 Rev C",
-  "estado": "Borrador"
- },
- {
-  "id": "SDI-CCV-003",
-  "n": 3,
-  "fecha": "2026-09-30",
-  "tema": "Documentos referenciados no entregados, documentos ilegibles y documentos sin revisión AFC",
-  "disc": [
-   "ESTRUCTURA",
-   "MECÁNICA",
-   "ELÉCTRICO"
-  ],
-  "urg": "Mediana",
-  "imp": [
-   "Plazo"
-  ],
-  "ubic": "Paquete de ingeniería de detalle Innomotics – sala eléctrica modular y sala existente +1.B",
-  "refs": [
-   [
-    "Planos",
-    "200ME-00003 Rev 0 (lám. 47); 104ME-00001; 104ME-00002 Rev B; 300EL-0001; 300EL-0002; 400ME-00002",
-    "Armado sala; pesos y anclajes gabinetes; conexionado LEM; pesos y centro de masa"
-   ],
-   [
-    "Especificación",
-    "ESPME-00001 Rev 0 (§4, §6.1); MDCME-00001 Rev 2 (§3)",
-    "Especificación metalmecánica; memoria de cálculo estructural"
-   ],
-   [
-    "Otros",
-    "HDDME-00001; Respuestas Licitación R265, R406, R414",
-    "Hoja de datos metalmecánica; respuestas de licitación"
-   ]
-  ],
-  "ant": "Faltan documentos citados (6019-PLA-ME-0004/5/6/7, 6019-M-FB-0035, PROME-00002/3, 205ES-00002); 300EL-0001/0002 y 400ME-00002 son ilegibles; 104ME-00001/00002 no están AFC e incluyen trabajos en la sala existente; HDDME-00001 con observación de revisión.",
-  "cons": [
-   "Entregar los documentos faltantes o confirmar que no aplican al alcance del contratista.",
-   "Reemitir en versión legible (PDF vectorial) 300EL-0001, 300EL-0002 y 400ME-00002.",
-   "Emitir 104ME-00001 y 104ME-00002 en Rev 0 AFC y confirmar la revisión vigente de HDDME-00001.",
-   "Confirmar si los trabajos en sala existente de 104ME-00001 son alcance de MIES y en qué partida del ECO se pagan."
-  ],
-  "prop": "Registrar las pendientes en el control documental y actualizar el Anexo 5 con los documentos faltantes.",
-  "fid": "1GiXBl2pO4anx0EsL6Z1C2sBhUSsHbRRY",
-  "archivo": "SDI-CCV-003_Documentos-no-entregados-ilegibles.xlsx",
-  "refp": "4502319491-03221-200ME-00003 Rev 0 (lám. 47); 104ME-00001; 104ME-00002 Rev B",
-  "estado": "Borrador"
- },
- {
-  "id": "SDI-CCV-004",
-  "n": 4,
-  "fecha": "2026-09-30",
-  "tema": "Confirmación de fecha y duración de la parada de planta mayor y de la parada para tie-in de enfriamiento",
-  "disc": [
-   "ELÉCTRICO",
-   "MECÁNICA",
-   "OTRO"
-  ],
-  "urg": "Inmediata",
-  "imp": [
-   "Plazo",
-   "Costo"
-  ],
-  "ubic": "Molino SAG – Sala eléctrica SAG / Túnel SAG (parada de planta)",
-  "refs": [
-   [
-    "Especificación",
-    "BT §4.3.2, §6.2.17, §6.2.19, §15 (Tabla de Hitos)",
-    "Bases Técnicas – parada de planta mayor e hitos 5 y 6"
-   ],
-   [
-    "Otros",
-    "Respuestas Licitación R4, R5, R128, R158, R199, R333; Hitos.xlsx",
-    "Respuestas de licitación y cuadro de hitos actualizado"
-   ]
-  ],
-  "ant": "Las respuestas de licitación son inconsistentes: parada de 10 días desde 05-04-2027 (R5/R128), \"5 abril 2026\" (R199), calendario de paradas sin abril (R333), tie-in de enfriamiento en la parada de octubre 2026 (R158), ventana máxima de 8 días (R4); el Hito 6 a 210 días cae antes de abril 2027.",
-  "cons": [
-   "Confirmar fecha de inicio, duración y régimen de turnos de la parada mayor.",
-   "Confirmar si el tie-in de enfriamiento (BT §6.2.8) se ejecuta en la parada de octubre 2026 u otra, con fecha y duración.",
-   "Confirmar paradas menores o ventanas previas para tie-ins parciales (Etapa 1).",
-   "Confirmar que los Hitos 5 y 6 se ajustarán a la fecha real de parada."
-  ],
-  "prop": "Vincular los hitos 5 y 6 a la fecha efectiva de parada informada por DAND y reprogramar el Programa de Trabajo con esa fecha.",
-  "fid": "10L5iQOa3HnsbwN0SDG3Fe_xkbNucyjMW",
-  "archivo": "SDI-CCV-004_Fecha-parada-planta-y-tie-in-enfriamiento.xlsx",
-  "refp": "BT §4.3.2, §6.2.17, §6.2.19, §15",
-  "estado": "Borrador"
- },
- {
-  "id": "SDI-CCV-005",
-  "n": 5,
-  "fecha": "2026-09-30",
+  "nAnt": "SDI-CCV-005",
+  "lote": 1,
+  "fecha": "2026-10-01",
   "tema": "Definición de ubicación, superficie y fecha de entrega del terreno para instalación de faena",
   "disc": [
    "CIVIL",
@@ -5859,281 +5848,165 @@ const SDI_DATA = [
     "Respuestas de licitación"
    ]
   ],
-  "ant": "Las BT mencionan Túnel SAG, Acceso MUN2 y \"terreno por definir\"; en licitación se indicó Túnel Inyección SAG con ubicación definitiva a entregar al adjudicado, sin espacio dentro de la sala y ~500 m a los frentes. El Hito 1 vence a 30 días del Acta de Entrega de Terreno.",
+  "ant": "BT §5.2 indica \"se identifica Túnel SAG. Sin embargo, se confirmará\"; BT §6.2.1 indica \"La ubicación asignada… será Acceso MUN2\"; BT §10.1 señala que el terreno \"será definido e informado\". En licitación (R15) se indicó que \"se está solicitando Túnel Inyección SAG; la ubicación definitiva se entregará a la empresa adjudicada\"; R326 indica que no hay espacio dentro de la sala y R248 una distancia aproximada de 500 m a los frentes. El Hito 1 (movilización e instalación de faena) vence a los 30 días desde el Acta de Entrega de Terreno.",
   "cons": [
-   "Ubicación definitiva, superficie disponible y plano de la instalación de faena asignada.",
-   "Fecha de entrega del terreno y condiciones (accesos, iluminación, ventilación, agua industrial).",
-   "Aplicabilidad del riego de caminos (§6.2.1) para una instalación subterránea."
+   "Informar ubicación definitiva, superficie disponible y plano de la instalación de faena asignada.",
+   "Indicar fecha de entrega de dicho terreno y sus condiciones (accesos, iluminación, ventilación, puntos de agua industrial y energía).",
+   "Confirmar la aplicabilidad del riego de caminos exigido en §6.2.1 para una instalación subterránea."
   ],
-  "prop": "Que el plazo del Hito 1 se cuente desde la entrega efectiva del terreno para la instalación de faena.",
-  "fid": "11alMJd3igAyTqTHMb_flMx6kWZLeaPpd",
-  "archivo": "SDI-CCV-005_Ubicacion-instalacion-de-faena.xlsx",
   "refp": "BT §5.2, §6.2.1, §10.1",
+  "actividad": "Hito 1 – Instalación de faenas (día 30)",
+  "fid": "11alMJd3igAyTqTHMb_flMx6kWZLeaPpd",
+  "archivo": "SDI-CCV-002_Ubicacion-instalacion-de-faena.xlsx",
   "estado": "Borrador"
  },
  {
-  "id": "SDI-CCV-006",
-  "n": 6,
-  "fecha": "2026-09-30",
-  "tema": "Interfaz de la sala eléctrica con el exoesqueleto: alcance, estado, perforaciones, tuerca soldada y nivelación",
+  "id": "SDI-CCV-003",
+  "n": 3,
+  "nAnt": "SDI-CCV-004",
+  "lote": 1,
+  "fecha": "2026-10-01",
+  "tema": "Confirmación de fecha y duración de la parada de planta mayor y de la parada para el tie-in de enfriamiento",
+  "disc": [
+   "ELÉCTRICO",
+   "MECÁNICA",
+   "OTRO"
+  ],
+  "urg": "Inmediata",
+  "imp": [
+   "Plazo",
+   "Costo"
+  ],
+  "ubic": "Molino SAG – Sala eléctrica SAG / Túnel SAG (parada de planta)",
+  "refs": [
+   [
+    "Especificación",
+    "BT §4.3.2, §6.2.17, §6.2.19, §15 (Tabla de Hitos)",
+    "Bases Técnicas – parada de planta mayor e hitos 5 y 6"
+   ],
+   [
+    "Otros",
+    "Respuestas Licitación R4, R5, R128, R158, R199, R333; Hitos.xlsx",
+    "Respuestas de licitación y cuadro de hitos actualizado"
+   ]
+  ],
+  "ant": "Las respuestas de licitación entregan información no consistente sobre la parada: R5/R128 indican parada de 10 días a partir del 05-04-2027 (fecha sujeta a cambios); R199 indica \"5 abril 2026\"; R333 lista paradas programadas el 07-sep, 19-oct, 24-oct, 11-ene y 16-feb, sin ninguna en abril; R158 indica que el tie-in de la línea de enfriamiento se ejecutaría en la parada de octubre de 2026; R4 fija una ventana máxima de 8 días para tie-in. El cuadro de hitos actualizado ubica el Hito 6 (puesta en marcha) a los 210 días desde el Acta de Entrega de Terreno, antes de abril de 2027.",
+  "cons": [
+   "Confirmar fecha de inicio, duración y régimen de turnos de la parada de planta mayor para el reemplazo del cicloconvertidor.",
+   "Confirmar si el tie-in de enfriamiento (BT §6.2.8) se ejecuta en la parada de octubre 2026 u otra, con su fecha y duración.",
+   "Confirmar si existen paradas menores o ventanas previas disponibles para tie-ins parciales (Etapa 1).",
+   "Confirmar si los Hitos 5 (Integración) y 6 (Puesta en marcha) se ajustarán a la fecha real de la parada."
+  ],
+  "refp": "BT §4.3.2, §6.2.17, §6.2.19, §15",
+  "actividad": "Programa de trabajo – Hitos 5 y 6 / parada de planta",
+  "fid": "10L5iQOa3HnsbwN0SDG3Fe_xkbNucyjMW",
+  "archivo": "SDI-CCV-003_Fecha-parada-planta-y-tie-in-enfriamiento.xlsx",
+  "estado": "Borrador"
+ },
+ {
+  "id": "SDI-CCV-004",
+  "n": 4,
+  "nAnt": "SDI-CCV-030",
+  "lote": 1,
+  "fecha": "2026-10-01",
+  "tema": "Plano de canalizaciones 205EL-00001: plano de referencia 205ES-00001 no entregado e interferencia con el cielo existente y el ducto de barras",
+  "disc": [
+   "ELÉCTRICO",
+   "CIVIL"
+  ],
+  "urg": "Inmediata",
+  "imp": [
+   "Plazo",
+   "Seguridad"
+  ],
+  "ubic": "Sala eléctrica SAG – exoesqueleto y escalerillas, cielo existente, ducto de barra existente",
+  "refs": [
+   [
+    "Planos",
+    "4600029647-028-03221-205EL-00001 Rev B (notas 2, 5, 6); 300CI-00002 Rev 1 (APC)",
+    "Plano de canalizaciones; plano sala con exoesqueleto – emplazamiento e isométrico"
+   ],
+   [
+    "Otros",
+    "4600029647-028-03221-205ES-00001 (no recibido)",
+    "Plano de posición del exoesqueleto"
+   ]
+  ],
+  "ant": "205EL-00001 nota 2 refiere las cotas al plano 4600029647-028-03221-205ES-00001, que no ha sido entregado. La nota 5 señala la holgura con el \"ducto de barra existente\". La nota 6 indica que \"el cielo existente presenta interferencias con la proyección de la sala eléctrica del segundo piso… deberá ser ajustado y/o modificado previo al inicio del montaje\", sin definir alcance ni responsable. 300CI-00002 ya está APC, pero 205EL sigue en Rev B.",
+  "cons": [
+   "Entregar el plano 205ES-00001 vigente.",
+   "Emitir 205EL-00001 en Rev 0 APC.",
+   "Definir alcance técnico, ingeniería y responsable de la modificación del cielo existente, y su plazo respecto del inicio del montaje de la sala.",
+   "Confirmar la distancia mínima requerida al ducto de barras existente y si éste permanece energizado durante los trabajos."
+  ],
+  "refp": "4600029647-028-03221-205EL-00001 Rev B (notas 2, 5, 6)",
+  "actividad": "4.2 Canalizaciones / 3.1 Armado E-House (10-11-2026)",
+  "fid": "1Sh6OeVYNDmRxY9PK3HWijEsZmdjDo-5X",
+  "archivo": "SDI-CCV-004_205ES-00001-y-cielo-existente.xlsx",
+  "estado": "Borrador"
+ },
+ {
+  "id": "SDI-CCV-005",
+  "n": 5,
+  "nAnt": "SDI-CCV-006",
+  "lote": 1,
+  "fecha": "2026-10-01",
+  "tema": "Exoesqueleto de la sala eléctrica: alcance, estado, entrega, perforaciones, nivelación y validación de las reacciones de anclaje",
   "disc": [
    "ESTRUCTURA"
   ],
   "urg": "Inmediata",
   "imp": [
    "Plazo",
-   "Costo",
    "Seguridad"
   ],
   "ubic": "Exoesqueleto sala eléctrica 2° piso – vigas IN 40 y soportes de anclaje",
   "refs": [
    [
     "Planos",
-    "400ME-00001 Rev 0 y Rev B; 200ME-00003 Rev 0 (lám. 4/47); 4600029647-028-03221-300CI-00002 Rev 1",
+    "4502319491-03221-400ME-00001 Rev 0; 200ME-00003 Rev 0 (lám. 4/47); 4600029647-028-03221-300CI-00002 Rev 1",
     "Puntos de anclaje y reacciones; armado sala; emplazamiento exoesqueleto (APC)"
    ],
    [
     "Especificación",
-    "4502319491-03221-MNLME-0001 Rev 0 (§7.4)",
-    "Manual de montaje en terreno"
+    "4502319491-03221-MNLME-0001 Rev 0 (§7.4); MDCME-00001 Rev 2",
+    "Manual de montaje en terreno; memoria de cálculo estructural"
    ],
    [
     "Otros",
-    "BT §5.3; Respuestas R201, R252; 4600022666-009-03221-205ES-00002 (no entregado)",
-    "Bases; respuestas; plano estructura exoesqueleto"
+    "BT §5.3; Respuestas Licitación R201, R252; 4600022666-009-03221-205ES-00002 (no entregado)",
+    "Bases Técnicas; respuestas de licitación; plano estructura exoesqueleto"
    ]
   ],
-  "ant": "BT §5.3 exige verificar nivelación y torque del exoesqueleto pero el ECO no tiene partida para fabricarlo ni montarlo (R252: contrato externo). 400ME-00001 Rev B indicaba tuerca soldada y la Rev 0 tuerca instalada; 200ME-00003 indica perforaciones ∅22 en vigas IN 40; no se especifican lainas ni grout (desnivel máx. ±3 mm); 205ES-00002 no fue entregado.",
+  "ant": "BT §5.3 exige \"verificar nivelación, cuadratura y torque de estructura base (exoesqueleto)\" y revisar su protocolo topográfico; R252 incluye \"instalación exoesqueleto\" entre actividades \"del contrato externo\". 200ME-00003 lám. 4 indica perforaciones ∅22 y pernos 3/4\"x4\" de anclaje a la \"Proyección Viga IN 40\"; 400ME-00001 Rev 0 indica tuerca hexagonal instalada (la Rev B la indicaba soldada). No se especifican lainas ni grout, aunque MNLME-0001 exige desnivel máximo ±3 mm entre módulos. El plano de estructura del exoesqueleto 205ES-00002 no fue entregado. Las reacciones de anclaje de 400ME-00001 Rev 0 (02-09-2025) son anteriores a la Rev 2 de la memoria MDCME-00001 (12-11-2025) y sus tablas no son legibles en el PDF recibido.",
   "cons": [
-   "Confirmar quién fabrica y monta el exoesqueleto, su estado y fecha de entrega liberada a MIES con protocolo topográfico y de torque.",
+   "Confirmar quién fabrica y monta el exoesqueleto, su estado actual y la fecha de entrega liberada a MIES, junto con su protocolo topográfico y de torque.",
    "Entregar el plano 205ES-00002 vigente.",
-   "Confirmar si las perforaciones ∅22 vienen de taller y coinciden con 400ME-00001.",
-   "Confirmar que no se requiere soldadura en terreno de tuercas (Rev 0 vs Rev B).",
-   "Definir el medio de nivelación (lainas/grout) y su suministro."
+   "Confirmar si las perforaciones ∅22 en las vigas IN 40 vienen de taller y coinciden con las cotas de 400ME-00001.",
+   "Confirmar que no se requiere soldadura en terreno de tuercas (Rev 0 vs Rev B de 400ME-00001).",
+   "Definir el medio de nivelación entre exoesqueleto y sala (lainas/grout) y su suministro.",
+   "Confirmar que el diseñador del exoesqueleto validó las reacciones de anclaje de 400ME-00001 Rev 0 respecto de MDCME-00001 Rev 2, y entregar 400ME-00001 en versión legible."
   ],
-  "prop": "Recibir el exoesqueleto mediante acta con protocolo topográfico aprobado; perforaciones o soldaduras en terreno como trabajo adicional con procedimiento aprobado por DAND.",
+  "refp": "4600029647-028-03221-300CI-00002 Rev 1; 400ME-00001 Rev 0",
+  "actividad": "3.1 Armado E-House de cicloconvertidores (10-11-2026)",
   "fid": "14aG2XIyCljRNLoXwOS_wtq2dG1dzv1FN",
-  "archivo": "SDI-CCV-006_Exoesqueleto-interfaz-anclaje.xlsx",
-  "refp": "4502319491-03221-400ME-00001 Rev 0 y Rev B",
+  "archivo": "SDI-CCV-005_Exoesqueleto-interfaz-y-reacciones.xlsx",
   "estado": "Borrador"
  },
  {
-  "id": "SDI-CCV-007",
-  "n": 7,
-  "fecha": "2026-09-30",
-  "tema": "Cantidad de soportes de anclaje (16 vs 14) y quincallería de 1\" especificada para pernos de 3/4\"",
-  "disc": [
-   "ESTRUCTURA"
-  ],
-  "urg": "Inmediata",
-  "imp": [
-   "Plazo",
-   "Seguridad"
-  ],
-  "ubic": "Soportes de anclaje sala eléctrica a exoesqueleto (Bulto N°25)",
-  "refs": [
-   [
-    "Planos",
-    "400ME-00001 Rev 0 (lám. 1/4, 2/4, 3/4); 200ME-00003 Rev 0 (lám. 4/47)",
-    "Puntos de anclaje y reacciones; plano armado sala modular"
-   ],
-   [
-    "Especificación",
-    "4502319491-03221-MNLME-0001 Rev 0 (§8.1, §8.3)",
-    "Manual de montaje en terreno"
-   ],
-   [
-    "Otros",
-    "4502319491-03221-MDCME-00001 Rev 2",
-    "Memoria de cálculo estructural (16 puntos de apoyo)"
-   ]
-  ],
-  "ant": "400ME-00001 indica 16 juegos en una lámina y 14 en otra; la tabla de quincallería lista golillas y tuercas de 1\" para pernos de 3/4\"; el manual lista pernería equivalente a 14 soportes; la memoria considera 16 puntos de apoyo; se prohíbe reutilizar pernos torqueados.",
-  "cons": [
-   "Confirmar la cantidad de soportes de anclaje (16) y de pernos por soporte.",
-   "Emitir la tabla de quincallería corregida (tuercas y golillas 3/4\").",
-   "Confirmar que Innomotics suministra la totalidad de la quincallería, incluido repuesto."
-  ],
-  "prop": "Considerar 16 soportes con 4 pernos 3/4\"x3\" + 4 pernos 3/4\"x4\" cada uno, tuercas y golillas de 3/4\", más 5 % de repuesto, sujeto a confirmación del diseñador.",
-  "fid": "140vBcfsb9X6wi_vf-nxdekZVA-Jr3aXT",
-  "archivo": "SDI-CCV-007_Quincalleria-soportes-anclaje.xlsx",
-  "refp": "4502319491-03221-400ME-00001 Rev 0 (lám. 1/4, 2/4, 3/4)",
-  "estado": "Borrador"
- },
- {
-  "id": "SDI-CCV-008",
-  "n": 8,
-  "fecha": "2026-09-30",
-  "tema": "Vigencia de reacciones de anclaje 400ME-00001 Rev 0 respecto de memoria de cálculo estructural MDCME-00001 Rev 2",
-  "disc": [
-   "ESTRUCTURA"
-  ],
-  "urg": "Inmediata",
-  "imp": [
-   "Seguridad"
-  ],
-  "ubic": "Puntos de anclaje sala eléctrica al exoesqueleto (tabla de reacciones)",
-  "refs": [
-   [
-    "Planos",
-    "4502319491-03221-400ME-00001 Rev 0 (02-09-2025) (lám. 4/4)",
-    "Disposición puntos de anclaje y reacciones en exoesqueleto"
-   ],
-   [
-    "Especificación",
-    "4502319491-03221-MDCME-00001 Rev 2 (12-11-2025) (§9, §11 Tabla 14, §14)",
-    "Memoria de cálculo estructural sala eléctrica modular"
-   ]
-  ],
-  "ant": "400ME-00001 Rev 0 tiene la fecha de la Rev 0 de la memoria, que luego pasó a Rev 1 y Rev 2 sin reemisión del plano. La memoria incluye combinaciones con viento sin definir la carga; la verificación de anclaje considera n = 1 perno y el nudo 56 presenta levantamiento de −6.171 kgf. Las tablas de reacciones no son legibles.",
-  "cons": [
-   "Confirmar que las reacciones de 400ME-00001 Rev 0 corresponden a MDCME-00001 Rev 2; si no, reemitir 400ME.",
-   "Aclarar si aplica carga de viento (sala en caverna) y con qué combinación se diseñó el anclaje.",
-   "Indicar cuántos pernos por soporte resisten la tracción de diseño.",
-   "Confirmar que el diseñador del exoesqueleto validó estas reacciones.",
-   "Entregar 400ME-00001 en versión legible."
-  ],
-  "prop": "No iniciar el apriete definitivo de anclajes hasta contar con la confirmación del diseñador y la validación de reacciones por el diseñador del exoesqueleto.",
-  "fid": "1SVPM2Y6jm84x5sqEx-Kenzx9wiLiOvHk",
-  "archivo": "SDI-CCV-008_Reacciones-anclaje-vs-memoria-Rev2.xlsx",
-  "refp": "4502319491-03221-400ME-00001 Rev 0 (lám. 4/4)",
-  "estado": "Borrador"
- },
- {
-  "id": "SDI-CCV-009",
-  "n": 9,
-  "fecha": "2026-09-30",
-  "tema": "Inconsistencia de dimensiones (ancho 4.360 vs 4.200 mm) y verificación de peso total de la sala eléctrica",
-  "disc": [
-   "ESTRUCTURA",
-   "MECÁNICA"
-  ],
-  "urg": "Mediana",
-  "imp": [
-   "Seguridad",
-   "Plazo"
-  ],
-  "ubic": "Sala eléctrica modular – envolvente y peso total",
-  "refs": [
-   [
-    "Planos",
-    "4502319491-03221-400ME-00002; 100ME-00002 Rev 0 (lám. 2/3)",
-    "Pesos y centro de masa; calado de piso, base y muro"
-   ],
-   [
-    "Especificación",
-    "MNLME-0001 Rev 0 (§7.1); MDCME-00001 Rev 2 (§1, Tabla 3)",
-    "Manual de montaje; memoria de cálculo estructural"
-   ],
-   [
-    "Otros",
-    "100EL-00001 Rev 0; 100ME-00003 Rev 0",
-    "Detección y extinción de incendio; HVAC"
-   ]
-  ],
-  "ant": "El manual indica 12.000 × 4.360 × 3.378 mm y 24.656 kg; la memoria indica 4,2 m de ancho con el mismo peso; las bases M1–M10 y el calado muestran 4.200 mm; el plano HVAC usa 4.095 mm interior. 400ME-00002 no es legible y no se sabe si el peso incluye cilindros de agente extintor, HVAC y zócalos.",
-  "cons": [
-   "Confirmar la envolvente máxima de la sala (celosías, soporte UC-01, portones, aleros) y a qué corresponde la cota de 4.360 mm.",
-   "Emitir 400ME-00002 legible con peso total, por módulo/bulto y centro de masa.",
-   "Confirmar que 24.656 kg incluye cilindros de extinción, equipos HVAC y zócalos."
-  ],
-  "prop": "Usar la información confirmada para el plan de izaje y maniobras y la verificación de gálibos de acceso (R270: acceso más estrecho 1,5 m).",
-  "fid": "1zGjpy3Y7jEi2N6ywGwTfLU4FQIyccg11",
-  "archivo": "SDI-CCV-009_Dimensiones-y-peso-sala.xlsx",
-  "refp": "4502319491-03221-400ME-00002; 100ME-00002 Rev 0 (lám. 2/3)",
-  "estado": "Borrador"
- },
- {
-  "id": "SDI-CCV-010",
-  "n": 10,
-  "fecha": "2026-09-30",
-  "tema": "Tabla de torques de apriete ambigua e incompleta y designaciones de pernos no válidas",
-  "disc": [
-   "ESTRUCTURA",
-   "MECÁNICA"
-  ],
-  "urg": "Mediana",
-  "imp": [
-   "Seguridad",
-   "Costo"
-  ],
-  "ubic": "Uniones apernadas sala eléctrica modular (estructura, muros, cielo, soportes)",
-  "refs": [
-   [
-    "Especificación",
-    "4502319491-03221-MNLME-0001 Rev 0 (§6.3, §8.3, §10.1, §10.3, §11)",
-    "Manual de montaje en terreno sala eléctrica modular"
-   ]
-  ],
-  "ant": "La tabla de torque para 3/4\" A325 da valores seco/con grasa sin definir cuál aplica a galvanizado (y §10.3.1 prohíbe lubricar); no define uniones snug-tight o pretensadas ni método; faltan torques para M6, M8, autoperforantes e inoxidables; designaciones ASTM A325 inválidas para 3/8\" e inoxidable; tolerancia transversal con rango indefinido.",
-  "cons": [
-   "Emitir tabla de torque por diámetro, grado y condición, indicando tipo de unión según RCSC y método de apriete.",
-   "Informar torques para M6, M8, autoperforantes e inoxidables.",
-   "Corregir designaciones de pernos 3/8\" e inoxidables y la golilla asociada.",
-   "Definir tolerancia transversal de aceptación/rechazo."
-  ],
-  "prop": "Mientras no se reciba respuesta, aplicar valores del fabricante de la pernería suministrada y protocolizar con llave calibrada, sujeto a validación de Innomotics.",
-  "fid": "1XXCo-2ALAIBoiMRDgy2n34oartY5R8Xh",
-  "archivo": "SDI-CCV-010_Tabla-torques-pernos.xlsx",
-  "refp": "4502319491-03221-MNLME-0001 Rev 0",
-  "estado": "Borrador"
- },
- {
-  "id": "SDI-CCV-011",
-  "n": 11,
-  "fecha": "2026-09-30",
-  "tema": "Equipos de izaje en caverna: certificación de viga monorriel/anclajes a techo y pesos-puntos de izaje de gabinetes",
-  "disc": [
-   "MECÁNICA",
-   "ESTRUCTURA"
-  ],
-  "urg": "Inmediata",
-  "imp": [
-   "Seguridad",
-   "Plazo"
-  ],
-  "ubic": "Sala eléctrica SAG / caverna – maniobras de izaje de módulos, gabinetes y cilindros",
-  "refs": [
-   [
-    "Planos",
-    "104ME-00002 Rev B; 100EL-00001 Rev 0 (lám. 4 y 5)",
-    "Pesos y anclajes gabinetes sala nueva; detección y extinción incendio"
-   ],
-   [
-    "Especificación",
-    "4502319491-03221-MNLME-0001 Rev 0 (§3, §6.4, §12)",
-    "Manual de montaje en terreno"
-   ],
-   [
-    "Otros",
-    "BT §5.4, §6.2.5; Respuestas R1, R211, R269, R342",
-    "Bases Técnicas; respuestas de licitación"
-   ]
-  ],
-  "ant": "El manual prevé izaje con tecle en el techo de la caverna (monorriel 5 t, grúa horquilla 3 t); los equipos de izaje son del contratista (R342) y se autorizan anclajes a techo (R269) sin informar capacidad certificada ni ubicación admisible. Las secciones 12.3–12.16 del manual son ilegibles y no hay pesos ni puntos de izaje por gabinete.",
-  "cons": [
-   "Capacidad admisible y requisitos de diseño/certificación para anclajes al techo de la caverna; estudio geotécnico o puntos existentes.",
-   "Pesos, dimensiones y puntos de izaje de cada gabinete, módulo y equipo (incluido 104ME-00002 AFC legible).",
-   "Confirmar que el plan de izaje crítico de MIES será revisado por DAND y en qué plazo."
-  ],
-  "prop": "MIES elaborará el plan de izaje crítico y la ingeniería del sistema monorriel/anclajes con certificación por tercero una vez recibida la información.",
-  "fid": "19M2ISTBr3Xq1x6CvL9oRDP4p8-CsRG5J",
-  "archivo": "SDI-CCV-011_Izaje-en-caverna.xlsx",
-  "refp": "4502319491-03221-104ME-00002 Rev B; 100EL-00001 Rev 0 (lám. 4 y 5)",
-  "estado": "Borrador"
- },
- {
-  "id": "SDI-CCV-012",
-  "n": 12,
-  "fecha": "2026-09-30",
+  "id": "SDI-CCV-006",
+  "n": 6,
+  "nAnt": "SDI-CCV-012",
+  "lote": 2,
+  "fecha": "2026-10-01",
   "tema": "Especificación y resistencia al fuego del panel del muro cortafuego (tipo fast work)",
   "disc": [
    "CIVIL",
    "ESTRUCTURA"
   ],
-  "urg": "Mediana",
+  "urg": "Inmediata",
   "imp": [
-   "Costo",
+   "Plazo",
    "Seguridad"
   ],
   "ubic": "Extensión muro cortafuego – sala eléctrica SAG",
@@ -6149,441 +6022,155 @@ const SDI_DATA = [
     "Respuestas de licitación (cubicación por peso, EETT estructuras)"
    ]
   ],
-  "ant": "Las BT incluyen estructura (kg) y panel tipo fast work (m²) del muro cortafuego, pero no hay plano del muro ni se define la resistencia al fuego exigida, su certificación ni el tratamiento de juntas y pasadas.",
+  "ant": "BT §6.2.3 incluye \"Suministro y montaje de estructura muro corta fuego\" (kg) y \"panel tipo fast work\" (m²) remitiendo al BT-Anexo 5. En licitación se indicó que la estructura se cubica por peso (R203) y que se adjuntaba EETT de estructuras (R258). En la ingeniería recibida no hay plano del muro cortafuego ni se define la resistencia al fuego exigida al panel, su certificación ni el tratamiento de juntas y pasadas. La construcción del muro está programada desde el 10-11-2026.",
   "cons": [
-   "Entregar plano del muro cortafuego (extensión, alturas, fundación/anclajes, estructura) y la EETT referida en R258.",
-   "Indicar la clasificación de resistencia al fuego requerida (F-60/F-120) y la certificación exigida.",
+   "Entregar el plano del muro cortafuego (extensión, alturas, fundación/anclajes, estructura) y la EETT referida en R258.",
+   "Indicar la clasificación de resistencia al fuego requerida (F-60 / F-120) del panel y la certificación exigida.",
    "Definir el detalle de sello de juntas y pasadas del muro."
   ],
-  "prop": "Proponer panel con certificación F-120 vigente y presentar ficha técnica para aprobación antes de la compra.",
-  "fid": "1HE10BfhaRbhZHK-zS9RinIF2vfRHX-du",
-  "archivo": "SDI-CCV-012_Muro-cortafuego-especificacion.xlsx",
   "refp": "BT §4.2, §6.2.3 (ítems 2.2 y 2.3)",
+  "actividad": "2 Extensión muro cortafuego (10-11-2026)",
+  "fid": "1HE10BfhaRbhZHK-zS9RinIF2vfRHX-du",
+  "archivo": "SDI-CCV-006_Muro-cortafuego-especificacion.xlsx",
   "estado": "Borrador"
  },
  {
-  "id": "SDI-CCV-013",
-  "n": 13,
-  "fecha": "2026-09-30",
-  "tema": "Clasificación de resistencia al fuego por elemento y sellos cortafuego certificados de pasadas (Roxtec)",
+  "id": "SDI-CCV-007",
+  "n": 7,
+  "nAnt": "SDI-CCV-029",
+  "lote": 2,
+  "fecha": "2026-10-01",
+  "tema": "Listado de canalizaciones LSTEL-00003: cantidades repetidas, clase de escalerilla, materiales faltantes y etapa de ejecución",
   "disc": [
-   "CIVIL",
    "ELÉCTRICO"
-  ],
-  "urg": "Mediana",
-  "imp": [
-   "Seguridad",
-   "Plazo"
-  ],
-  "ubic": "Sala eléctrica modular – muros, cielo, piso, puertas y pasadas de cables/ductos/cañerías",
-  "refs": [
-   [
-    "Planos",
-    "4502319491-03221-100ME-00002 Rev 0 (nota 3 y hoja de respuestas)",
-    "Disposición y detalles de calado de piso, base y muro"
-   ],
-   [
-    "Especificación",
-    "4502319491-03221-ESPME-00001 Rev 0 (§6.1, §6.4)",
-    "Especificación técnica metalmecánica sala eléctrica"
-   ],
-   [
-    "Otros",
-    "4502319491-03221-CEREL-0003 Rev 0",
-    "Certificado de resistencia al fuego (DICTUC/IDIEM)"
-   ]
-  ],
-  "ant": "CEREL-0003 acredita muro F-120 por asimilación (ensayo de 2011), cielo F-60 y puerta F-60 no bidireccional; ESPME exige F-60 con isopanel. No existe certificación ni detalle para sellos de pasadas (Roxtec, cañerías, ductos HVAC), celosías, juntas ni el piso hacia la sala +1.B; Innomotics indicó que la información Roxtec será posterior.",
-  "cons": [
-   "Confirmar la clasificación de resistencia al fuego exigida por elemento y la vigencia del informe base.",
-   "Confirmar que las dimensiones reales del portón (2.000 × 2.450 mm) están cubiertas por la asimilación y el sentido de la cara expuesta.",
-   "Entregar la ingeniería de detalle de sellos Roxtec y sellos cortafuego certificados e indicar el suministrador."
-  ],
-  "prop": "Instalar los sellos según ingeniería y fichas certificadas de DAND/Innomotics; si son suministro del contratista, tratarlo como trabajo adicional.",
-  "fid": "1_2qqwQy1WpJKkifOBeltnqijOpe1pfDP",
-  "archivo": "SDI-CCV-013_Resistencia-fuego-sellos-pasadas.xlsx",
-  "refp": "4502319491-03221-100ME-00002 Rev 0",
-  "estado": "Borrador"
- },
- {
-  "id": "SDI-CCV-014",
-  "n": 14,
-  "fecha": "2026-09-30",
-  "tema": "Ingeniería del piping del sistema de enfriamiento: isométricos, especificación, prueba hidrostática y tie-in",
-  "disc": [
-   "MECÁNICA",
-   "PIPING"
   ],
   "urg": "Inmediata",
-  "imp": [
-   "Plazo",
-   "Costo"
-  ],
-  "ubic": "Líneas de alimentación y retorno de enfriamiento cicloconvertidor – unidad de enfriamiento existente",
-  "refs": [
-   [
-    "Especificación",
-    "BT §4.2, §5.5, §6.2.6 a §6.2.8, §6.2.23",
-    "Bases Técnicas – cañerías del sistema de enfriamiento y pruebas"
-   ],
-   [
-    "Otros",
-    "Respuestas Licitación R157, R158, R197, R215, R268, R427",
-    "Respuestas de licitación"
-   ]
-  ],
-  "ant": "Las BT incluyen suministro y montaje de cañerías de enfriamiento \"según ingeniería\", pruebas hidrostáticas y conexión a la unidad existente, pero el paquete no contiene isométricos, P&ID ni especificación de piping; presión de prueba y datos \"se proveerán al adjudicado\".",
-  "cons": [
-   "Entregar isométricos, P&ID y plano de ruteo de las líneas de alimentación y retorno.",
-   "Especificación de materiales (norma, schedule, diámetros, fittings ranurados), procedimiento de soldadura y calificación.",
-   "Fluido, presión de diseño y de prueba hidrostática, medio de prueba, criterios de aceptación y de flushing.",
-   "Punto exacto de tie-in en la unidad existente, fecha de ejecución y quién suministra y carga el fluido refrigerante."
-  ],
-  "prop": "Con la información recibida, MIES emitirá procedimiento de fabricación, prueba hidrostática y flushing para aprobación de DAND.",
-  "fid": "1Or4EYVQF2n8IzYu0OR87B-sW9850QwQX",
-  "archivo": "SDI-CCV-014_Piping-enfriamiento.xlsx",
-  "refp": "BT §4.2, §5.5, §6.2.6 a §6.2.8, §6.2.23",
-  "estado": "Borrador"
- },
- {
-  "id": "SDI-CCV-015",
-  "n": 15,
-  "fecha": "2026-09-30",
-  "tema": "HVAC: discrepancia entre memoria y plano (equipo compacto vs split), alimentación, drenajes, agua y pasadas en terreno",
-  "disc": [
-   "MECÁNICA",
-   "ELÉCTRICO"
-  ],
-  "urg": "Mediana",
   "imp": [
    "Costo",
    "Plazo"
   ],
-  "ubic": "Sistema HVAC sala eléctrica 2° piso – UI-01 / UC-01",
+  "ubic": "Canalizaciones eléctricas sala SAG – escalerillas 600x100 y 300x100, conduit",
   "refs": [
    [
     "Planos",
-    "100ME-00003 Rev 0 (lám. 02, 06-09, 14, 18); 100ME-00002 Rev 0 (nota 5)",
-    "Disposición y montaje HVAC; pasada de enfriamiento en terreno"
+    "4600029647-028-03221-205EL-00001 Rev B",
+    "Plano de canalizaciones"
    ],
    [
     "Especificación",
-    "MDCME-00002 Rev 0 (§6.4-6.5, Tablas 1, 3, 13); ESPME-00001 (§10)",
-    "Memoria de cálculo HVAC; especificación metalmecánica"
+    "4600029647-028-03221-LSTEL-00003 Rev B (Tabla 5.1, nota 1)",
+    "Listado de canalizaciones eléctricas (R&Q)"
    ],
    [
     "Otros",
-    "BT Rev 2 §6.2 ítems ECO 8.1-8.3; Respuestas 2ª ronda 2R8, 2R9",
-    "Partidas adicionales por actualización documental"
+    "4600029647-028-03221-LSTEL-00002 Rev B; Respuestas Licitación R260, R395",
+    "Listado de circuitos (etapas); respuestas de licitación"
    ]
   ],
-  "ant": "La memoria describe un equipo compacto y el plano un equipo split con 25,71 m de cañería de cobre; condiciones de diseño distintas (24 °C/35 % HR vs 22 °C/60 % HR); humidificador con agua y drenajes sin origen ni destino; alimentación 380 V sin tablero de origen; pasadas a ejecutar en terreno.",
+  "ant": "En LSTEL-00003 el bloque \"escalerilla 600x100, 216 m; curvas 7/4/18/3/2\" se repite al menos cuatro veces sin explicación y CODELCO observó filas faltantes. La clase figura como \"Clase 1 80\" (posiblemente clase 180). Faltan ferretería, riel, cobre desnudo y otros materiales. No hay canalización para circuitos en escalerilla 300x100 ni conduit. La nota 1 indica que el trabajo es \"después de la parada de planta\", pero LSTEL-00002 ubica la canalización en Etapa 1 (antes de la parada).",
   "cons": [
-   "Confirmar modelo y configuración definitiva del equipo HVAC y actualizar la memoria.",
-   "Definir alimentación 380 V: tablero y protección de origen, cable, canalización y responsable del suministro.",
-   "Definir descarga de condensados y suministro/drenaje de agua del humidificador.",
-   "Confirmar quién ejecuta y protocoliza soldadura fuerte, prueba de presión, vacío y carga de refrigerante.",
-   "Confirmar si las pasadas se cortan en taller; si son en terreno, entregar detalle y partida de pago."
+   "Emitir LSTEL-00003 Rev 0 por tramo, trazable a LSTEL-00002, con resumen de cantidades por tipo.",
+   "Confirmar la clase de escalerilla y los materiales complementarios (ferretería, riel, cobre desnudo).",
+   "Confirmar la etapa de ejecución de las canalizaciones (previo o posterior a la parada)."
   ],
-  "prop": "MIES montará según ECO 8.1-8.3; la puesta en servicio, carga de refrigerante y protocolos de desempeño serán del proveedor HVAC/Innomotics.",
-  "fid": "1H-JJouTmAyE_EIdI-3FiQaYR4Fmz9Dzq",
-  "archivo": "SDI-CCV-015_HVAC-memoria-vs-plano.xlsx",
-  "refp": "4502319491-03221-100ME-00003 Rev 0",
+  "refp": "4600029647-028-03221-LSTEL-00003 Rev B",
+  "actividad": "4.2 Suministro y montaje de canalizaciones (10-11-2026)",
+  "fid": "1LUmb_HKWfxwt3LcYzUtYTOV-CqVOX8iI",
+  "archivo": "SDI-CCV-007_LSTEL-00003-canalizaciones.xlsx",
   "estado": "Borrador"
  },
  {
-  "id": "SDI-CCV-016",
-  "n": 16,
-  "fecha": "2026-09-30",
-  "tema": "Pintura de retoque: especificación CODELCO de referencia, kit touch-up y productos",
+  "id": "SDI-CCV-008",
+  "n": 8,
+  "nAnt": "SDI-CCV-011",
+  "lote": 2,
+  "fecha": "2026-10-01",
+  "tema": "Izaje en caverna: capacidad y certificación de anclajes al techo para viga monorriel y revisión del plan de izaje",
   "disc": [
-   "MECÁNICA"
-  ],
-  "urg": "Normal",
-  "imp": [
-   "Costo"
-  ],
-  "ubic": "Sala eléctrica modular – retoques de pintura en terreno",
-  "refs": [
-   [
-    "Planos",
-    "4502319491-03221-104ME-00001",
-    "Pesos y anclajes gabinetes sala existente (referencia SGPD-2EST-ESPTC-0001)"
-   ],
-   [
-    "Especificación",
-    "500ME-0001 Rev 0 (§2, §8, §10, §11); ESPME-00001 Rev 0 (§8.1)",
-    "Esquema de tratamiento superficial y pintura; especificación metalmecánica"
-   ]
-  ],
-  "ant": "Tres documentos citan tres códigos distintos de la especificación CODELCO de pintura; 500ME-0001 exige un kit de touch-up sin indicar suministrador; productos genéricos sin marca ni ficha técnica; sin RAL en costaneras y sin criterio para pernería galvanizada.",
-  "cons": [
-   "Confirmar la especificación CODELCO vigente de pintura aplicable.",
-   "Confirmar que Innomotics suministra el kit de retoque con productos del esquema de fábrica y sus fichas técnicas.",
-   "Definir tratamiento de pernería galvanizada y alcance de protocolos de espesor en terreno."
-  ],
-  "prop": "Ejecutar retoques con el kit del fabricante, protocolizando espesores y condiciones ambientales según 500ME-0001.",
-  "fid": "1m4aB987JqBjNZ68vrWfThqZ0QF2y-hpT",
-  "archivo": "SDI-CCV-016_Pintura-retoque.xlsx",
-  "refp": "4502319491-03221-104ME-00001",
-  "estado": "Borrador"
- },
- {
-  "id": "SDI-CCV-017",
-  "n": 17,
-  "fecha": "2026-09-30",
-  "tema": "Red de detección y extinción de incendio: agente, detectores, integración a sistema de planta, alimentación, retiro y certificación",
-  "disc": [
-   "INSTRUMENTACIÓN",
-   "ELÉCTRICO"
+   "MECÁNICA",
+   "ESTRUCTURA"
   ],
   "urg": "Inmediata",
   "imp": [
    "Seguridad",
-   "Costo"
+   "Plazo"
   ],
-  "ubic": "Sistema de detección y extinción sala eléctrica nueva y sala existente +1.B",
+  "ubic": "Sala eléctrica SAG / caverna – maniobras de izaje de módulos, gabinetes y cilindros",
   "refs": [
    [
-    "Planos",
-    "4502319491-03221-100EL-00001 Rev 0 (AFC 24-02-2026) lám. 1 a 13",
-    "Disposición general sistema detección y extinción de incendios"
-   ],
-   [
     "Especificación",
-    "4502319491-03221-ESPME-00001 Rev 0 (§11)",
-    "Especificación técnica metalmecánica sala eléctrica"
+    "4502319491-03221-MNLME-0001 Rev 0 (§3, §6.4, §12)",
+    "Manual de montaje en terreno"
    ],
    [
     "Otros",
-    "BT §5.1, §6.2.21-§6.2.24, §10.4; Respuestas R159, R160, R266, R325",
+    "BT §5.4, §6.2.5; Respuestas Licitación R1, R211, R269, R342",
     "Bases Técnicas; respuestas de licitación"
    ]
   ],
-  "ant": "Peso del cilindro NOVEC \"a confirmar\"; ESPME exige detectores térmicos, iónicos y por aspiración pero el plano solo fotoeléctricos y térmicos; integración al sistema de planta sin punto de conexión; alimentación y fuente \"por definir en terreno\"; retiro del sistema existente en +1.B sin alcance; certificación contradictoria (R160 vs R325).",
+  "ant": "MNLME-0001 indica que el izaje se realizará \"mediante tecle instalado en el techo de la caverna\" y lista una \"viga monorriel con capacidad de carga de 5 toneladas\" y \"grúa horquilla 3 ton\". En licitación se indicó que los equipos de izaje son del contratista (R342) y se autorizan anclajes a techo (R269). No se informa la capacidad certificada del techo/anclajes de la caverna ni la ubicación admisible de los puntos de anclaje.",
   "cons": [
-   "Confirmar agente, masa y peso definitivo de cada cilindro.",
-   "Confirmar si se acepta la detección del plano o se exige detección iónica y por aspiración.",
-   "Entregar punto de interconexión con el sistema de planta y su responsable.",
-   "Definir circuito de emergencia de alimentación y ubicación de la fuente de poder.",
-   "Definir quién retira y dispone el sistema y agente existentes en +1.B.",
-   "Aclarar quién realiza la certificación final del sistema."
+   "Informar la capacidad admisible y los requisitos de diseño/certificación para anclajes al techo de la caverna, e indicar si DAND cuenta con estudio geotécnico o puntos de anclaje existentes.",
+   "Confirmar que el plan de izaje crítico que elabore MIES será revisado por DAND, y en qué plazo."
   ],
-  "prop": "MIES monta equipos suministrados por DAND y ejecuta canalizaciones/cableado; programación, pruebas funcionales y certificación por proveedor autorizado.",
-  "fid": "1HAKbIfEpFPINBktCPEr0RDSQbxB4D_zd",
-  "archivo": "SDI-CCV-017_Red-incendio-definiciones.xlsx",
-  "refp": "4502319491-03221-100EL-00001 Rev 0",
+  "refp": "BT §5.4, §6.2.5; MNLME-0001 Rev 0 §12",
+  "actividad": "3.1 Armado E-House de cicloconvertidores (10-11-2026)",
+  "fid": "19M2ISTBr3Xq1x6CvL9oRDP4p8-CsRG5J",
+  "archivo": "SDI-CCV-008_Izaje-en-caverna-anclajes-techo.xlsx",
   "estado": "Borrador"
  },
  {
-  "id": "SDI-CCV-018",
-  "n": 18,
-  "fecha": "2026-09-30",
-  "tema": "Hermeticidad del recinto para sistema de inundación total con agente limpio (celosías, dampers, door fan test)",
-  "disc": [
-   "MECÁNICA",
-   "INSTRUMENTACIÓN"
-  ],
-  "urg": "Mediana",
-  "imp": [
-   "Seguridad"
-  ],
-  "ubic": "Sala eléctrica modular – celosías gravitacionales, HVAC y ventilación post-descarga",
-  "refs": [
-   [
-    "Planos",
-    "100EL-00001 Rev 0 (lám. 11, 13); 100ME-00002 Rev 0; 200ME-00003 Rev 0",
-    "Detección y extinción; calado; armado sala (celosías)"
-   ],
-   [
-    "Especificación",
-    "4502319491-03221-MDCME-00002 Rev 0 (Tabla 13)",
-    "Memoria de cálculo HVAC"
-   ]
-  ],
-  "ant": "El sistema es de inundación total con FK-5-1-12 pero la sala tiene 3 celosías gravitacionales abiertas al exterior y el HVAC considera 72 % de aire exterior; solo hay un relé de corte del presurizador, sin dampers ni ventilación post-descarga, y no se exige door fan test.",
-  "cons": [
-   "Indicar cómo se asegura la concentración y tiempo de retención del agente (cierre de celosías/dampers o justificación del proveedor).",
-   "Confirmar si se requiere prueba de hermeticidad (door fan test) y quién la ejecuta.",
-   "Definir el sistema de extracción/ventilación post-descarga."
-  ],
-  "prop": "Que el proveedor del sistema entregue el cálculo de retención considerando las aberturas y, de requerirse dampers, que se incorporen como suministro DAND.",
-  "fid": "19TrXABmsUOQAbGrWLkMQjQKiThJ6kIzp",
-  "archivo": "SDI-CCV-018_Hermeticidad-inundacion-total.xlsx",
-  "refp": "4502319491-03221-100EL-00001 Rev 0 (lám. 11, 13)",
-  "estado": "Borrador"
- },
- {
-  "id": "SDI-CCV-019",
-  "n": 19,
-  "fecha": "2026-09-30",
-  "tema": "Matriz de límites de suministro DAND / Innomotics / contratista para cables, terminales, fibra, canalizaciones y ferretería",
+  "id": "SDI-CCV-009",
+  "n": 9,
+  "nAnt": "SDI-CCV-024",
+  "lote": 2,
+  "fecha": "2026-10-01",
+  "tema": "Puesta a tierra de la sala eléctrica +1.B-2 y del exoesqueleto no definida",
   "disc": [
    "ELÉCTRICO",
-   "INSTRUMENTACIÓN"
-  ],
-  "urg": "Inmediata",
-  "imp": [
-   "Costo",
-   "Plazo"
-  ],
-  "ubic": "Cables de fuerza, control y comunicaciones; canalizaciones y materiales menores",
-  "refs": [
-   [
-    "Planos",
-    "4502319491-03221-202EL-0002 Rev 0",
-    "Diagrama unilineal distribución BT ('CABLE POR CLIENTE')"
-   ],
-   [
-    "Especificación",
-    "4502319491-03221-106EL-00001 Rev B (§1)",
-    "Especificación de cables (suministro CODELCO Andina)"
-   ],
-   [
-    "Otros",
-    "BT §6.2.10, §6.2.11, §6.2.13, §6.2.24, §10.4; LSTEL-00003/00004 Rev B; Respuestas R10, R140, R146, R152, 2R5",
-    "Bases, listados R&Q y respuestas de licitación"
-   ]
-  ],
-  "ant": "DAND suministra los cables de potencia principales en bodega KM7; §6.2.13 incluye suministro de cables periféricos; §6.2.11 solo cubre terminales 500/350 MCM; los planos indican \"cable por cliente\" y LSTEL-00003 partidas de suministro de escalerillas; R152/R140 y 2R5 dejan definiciones abiertas.",
-  "cons": [
-   "Matriz de suministro por ítem (DAND/Innomotics/MIES): cables de fuerza, control y comunicaciones, fibra y SFP, terminales, escalerillas y soportes, ferretería, cobre desnudo y prensas.",
-   "Cantidad de carretes, largos de corte, quién corta y fecha de disponibilidad en bodega KM7.",
-   "Confirmar que el traslado KM7 → frente es del contratista y su partida de pago."
-  ],
-  "prop": "Considerar suministro DAND todo cable indicado \"por cliente\" en planos y suministro MIES solo lo expresamente indicado en el ECO.",
-  "fid": "1a5cpcHFzuYrrdeiLocOPnCWGIyP2x08X",
-  "archivo": "SDI-CCV-019_Matriz-limites-suministro.xlsx",
-  "refp": "4502319491-03221-202EL-0002 Rev 0",
-  "estado": "Borrador"
- },
- {
-  "id": "SDI-CCV-020",
-  "n": 20,
-  "fecha": "2026-09-30",
-  "tema": "Listado de circuitos: cables nuevos vs reutilizados, largos hacia sala del 2° piso y tags repetidos",
-  "disc": [
-   "ELÉCTRICO"
-  ],
-  "urg": "Inmediata",
-  "imp": [
-   "Costo",
-   "Plazo"
-  ],
-  "ubic": "Alimentación motor anillo – circuitos transformador / cicloconvertidor / +1.U11-U12 / estator",
-  "refs": [
-   [
-    "Especificación",
-    "4600029647-028-03221-LSTEL-00002 Rev B (Tabla 5.1, nota 4)",
-    "Listado de circuitos eléctricos por tramos exactos (R&Q)"
-   ],
-   [
-    "Otros",
-    "4502319491-03221-106EL-0002 Rev 0; Respuestas R207, R324, R396, 2R1",
-    "Listado de cables Innomotics; respuestas de licitación"
-   ]
-  ],
-  "ant": "LSTEL-00002 repite los mismos circuitos y largos en \"Proyectado\" y \"Existente\" (50/10/105/45 m); la nota 4 habla de reutilización pero R324 y 2R1 confirman reemplazo y retiro; la sala nueva está en el 2° piso con largos iguales a los del 1° piso; tags repetidos e incompletos.",
-  "cons": [
-   "Emitir LSTEL-00002 Rev 0 APC con tag único por circuito, indicando nuevos y reutilizados.",
-   "Largos medidos hasta la sala del 2° piso con holgura de terminación, conciliados con 106EL-0002.",
-   "Partida del ECO que paga el reemplazo de cables hasta el motor anillo y confirmar si son MT."
-  ],
-  "prop": "MIES hará levantamiento de rutas en terreno y propondrá largos de corte para validación antes de cortar carretes DAND.",
-  "fid": "1_3ojMwNasEscoUrbuD_YR_e9YHHVPcVY",
-  "archivo": "SDI-CCV-020_LSTEL-00002-cables-nuevos-vs-reutilizados.xlsx",
-  "refp": "4600029647-028-03221-LSTEL-00002 Rev B (Tabla 5.1, nota 4)",
-  "estado": "Borrador"
- },
- {
-  "id": "SDI-CCV-021",
-  "n": 21,
-  "fecha": "2026-09-30",
-  "tema": "Sección de cable de alimentación de excitación =.J01 (3x1c #2 AWG) aparentemente insuficiente",
-  "disc": [
-   "ELÉCTRICO"
+   "ESTRUCTURA"
   ],
   "urg": "Inmediata",
   "imp": [
    "Seguridad",
-   "Costo"
-  ],
-  "ubic": "Circuito transformador de excitación =.E01 → =.J01 (330 V) / +1.U13",
-  "refs": [
-   [
-    "Planos",
-    "4502319491-03221-202EL-00001 Rev 0",
-    "Diagrama unilineal MT (transformador excitación 350 kVA)"
-   ],
-   [
-    "Especificación",
-    "4600029647-028-03221-LSTEL-00002 Rev B",
-    "Listado de circuitos eléctricos por tramos exactos"
-   ],
-   [
-    "Otros",
-    "4600029647-028-03221-LSTEL-00004/00005 Rev B",
-    "Listado de equipos (380 kVA) y tie-in"
-   ]
-  ],
-  "ant": "Para el circuito =.E01 → =.J01 a 330 V se indica cable 3x1c #2 AWG; con 350–380 kVA la corriente nominal es del orden de 612–665 A, muy superior a la capacidad de un #2 AWG; el lado CC usa 2x2c 240 mm².",
-  "cons": [
-   "Confirmar sección, número de conductores por fase y tipo de cable del circuito =.E01 → =.J01.",
-   "Confirmar la potencia real del transformador de excitación (350 o 380 kVA).",
-   "Entregar la memoria de cálculo que respalda la sección especificada."
-  ],
-  "prop": "No cortar ni tender este circuito hasta recibir confirmación de la sección por Innomotics/DAND.",
-  "fid": "1qBiTi9IFc9uDnnOvYj2jXtqR--PM5kF_",
-  "archivo": "SDI-CCV-021_Cable-alimentacion-excitacion.xlsx",
-  "refp": "4502319491-03221-202EL-00001 Rev 0",
-  "estado": "Borrador"
- },
- {
-  "id": "SDI-CCV-022",
-  "n": 22,
-  "fecha": "2026-09-30",
-  "tema": "Datos de placa y tags inconsistentes entre ingeniería Innomotics y R&Q – base de construcción",
-  "disc": [
-   "ELÉCTRICO"
-  ],
-  "urg": "Mediana",
-  "imp": [
    "Plazo"
   ],
-  "ubic": "Transformadores de excitación y conversión, cicloconvertidores y UPS",
+  "ubic": "Sala eléctrica 2° piso +1.B-2 y exoesqueleto",
   "refs": [
    [
     "Planos",
-    "4502319491-03221-202EL-00001 Rev 0; 202EL-0002 Rev 0",
-    "Diagramas unilineales MT y BT Innomotics"
+    "4600029647-028-03221-300CI-00002 Rev 1 (APC 14-09-2026)",
+    "Plano sala con exoesqueleto – planta de emplazamiento e isométrico"
    ],
    [
     "Especificación",
-    "LSTEL-00004 Rev B; LSTEL-00005 Rev B",
-    "Listado de equipos; listado de tie-in"
+    "4600029647-028-03221-INFEL-00010 Rev B; LSTEL-00003 Rev B",
+    "Informe malla a tierra; listado de canalizaciones"
    ],
    [
     "Otros",
-    "4600029647-028-03221-INFEL-00010 Rev B",
-    "Informe verificación malla a tierra"
+    "BT §6.2.5; Respuesta Licitación R422",
+    "Bases Técnicas; respuesta de licitación"
    ]
   ],
-  "ant": "Transformador de excitación 350 kVA (Innomotics) vs 380 kVA (R&Q); Uz 10,5 % vs 7 % asumido; tags de cicloconvertidores y UPS distintos entre listados; los documentos R&Q se basan en documentos Fluor y no en los planos Innomotics APC.",
+  "ant": "Ningún documento define la conexión a tierra de la sala del 2° piso ni del exoesqueleto: puntos de conexión, número de bajadas, conductor, método de unión (termofusión o compresión) y conexión a la malla existente. LSTEL-00003 no incluye conductor de cobre desnudo (observado por CODELCO: \"faltan datos de: conductor de cu desnudo, prensas…\"). La ingeniería Innomotics solo muestra la barra PE Cu 30x5 y =1.N00 \"Earthing and short circuiting\". R422 responde de forma genérica (\"conforme a BT\").",
   "cons": [
-   "Confirmar que la base para construcción son los documentos Innomotics APC 4502319491-03221-….",
-   "Solicitar que R&Q actualice tags y datos de placa conforme a dichos documentos."
+   "Entregar el plano de puesta a tierra APC de la sala y del exoesqueleto, con detalles de conexión, conductor, número de bajadas y método de unión.",
+   "Indicar los puntos de conexión disponibles a la malla de tierra existente."
   ],
-  "prop": "En caso de discrepancia, aplicar la ingeniería Innomotics APC y registrar la diferencia en el control documental.",
-  "fid": "1y_-ND7Xfwo7uNfnWO9gIzIMxP9-fRleo",
-  "archivo": "SDI-CCV-022_Datos-placa-tags-Innomotics-vs-RQ.xlsx",
-  "refp": "4502319491-03221-202EL-00001 Rev 0; 202EL-0002 Rev 0",
+  "refp": "4600029647-028-03221-300CI-00002 Rev 1 (APC 14-09-2026)",
+  "actividad": "3.1 Armado E-House / 4.2 canalizaciones (10-11-2026)",
+  "fid": "1UHZslZI5hZeWAg1fqsq2IWD1mXRyKY9t",
+  "archivo": "SDI-CCV-009_Puesta-tierra-sala-y-exoesqueleto.xlsx",
   "estado": "Borrador"
  },
  {
-  "id": "SDI-CCV-023",
-  "n": 23,
-  "fecha": "2026-09-30",
-  "tema": "Malla a tierra: resistencia no medida, sin verificación de tensiones de paso/contacto y corriente de falla mal considerada",
+  "id": "SDI-CCV-010",
+  "n": 10,
+  "nAnt": "SDI-CCV-023",
+  "lote": 2,
+  "fecha": "2026-10-01",
+  "tema": "Malla a tierra: resistencia no medida, sin verificación de tensiones de paso/contacto y corriente de falla considerada en INFEL-00010",
   "disc": [
    "ELÉCTRICO"
   ],
@@ -6604,118 +6191,78 @@ const SDI_DATA = [
     "SDI R&Q protocolo de medición; unilineal MT (Uz 10,5 %)"
    ]
   ],
-  "ant": "El valor de 1 Ω es una indicación verbal con protocolo pendiente; no se calcularon tensiones de paso ni contacto (IEEE 80); el cortocircuito usa Z = 7 % en vez de 10,5 %, toma la falla trifásica de 1,2 kV como falla a tierra y aplica un factor 50 %.",
+  "ant": "El valor de resistencia de malla de 1 Ω corresponde a una \"indicación verbal\" de CODELCO; el protocolo de medición está pendiente en SDI 4600029647-028-03221-SDIMD-00010_0, aunque la conclusión lo informa como \"medido en 1 Ω\". El informe declara que no se calcularon tensiones de paso ni de contacto (IEEE 80-2013). El cálculo de cortocircuito usa Z = 7 % \"típica\" en vez de 10,5 % (202EL-00001), toma 46,5 kA trifásicos del lado 1,2 kV como falla a tierra en un secundario Yd5 (también observado por CODELCO) y aplica un factor 50 % (23 kA, t = 0,3 s).",
   "cons": [
    "Entregar el protocolo de medición de resistencia de malla vigente.",
-   "Informar la corriente de falla a tierra real y el tiempo de despeje de protecciones.",
-   "Entregar verificación de tensiones de paso y contacto antes del montaje y emitir INFEL-00010 Rev 0."
+   "Informar la corriente de falla a tierra real y el tiempo de despeje de protecciones considerados para el diseño.",
+   "Entregar la verificación de tensiones de paso y contacto y emitir INFEL-00010 en Rev 0."
   ],
-  "prop": "Considerar chicotes de 4/0 AWG hasta recibir el informe definitivo.",
-  "fid": "1XEcta8NbqSFqu9v79HxJuWswOWec_TgG",
-  "archivo": "SDI-CCV-023_Malla-tierra-INFEL-00010.xlsx",
   "refp": "4600029647-028-03221-INFEL-00010 Rev B",
+  "actividad": "3.1 Armado E-House / puesta a tierra (nov-2026)",
+  "fid": "1XEcta8NbqSFqu9v79HxJuWswOWec_TgG",
+  "archivo": "SDI-CCV-010_Malla-tierra-INFEL-00010.xlsx",
   "estado": "Borrador"
  },
  {
-  "id": "SDI-CCV-024",
-  "n": 24,
-  "fecha": "2026-09-30",
-  "tema": "Puesta a tierra de la sala eléctrica +1.B-2 y del exoesqueleto no definida",
-  "disc": [
-   "ELÉCTRICO",
-   "ESTRUCTURA"
-  ],
-  "urg": "Inmediata",
-  "imp": [
-   "Seguridad",
-   "Plazo"
-  ],
-  "ubic": "Sala eléctrica 2° piso +1.B-2 y exoesqueleto",
-  "refs": [
-   [
-    "Planos",
-    "4600029647-028-03221-300CI-00002 Rev 1 (APC 14-09-2026)",
-    "Plano sala con exoesqueleto – emplazamiento e isométrico"
-   ],
-   [
-    "Especificación",
-    "INFEL-00010 Rev B; LSTEL-00003 Rev B",
-    "Informe malla a tierra; listado de canalizaciones"
-   ],
-   [
-    "Otros",
-    "BT §6.2.5; Respuesta R422",
-    "Bases Técnicas; respuesta de licitación"
-   ]
-  ],
-  "ant": "Ningún documento define la conexión a tierra de la sala del 2° piso ni del exoesqueleto (puntos, bajadas, conductor, método de unión, conexión a la malla existente); LSTEL-00003 no incluye cobre desnudo ni prensas (observado por CODELCO); R422 responde de forma genérica.",
-  "cons": [
-   "Entregar plano de puesta a tierra APC de la sala y exoesqueleto con detalles de conexión y materiales.",
-   "Indicar partida del ECO para suministro y montaje de la puesta a tierra."
-  ],
-  "prop": "Conductor Cu desnudo 4/0 AWG en al menos dos puntos diagonales de la sala y en cada columna del exoesqueleto, unido a la malla existente por termofusión, sujeto a aprobación de DAND.",
-  "fid": "1UHZslZI5hZeWAg1fqsq2IWD1mXRyKY9t",
-  "archivo": "SDI-CCV-024_Puesta-tierra-E-House-exoesqueleto.xlsx",
-  "refp": "4600029647-028-03221-300CI-00002 Rev 1",
-  "estado": "Borrador"
- },
- {
-  "id": "SDI-CCV-025",
-  "n": 25,
-  "fecha": "2026-09-30",
-  "tema": "Definición de tie-ins eléctricos: cantidad (3 vs 12), punto de conexión, ventana de parada y responsable de maniobras",
-  "disc": [
-   "ELÉCTRICO",
-   "INSTRUMENTACIÓN"
-  ],
-  "urg": "Inmediata",
-  "imp": [
-   "Plazo",
-   "Seguridad"
-  ],
-  "ubic": "Sala eléctrica existente +1.B (piso 1) y proyectada +1.B-2 (piso 2), motor anillo",
-  "refs": [
-   [
-    "Especificación",
-    "4600029647-028-03221-LSTEL-00005 Rev B (Tabla 5.1, notas 1 y 2)",
-    "Listado de tie-in eléctricos (R&Q)"
-   ],
-   [
-    "Otros",
-    "BT §4.3.2, §6.2.18 (ítems 5.1.15-5.1.17); Respuestas R21, R212, R241, R242, R426",
-    "Bases Técnicas; respuestas de licitación"
-   ]
-  ],
-  "ant": "Las BT hablan de 3 tie-ins y LSTEL-00005 lista 12, sin punto físico, duración, ventana ni secuencia, con ubicaciones contradictorias entre pisos; faltan tie-ins de gavetas CCM reutilizadas, +.B36, UPS, HVAC, conexiones estator/rotor, fibra y puesta a tierra; la liberación de equipos la realiza GMAN.",
-  "cons": [
-   "Listado de tie-ins APC conciliado con los ítems 5.1.15-5.1.17 del ECO, con punto de conexión, sala/piso, equipo existente, bloqueos, duración y etapa.",
-   "Confirmar el responsable de maniobras, desenergización y bloqueos (área eléctrica DAND / GMAN)."
-  ],
-  "prop": "MIES elaborará el plan detallado de tie-ins y la secuencia de parada una vez recibido el listado APC.",
-  "fid": "1e5gfI4rxx4NQYkseMsHRkpNm0aeUoxR4",
-  "archivo": "SDI-CCV-025_Tie-ins-definicion.xlsx",
-  "refp": "4600029647-028-03221-LSTEL-00005 Rev B",
-  "estado": "Borrador"
- },
- {
-  "id": "SDI-CCV-026",
-  "n": 26,
-  "fecha": "2026-09-30",
-  "tema": "Alimentaciones de servicios auxiliares de la sala: UPS, +.B36, gavetas CCM BT reutilizadas, HVAC y energía para precomisionamiento",
+  "id": "SDI-CCV-011",
+  "n": 11,
+  "nAnt": "SDI-CCV-020",
+  "lote": 3,
+  "fecha": "2026-10-01",
+  "tema": "Listado de circuitos LSTEL-00002: cables nuevos vs reutilizados, largos hacia la sala del 2° piso y tags repetidos",
   "disc": [
    "ELÉCTRICO"
   ],
   "urg": "Inmediata",
   "imp": [
-   "Plazo",
+   "Costo",
+   "Plazo"
+  ],
+  "ubic": "Alimentación motor anillo – circuitos transformador / cicloconvertidor / +1.U11-U12 / estator",
+  "refs": [
+   [
+    "Especificación",
+    "4600029647-028-03221-LSTEL-00002 Rev B (Tabla 5.1, nota 4)",
+    "Listado de circuitos eléctricos por tramos exactos (R&Q)"
+   ],
+   [
+    "Otros",
+    "4502319491-03221-106EL-0002 Rev 0; Respuestas Licitación R207, R324, R396, 2R1",
+    "Listado de cables Innomotics; respuestas de licitación"
+   ]
+  ],
+  "ant": "En LSTEL-00002 las secciones \"Proyectado\" y \"Existente\" repiten los mismos circuitos con cable idéntico y los mismos largos (transformador → TT/CC 50 m; TT/CC → cicloconvertidor 10 m; cicloconvertidor → +1.U11/U12 105 m; +1.U11/U12 → estator 45 m). La nota (4) indica que \"la conexión de circuitos proyectados implica la reutilización de conductores existentes\", pero R324 confirma el reemplazo de cables cicloconvertidor-motor anillo y 2R1 el retiro de cables 300 MCM. La nueva sala +1.B-2 está en el 2° piso, pero los largos proyectados son iguales a los existentes del 1° piso. Hay tags repetidos (+1.U11-F01 y +1.U12-F01 tres veces cada uno) e incompletos. CODELCO ya observó que \"la longitud de canalización es la misma que del cable\". Los cables ya fueron adquiridos por DAND, por lo que los largos de corte deben confirmarse antes de cortar los carretes.",
+  "cons": [
+   "Emitir LSTEL-00002 Rev 0 APC con tag único por circuito, indicando cuáles circuitos son nuevos y cuáles reutilizan conductores existentes.",
+   "Entregar los largos medidos hasta la sala del 2° piso, incluida la holgura de terminación, conciliados con 106EL-0002 y con los carretes adquiridos."
+  ],
+  "refp": "4600029647-028-03221-LSTEL-00002 Rev B (Tabla 5.1, nota 4)",
+  "actividad": "4.3 Montaje de cables, conexionado y pruebas (10-11-2026)",
+  "fid": "1_3ojMwNasEscoUrbuD_YR_e9YHHVPcVY",
+  "archivo": "SDI-CCV-011_LSTEL-00002-cables-y-largos.xlsx",
+  "estado": "Borrador"
+ },
+ {
+  "id": "SDI-CCV-012",
+  "n": 12,
+  "nAnt": "SDI-CCV-021",
+  "lote": 3,
+  "fecha": "2026-10-01",
+  "tema": "Sección del cable de alimentación de excitación =.E01 → =.J01 (3x1c #2 AWG) aparentemente insuficiente",
+  "disc": [
+   "ELÉCTRICO"
+  ],
+  "urg": "Inmediata",
+  "imp": [
+   "Seguridad",
    "Costo"
   ],
-  "ubic": "Servicios auxiliares BT sala eléctrica +1.B-2 – CCM BT +.B43/+.B44, TDFI-3330-01",
+  "ubic": "Circuito transformador de excitación =.E01 → =.J01 (330 V) / +1.U13",
   "refs": [
    [
     "Planos",
-    "202EL-0002 Rev 0 (APC 25-08-2025); 402EL-00001 Rev 0",
-    "Unilineal distribución BT; integración SSAA sala eléctrica"
+    "4502319491-03221-202EL-00001 Rev 0",
+    "Diagrama unilineal sistema de distribución MT (transformador excitación 350 kVA)"
    ],
    [
     "Especificación",
@@ -6724,27 +6271,156 @@ const SDI_DATA = [
    ],
    [
     "Otros",
-    "BT §9.7; Respuestas R57, R278, R300, R401-R404",
-    "Energía del contratista; respuestas de licitación"
+    "4600029647-028-03221-LSTEL-00004/00005 Rev B",
+    "Listado de equipos (380 kVA) y tie-in"
    ]
   ],
-  "ant": "La UPS y +.B36 se alimentan \"por cliente\" desde tableros y feeders no identificados; se reutilizan gavetas del CCM +.B44; la alimentación del HVAC \"la proporciona el cliente\" sin datos; ninguno de estos circuitos aparece en LSTEL-00002; la energía de faena es 100 % del contratista pero el precomisionamiento requiere alimentación definitiva.",
+  "ant": "LSTEL-00002 indica para el circuito =.E01 → =.J01 a 330 V un cable 3x1c #2 AWG. Con la potencia del transformador de excitación (350 kVA según 202EL-00001; 380 kVA según LSTEL-00004/00005), la corriente nominal resulta del orden de 612 A a 665 A, valor que excede la capacidad de un conductor #2 AWG. En contraste, el lado de corriente continua utiliza 2x2c 240 mm².",
   "cons": [
-   "Para cada alimentador: tablero y gaveta de origen, interruptor, cable, largo, ruta y responsable de suministro e instalación.",
-   "Incorporar estos circuitos a LSTEL-00002.",
-   "Fecha de disponibilidad de la energía definitiva para precomisionamiento o uso de generación provisoria."
+   "Confirmar sección, número de conductores por fase y tipo de cable del circuito =.E01 → =.J01, y su correspondencia con el cable adquirido.",
+   "Confirmar la potencia real del transformador de excitación (350 o 380 kVA).",
+   "Entregar la memoria de cálculo que respalda la sección especificada."
   ],
-  "prop": "Energizar la sala con alimentación definitiva DAND para precomisionamiento; un generador provisorio se trataría como servicio adicional.",
-  "fid": "1_Mlo34XKL5JRwJ_tKKA9gnnz44oaxkgk",
-  "archivo": "SDI-CCV-026_Alimentaciones-SSAA.xlsx",
-  "refp": "4502319491-03221-202EL-0002 Rev 0",
+  "refp": "4502319491-03221-202EL-00001 Rev 0; LSTEL-00002 Rev B",
+  "actividad": "4.3 Montaje de cables (10-11-2026)",
+  "fid": "1qBiTi9IFc9uDnnOvYj2jXtqR--PM5kF_",
+  "archivo": "SDI-CCV-012_Cable-alimentacion-excitacion.xlsx",
   "estado": "Borrador"
  },
  {
-  "id": "SDI-CCV-027",
-  "n": 27,
-  "fecha": "2026-09-30",
-  "tema": "Fibra óptica y comunicaciones hacia sala de control: tipo de fibra, hilos, ruta, SFP y pruebas",
+  "id": "SDI-CCV-013",
+  "n": 13,
+  "nAnt": "SDI-CCV-022",
+  "lote": 3,
+  "fecha": "2026-10-01",
+  "tema": "Datos de placa y tags inconsistentes entre la ingeniería Innomotics (APC) y los listados R&Q",
+  "disc": [
+   "ELÉCTRICO"
+  ],
+  "urg": "Mediana",
+  "imp": [
+   "Plazo"
+  ],
+  "ubic": "Transformadores de excitación y conversión, cicloconvertidores y UPS",
+  "refs": [
+   [
+    "Planos",
+    "4502319491-03221-202EL-00001 Rev 0; 202EL-0002 Rev 0",
+    "Diagramas unilineales MT y BT Innomotics"
+   ],
+   [
+    "Especificación",
+    "4600029647-028-03221-LSTEL-00004 Rev B; LSTEL-00005 Rev B",
+    "Listado de equipos; listado de tie-in"
+   ],
+   [
+    "Otros",
+    "4600029647-028-03221-INFEL-00010 Rev B",
+    "Informe verificación malla a tierra"
+   ]
+  ],
+  "ant": "Transformador de excitación: 350 kVA, uz 9 % (Innomotics) vs 380 kVA (R&Q). Transformador de conversión: Uz 10,5 % (Innomotics) vs 7 % asumido en INFEL-00010. Cicloconvertidores: =1.G10/=1.G20 (LSTEL-00004), =G.10/=G.20 (LSTEL-00005), puentes -G11…-G23 (Innomotics). UPS: LSTEL-00004 la identifica como +1.B32 230 VAC, mientras 202EL-0002 identifica +.B32/+.B33 como cargador y banco de baterías 24 Vcc. Los documentos R&Q se basan en documentos Fluor (4600022666-009-…) y en 66OP12040-INN-DAND-EL-PL0096_C, no en los planos Innomotics APC 4502319491-….",
+  "cons": [
+   "Confirmar que la base para construcción son los documentos Innomotics APC 4502319491-03221-….",
+   "Indicar si R&Q actualizará los tags y datos de placa de sus listados conforme a dichos documentos, y en qué plazo."
+  ],
+  "refp": "4502319491-03221-202EL-00001 Rev 0; LSTEL-00004/00005 Rev B",
+  "actividad": "4.3 Montaje de cables / 4.4 equipos eléctricos",
+  "fid": "1y_-ND7Xfwo7uNfnWO9gIzIMxP9-fRleo",
+  "archivo": "SDI-CCV-013_Datos-placa-tags-RQ-vs-Innomotics.xlsx",
+  "estado": "Borrador"
+ },
+ {
+  "id": "SDI-CCV-014",
+  "n": 14,
+  "nAnt": "SDI-CCV-028",
+  "lote": 3,
+  "fecha": "2026-10-01",
+  "tema": "Circuitos de control sin definir en LSTEL-00002 y secciones 0,5 mm² inferiores al mínimo especificado",
+  "disc": [
+   "INSTRUMENTACIÓN",
+   "ELÉCTRICO"
+  ],
+  "urg": "Mediana",
+  "imp": [
+   "Plazo"
+  ],
+  "ubic": "Circuitos de control +B45 Auxiliary LV MCC – B12 y otros",
+  "refs": [
+   [
+    "Especificación",
+    "4600029647-028-03221-LSTEL-00002 Rev B (Circuitos de control, nota 3); 4502319491-03221-106EL-00001 Rev B (§3.3.1)",
+    "Listado de circuitos eléctricos por tramos exactos; especificación de cables"
+   ],
+   [
+    "Otros",
+    "Respuesta Licitación R421",
+    "Respuesta de licitación (marcación DIN)"
+   ]
+  ],
+  "ant": "LSTEL-00002 nota (3) indica que \"los circuitos asociados a los sistemas de control deberán ser definidos\". Existen canalizaciones \"Sin Inf.\" (=1.A01-W20, 1.KG01-W70, S31 a S34-W40, W104 a W106); CODELCO anotó \"no aparece este dato\" en 1.KG01-W70. Los circuitos S31 a S34-W40 (4x2x0,5, desde +B45 Auxiliary LV MCC a B12) usan 0,5 mm², mientras 106EL-00001 exige #14 AWG como mínimo entre sala y terreno, permitiendo #16 o #18 solo dentro de una misma sala.",
+  "cons": [
+   "Entregar el listado definitivo de cables de control con sección, extremos, ruta y canalización.",
+   "Confirmar si 0,5 mm² es aceptable para S31 a S34-W40 (ambos extremos en la misma sala) o debe cambiarse a #14 AWG."
+  ],
+  "refp": "4600029647-028-03221-LSTEL-00002 Rev B (nota 3)",
+  "actividad": "4.3 Montaje de cables, conexionado y pruebas",
+  "fid": "1JL9wiaL6ebOQRep5lk6rm3wSuRIRslvC",
+  "archivo": "SDI-CCV-014_Circuitos-de-control.xlsx",
+  "estado": "Borrador"
+ },
+ {
+  "id": "SDI-CCV-015",
+  "n": 15,
+  "nAnt": "SDI-CCV-026",
+  "lote": 3,
+  "fecha": "2026-10-01",
+  "tema": "Alimentaciones de servicios auxiliares de la sala: UPS, +.B36, gavetas CCM BT reutilizadas, HVAC del 2° piso y energía para precomisionamiento",
+  "disc": [
+   "ELÉCTRICO"
+  ],
+  "urg": "Inmediata",
+  "imp": [
+   "Plazo",
+   "Costo"
+  ],
+  "ubic": "Servicios auxiliares BT sala eléctrica +1.B-2 – CCM BT +.B43/+.B44, TDFI-3330-01, HVAC UI-01/UC-01",
+  "refs": [
+   [
+    "Planos",
+    "4502319491-03221-202EL-0002 Rev 0 (APC 25-08-2025); 402EL-00001 Rev 0; 100ME-00003 Rev 0",
+    "Unilineal distribución BT; integración SSAA; disposición HVAC"
+   ],
+   [
+    "Especificación",
+    "4600029647-028-03221-LSTEL-00002 Rev B; ESPME-00001 Rev 0 (§10.1)",
+    "Listado de circuitos; alimentación 380 V del HVAC"
+   ],
+   [
+    "Otros",
+    "BT §9.7; Respuestas Licitación R57, R278, R300, R401-R404",
+    "Energía del contratista; respuestas de licitación"
+   ]
+  ],
+  "ant": "La UPS se alimenta \"POR CLIENTE (TDFI-3330-01) 1/N/PE AC 50 Hz 220 V, 50 A\" con \"CABLE POR CLIENTE\" N2XH-J 3G10. +.B36 se alimenta desde \"nuevo feeder disponible en el CCM BT ubicado en la sala del segundo piso\", sin identificar el CCM ni confirmar la existencia del feeder. Se reutilizan gavetas del CCM BT +.B44 para =.B75, =.B71 y =.J22 (\"retirar contactor existente\"). La alimentación 380 V del HVAC del 2° piso \"la proporciona el cliente\", sin tablero de origen, protección ni ruta. Ninguno de estos circuitos aparece en LSTEL-00002. La energía de faena es 100 % del contratista (BT §9.7), pero el precomisionamiento de la sala (HVAC, iluminación, UPS) requiere alimentación definitiva.",
+  "cons": [
+   "Para cada alimentador (UPS, +.B36, gavetas +.B44 reutilizadas, HVAC 2° piso) indicar: tablero y gaveta de origen, capacidad del interruptor, cable, largo y ruta.",
+   "Incorporar estos circuitos a LSTEL-00002 Rev 0.",
+   "Indicar la fecha de disponibilidad de la energía definitiva para el precomisionamiento de la sala."
+  ],
+  "refp": "4502319491-03221-202EL-0002 Rev 0 (APC 25-08-2025)",
+  "actividad": "4.3 Montaje de cables / 4.4 equipos eléctricos",
+  "fid": "1_Mlo34XKL5JRwJ_tKKA9gnnz44oaxkgk",
+  "archivo": "SDI-CCV-015_Alimentaciones-SSAA-y-HVAC.xlsx",
+  "estado": "Borrador"
+ },
+ {
+  "id": "SDI-CCV-016",
+  "n": 16,
+  "nAnt": "SDI-CCV-027",
+  "lote": 3,
+  "fecha": "2026-10-01",
+  "tema": "Fibra óptica y comunicaciones hacia la sala de control: tipo de fibra, hilos, ruta y pruebas",
   "disc": [
    "INSTRUMENTACIÓN"
   ],
@@ -6767,148 +6443,157 @@ const SDI_DATA = [
    ],
    [
     "Otros",
-    "LSTAT-00001 Rev 1; LSTEL-00002 Rev B; BT §4.2, §6.2.12, §6.2.14; Respuestas R148, R152, R209, R400",
-    "Listado de partes automatización; circuitos; bases; respuestas"
+    "LSTAT-00001 Rev 1; LSTEL-00002 Rev B; BT §4.2, §6.2.12, §6.2.14; Respuestas Licitación R148, R152, R209, R400",
+    "Listado de partes automatización; listado de circuitos; bases; respuestas"
    ]
   ],
-  "ant": "La arquitectura 413AT-00001 se actualizará después del System Test; los listados combinan SFP monomodo LD con fibra multimodo 62,5/125 y conectores ST vs LC; LSTEL-00002 no lista fibra hacia sala de control o DCS.",
+  "ant": "Innomotics indicó que 413AT-00001 se \"actualizará después del System Test\", por lo que la arquitectura sigue pendiente. LSTAT-00001 incluye conversor de medios SCALANCE XCM102 con SFP992-1LD en +1.U15 y switch SCALANCE XC206-2SFP en +1.B61; 106EL-00001 solo especifica fibra IBA 62,5/125 µm dúplex con conectores ST (multimodo); BT §6.2.14 menciona \"módulos SFP de 1310 nm con conectores tipo LC\". LSTEL-00002 solo lista patch Ethernet W94/W95/W97 de 6 a 10 m y un Profibus, sin cable de fibra hacia la sala de control o el DCS existente.",
   "cons": [
-   "Entregar arquitectura de red final y plano de rutas de fibra óptica.",
-   "Tipo de fibra (mono/multimodo), número de hilos, conector y cantidad de cabeceras/ODF.",
-   "Responsable del suministro de cable, SFP, patch cords, empalmes y terminaciones.",
-   "Pruebas requeridas (OTDR, potencia) y criterios de aceptación."
+   "Entregar la arquitectura de red final y el plano de rutas de fibra óptica hacia la sala de control.",
+   "Especificar tipo de fibra (mono/multimodo), número de hilos, tipo de conector y cantidad de cabeceras/ODF en cada extremo.",
+   "Definir las pruebas requeridas (OTDR, potencia) y los criterios de aceptación."
   ],
-  "prop": "Ejecutar tendido y terminación con certificación OTDR bidireccional por hilo una vez definida la arquitectura.",
+  "refp": "4502319491-03221-413AT-00001 Rev 0 (APC 03-09-2025)",
+  "actividad": "4.3 Montaje de cables, conexionado y pruebas",
   "fid": "1I-t5GNzpaKv72r27tJ1Y9OGGt4-c6zmI",
-  "archivo": "SDI-CCV-027_Fibra-optica-comunicaciones.xlsx",
-  "refp": "4502319491-03221-413AT-00001 Rev 0",
+  "archivo": "SDI-CCV-016_Fibra-optica-sala-de-control.xlsx",
   "estado": "Borrador"
  },
  {
-  "id": "SDI-CCV-028",
-  "n": 28,
-  "fecha": "2026-09-30",
-  "tema": "Circuitos de control sin definir y secciones 0,5 mm² inferiores al mínimo especificado",
+  "id": "SDI-CCV-017",
+  "n": 17,
+  "nAnt": "SDI-CCV-014",
+  "lote": 4,
+  "fecha": "2026-10-01",
+  "tema": "Ingeniería del piping del sistema de enfriamiento: isométricos, especificación, prueba hidrostática y tie-in",
+  "disc": [
+   "MECÁNICA",
+   "PIPING"
+  ],
+  "urg": "Inmediata",
+  "imp": [
+   "Plazo",
+   "Costo"
+  ],
+  "ubic": "Líneas de alimentación y retorno de enfriamiento del cicloconvertidor – unidad de enfriamiento existente",
+  "refs": [
+   [
+    "Especificación",
+    "BT §4.2, §5.5, §6.2.6 a §6.2.8, §6.2.23",
+    "Bases Técnicas – cañerías del sistema de enfriamiento y pruebas"
+   ],
+   [
+    "Otros",
+    "Respuestas Licitación R157, R158, R197, R215, R268, R427",
+    "Respuestas de licitación"
+   ]
+  ],
+  "ant": "Las BT incluyen suministro y montaje de soportes y \"cañerías que alimentan el sistema de enfriamiento y su retorno, según Ingeniería\", \"pruebas hidrostáticas\" y \"conexión de cañerías en unidad enfriamiento existente\". El paquete recibido no contiene isométricos, P&ID ni especificación de piping. En licitación se indicó que la presión de prueba y datos \"se proveerán al adjudicado\" (R157/R197), que dentro de la sala se usará ranurado y fuera soldado (R268), que se requiere flushing (R427), END no aplica (R215) y que el tie-in se ejecutaría en la parada de octubre 2026 (R158). El montaje de cañerías está programado desde el 16-01-2027.",
+  "cons": [
+   "Entregar isométricos, P&ID y plano de ruteo de las líneas de alimentación y retorno.",
+   "Indicar la especificación de materiales (norma, schedule, diámetros, fittings ranurados), el procedimiento de soldadura y la calificación requerida.",
+   "Indicar fluido, presión de diseño y de prueba hidrostática, medio de prueba, criterios de aceptación y de flushing.",
+   "Definir el punto exacto de tie-in en la unidad de enfriamiento existente y su fecha de ejecución."
+  ],
+  "refp": "BT §4.2, §5.5, §6.2.6 a §6.2.8, §6.2.23",
+  "actividad": "4.1 Cañería de agua, sistema de enfriamiento (16-01-2027)",
+  "fid": "1Or4EYVQF2n8IzYu0OR87B-sW9850QwQX",
+  "archivo": "SDI-CCV-017_Piping-enfriamiento.xlsx",
+  "estado": "Borrador"
+ },
+ {
+  "id": "SDI-CCV-018",
+  "n": 18,
+  "nAnt": "SDI-CCV-017",
+  "lote": 4,
+  "fecha": "2026-10-01",
+  "tema": "Red de detección y extinción de incendio: interconexión con el sistema de planta, alimentación de emergencia y sistema existente en +1.B",
   "disc": [
    "INSTRUMENTACIÓN",
    "ELÉCTRICO"
   ],
-  "urg": "Mediana",
+  "urg": "Inmediata",
   "imp": [
+   "Seguridad",
    "Plazo"
   ],
-  "ubic": "Circuitos de control +B45 Auxiliary LV MCC – B12 y otros",
-  "refs": [
-   [
-    "Especificación",
-    "LSTEL-00002 Rev B (Circuitos de control, nota 3); 106EL-00001 Rev B (§3.3.1)",
-    "Listado de circuitos; especificación de cables"
-   ],
-   [
-    "Otros",
-    "Respuesta Licitación R421",
-    "Respuesta de licitación (marcación DIN)"
-   ]
-  ],
-  "ant": "LSTEL-00002 indica que los circuitos de control \"deberán ser definidos\"; hay canalizaciones \"Sin Inf.\"; los circuitos S31 a S34-W40 usan 0,5 mm² mientras 106EL-00001 exige #14 AWG mínimo entre sala y terreno.",
-  "cons": [
-   "Entregar listado definitivo de cables de control con sección, extremos, ruta y canalización.",
-   "Confirmar si 0,5 mm² es aceptable para S31 a S34-W40 o debe cambiarse a #14 AWG."
-  ],
-  "prop": "Aplicar el mínimo de 106EL-00001 en todo circuito que salga de la sala, salvo instrucción contraria.",
-  "fid": "1JL9wiaL6ebOQRep5lk6rm3wSuRIRslvC",
-  "archivo": "SDI-CCV-028_Circuitos-de-control.xlsx",
-  "refp": "4600029647-028-03221-LSTEL-00002 Rev B (nota 3)",
-  "estado": "Borrador"
- },
- {
-  "id": "SDI-CCV-029",
-  "n": 29,
-  "fecha": "2026-09-30",
-  "tema": "Listado de canalizaciones: cantidades repetidas, clase de escalerilla, materiales faltantes y etapa contradictoria",
-  "disc": [
-   "ELÉCTRICO"
-  ],
-  "urg": "Mediana",
-  "imp": [
-   "Costo",
-   "Plazo"
-  ],
-  "ubic": "Canalizaciones eléctricas sala SAG – escalerillas 600x100 y 300x100, conduit",
+  "ubic": "Sistema de detección y extinción sala eléctrica nueva y sala existente +1.B",
   "refs": [
    [
     "Planos",
-    "4600029647-028-03221-205EL-00001 Rev B",
-    "Plano de canalizaciones"
+    "4502319491-03221-100EL-00001 Rev 0 (AFC 24-02-2026) lám. 1 a 13",
+    "Disposición general sistema detección y extinción de incendios sala eléctrica"
    ],
    [
     "Especificación",
-    "4600029647-028-03221-LSTEL-00003 Rev B (Tabla 5.1, nota 1)",
-    "Listado de canalizaciones eléctricas (R&Q)"
+    "4502319491-03221-ESPME-00001 Rev 0 (§11)",
+    "Especificación técnica metalmecánica sala eléctrica"
    ],
    [
     "Otros",
-    "LSTEL-00002 Rev B; Respuestas R260, R395",
-    "Listado de circuitos (etapas); respuestas de licitación"
+    "BT §5.1, §6.2.21-§6.2.24, §10.4; Respuestas Licitación R159, R160, R266, R325",
+    "Bases Técnicas; respuestas de licitación"
    ]
   ],
-  "ant": "El bloque \"escalerilla 600x100, 216 m\" se repite al menos cuatro veces; clase \"Clase 1 80\"; faltan ferretería, riel, cobre desnudo; no hay canalización para escalerilla 300x100 ni conduit; la nota 1 ubica el trabajo después de la parada mientras LSTEL-00002 lo ubica en Etapa 1.",
+  "ant": "ESPME-00001 exige integrar el sistema \"al sistema de detección y supresión general de la Planta\"; el plano solo muestra relés FRM-1 \"señales monitoreo hacia control\", sin punto de conexión. La alimentación se indica \"a circuito de emergencia de nave (por eléctricos)\" y la ubicación de la fuente de poder \"por definir en terreno\". El sistema existente en +1.B \"es reemplazado completamente\", sin definir el alcance de su retiro ni el destino del agente extintor existente. La instalación de la red está programada desde el 25-01-2027.",
   "cons": [
-   "Emitir LSTEL-00003 Rev 0 por tramo, trazable a LSTEL-00002, con resumen de cantidades por tipo.",
-   "Confirmar clase de escalerilla y materiales complementarios.",
-   "Confirmar etapa de ejecución (previo o posterior a la parada)."
+   "Entregar el punto de interconexión con el sistema de detección y supresión de la planta (protocolo o contactos secos), su ubicación y responsable.",
+   "Definir el circuito de emergencia de alimentación del sistema y la ubicación de la fuente de poder.",
+   "Definir el alcance del retiro del sistema existente en +1.B y el destino del agente extintor y equipos retirados."
   ],
-  "prop": "Ejecutar canalizaciones en Etapa 1 (previo a parada), según plano 205EL APC y levantamiento en terreno.",
-  "fid": "1LUmb_HKWfxwt3LcYzUtYTOV-CqVOX8iI",
-  "archivo": "SDI-CCV-029_LSTEL-00003-canalizaciones.xlsx",
-  "refp": "4600029647-028-03221-205EL-00001 Rev B",
+  "refp": "4502319491-03221-100EL-00001 Rev 0 (AFC 24-02-2026)",
+  "actividad": "7.1 Instalación red de incendio (25-01-2027)",
+  "fid": "1HAKbIfEpFPINBktCPEr0RDSQbxB4D_zd",
+  "archivo": "SDI-CCV-018_Red-incendio-interconexion.xlsx",
   "estado": "Borrador"
  },
  {
-  "id": "SDI-CCV-030",
-  "n": 30,
-  "fecha": "2026-09-30",
-  "tema": "Plano de canalizaciones: plano de referencia 205ES-00001 no entregado e interferencia con cielo existente y ducto de barras",
+  "id": "SDI-CCV-019",
+  "n": 19,
+  "nAnt": "SDI-CCV-025",
+  "lote": 5,
+  "fecha": "2026-10-01",
+  "tema": "Definición de los tie-ins eléctricos: cantidad, punto de conexión, ventana de parada y responsable de maniobras",
   "disc": [
    "ELÉCTRICO",
-   "CIVIL"
+   "INSTRUMENTACIÓN"
   ],
   "urg": "Inmediata",
   "imp": [
    "Plazo",
    "Seguridad"
   ],
-  "ubic": "Sala eléctrica SAG – exoesqueleto y escalerillas, cielo existente, ducto de barra existente",
+  "ubic": "Sala eléctrica existente +1.B (piso 1) y proyectada +1.B-2 (piso 2), motor anillo",
   "refs": [
    [
-    "Planos",
-    "205EL-00001 Rev B (notas 2, 5, 6); 300CI-00002 Rev 1 (APC)",
-    "Plano de canalizaciones; plano sala con exoesqueleto"
+    "Especificación",
+    "4600029647-028-03221-LSTEL-00005 Rev B (Tabla 5.1, notas 1 y 2)",
+    "Listado de tie-in eléctricos (R&Q)"
    ],
    [
     "Otros",
-    "4600029647-028-03221-205ES-00001 (no recibido)",
-    "Plano de posición del exoesqueleto"
+    "BT §4.3.2, §6.2.18; Respuestas Licitación R21, R212, R241, R242, R426",
+    "Bases Técnicas; respuestas de licitación"
    ]
   ],
-  "ant": "205EL-00001 refiere sus cotas al plano 205ES-00001 no entregado; la nota 6 indica que el cielo existente interfiere con la sala del 2° piso y debe modificarse antes del montaje, sin alcance ni responsable; la nota 5 señala holgura con el ducto de barra existente.",
+  "ant": "BT §6.2.18 establece que el tie-in eléctrico se divide en tres tie-ins; LSTEL-00005 lista 12, sin indicar punto físico de conexión (borne/barra), duración, ventana de parada ni secuencia (\"coordinar con personal Codelco\"). Existen contradicciones de ubicación: tie-in 7 \"S/E Existente +1B… Proyectado en Sala Eléctrica Piso 2\"; tie-ins 8 a 12 \"S/E Proyectada +1B-2… Instalado en Sala Eléctrica Piso 1\". No se incluyen tie-ins para gavetas CCM BT +.B43/+.B44 reutilizadas, nuevo alimentador para +.B36, TDFI-3330-01 (UPS), HVAC 2° piso, conexiones estator/rotor en +1.U11/U12/U13, red/fibra a sala de control ni puesta a tierra. R21: la liberación de equipos la realiza GMAN.",
   "cons": [
-   "Entregar el plano 205ES-00001 vigente.",
-   "Emitir 205EL-00001 en Rev 0 APC.",
-   "Definir alcance, ingeniería, responsable y partida de pago de la modificación del cielo existente y su plazo.",
-   "Confirmar distancia mínima al ducto de barras existente y si permanece energizado durante los trabajos."
+   "Entregar el listado de tie-ins APC indicando para cada uno: punto físico de conexión, sala/piso, equipo existente, requisitos de bloqueo, duración estimada y etapa (1: previo a parada / 2: en parada).",
+   "Confirmar el responsable de las maniobras, desenergización y bloqueos (área eléctrica DAND / GMAN)."
   ],
-  "prop": "Si la modificación del cielo es de MIES, ejecutarla con ingeniería DAND aprobada como trabajo adicional previo al montaje de la sala.",
-  "fid": "1Sh6OeVYNDmRxY9PK3HWijEsZmdjDo-5X",
-  "archivo": "SDI-CCV-030_205EL-00001-interferencias-cielo.xlsx",
-  "refp": "4600029647-028-03221-205EL-00001 Rev B (notas 2, 5, 6)",
+  "refp": "4600029647-028-03221-LSTEL-00005 Rev B (Tabla 5.1, notas 1 y 2)",
+  "actividad": "4.4 Montaje de equipos eléctricos (25-01-2027) / 5.1 parada de planta",
+  "fid": "1e5gfI4rxx4NQYkseMsHRkpNm0aeUoxR4",
+  "archivo": "SDI-CCV-019_Tie-ins-definicion.xlsx",
   "estado": "Borrador"
  },
  {
-  "id": "SDI-CCV-031",
-  "n": 31,
-  "fecha": "2026-09-30",
-  "tema": "Retiro de cables y equipos existentes: secuencia, reutilización, destino, residuos y circuitos temporales",
+  "id": "SDI-CCV-020",
+  "n": 20,
+  "nAnt": "SDI-CCV-031",
+  "lote": 5,
+  "fecha": "2026-10-01",
+  "tema": "Retiro de cables y equipos existentes: secuencia, reutilización, destino y circuitos temporales",
   "disc": [
    "ELÉCTRICO",
    "OTRO"
@@ -6922,66 +6607,25 @@ const SDI_DATA = [
   "refs": [
    [
     "Especificación",
-    "LSTEL-00002 Rev B; LSTEL-00004 Rev B",
+    "4600029647-028-03221-LSTEL-00002 Rev B; LSTEL-00004 Rev B",
     "Listado de circuitos ('Retiro Etapa 2'); listado de equipos ('Existente a retirar')"
    ],
    [
     "Otros",
-    "BT §4.2, §5.1, §5.7, §5.8, §6.2.17, §6.2.20, §9.20, §15 Hito 7; Respuestas R5, R25, R114, R176, R214, R247, R273, R409",
+    "BT §4.2, §5.1, §5.7, §5.8, §6.2.17, §6.2.20, §15 Hito 7; Respuestas Licitación R5, R176, R214, R409",
     "Bases Técnicas Rev 2; respuestas de licitación"
    ]
   ],
-  "ant": "Las BT ubican el retiro de cables dentro de la parada (§5.1) y post detención (§5.8); la \"instalación temporal de circuitos definitivos\" no está definida; LSTEL-00002 marca retiro pero su nota indica reutilización; los equipos a retirar no tienen destino ni custodia; el manejo de residuos es contradictorio entre respuestas.",
+  "ant": "BT §5.1 incluye \"Retiro de cables existentes… sala eléctrica y Molino\" dentro de la parada, mientras §5.8 lo ubica \"Post Detención\" (R5: retiro posterior a la parada). §5.1 incluye además \"Instalación temporal de circuitos definitivos entre sala eléctrica y molino SAG\", sin definición. LSTEL-00002 marca los cables de potencia existentes \"Retiro Etapa 2\" pero su nota (4) indica reutilización; los cables de control se marcan \"Existente a reutilizar\" sin prueba previa. LSTEL-00004 lista a retirar cicloconvertidores, rectificador, UPS, banco de baterías, unidad de enfriamiento, +1.B18 y CPU UC-320, sin destino, acopio ni custodia.",
   "cons": [
-   "Confirmar secuencia de retiro (en parada vs post parada) y definir la \"instalación temporal de circuitos definitivos\".",
-   "Definir cable por cable si se retira o reutiliza; para reutilizados, prueba de aislamiento previa.",
-   "Destino, acopio y receptor DAND de los equipos retirados; manejo de baterías como residuo peligroso.",
-   "Responsable y costo del retiro de residuos.",
-   "Confirmar si el retiro de canalizaciones existentes es parte del alcance y su partida."
+   "Confirmar la secuencia de retiro (en parada vs post parada) y definir la \"instalación temporal de circuitos definitivos\" indicada en BT §5.1.",
+   "Definir, cable por cable, cuáles se retiran y cuáles se reutilizan; para los reutilizados, indicar si se requiere prueba de aislamiento previa.",
+   "Indicar destino, lugar de acopio y receptor DAND de los equipos retirados, y el manejo previsto para las baterías."
   ],
-  "prop": "En la parada solo desconectar, aislar y rotular cables existentes; ejecutar el retiro post parada con registro de pesos y actas de entrega a DAND.",
-  "fid": "1VSE4AMcLZSqg4unzBiZVpJ0YTRJFClnp",
-  "archivo": "SDI-CCV-031_Retiro-equipos-y-cables-existentes.xlsx",
   "refp": "4600029647-028-03221-LSTEL-00002 Rev B; LSTEL-00004 Rev B",
-  "estado": "Borrador"
- },
- {
-  "id": "SDI-CCV-032",
-  "n": 32,
-  "fecha": "2026-09-30",
-  "tema": "Alcance y dotación del apoyo a integración, pruebas SAT y puesta en marcha",
-  "disc": [
-   "ELÉCTRICO",
-   "INSTRUMENTACIÓN"
-  ],
-  "urg": "Mediana",
-  "imp": [
-   "Costo",
-   "Plazo"
-  ],
-  "ubic": "Integración y puesta en marcha cicloconvertidor – parada de planta",
-  "refs": [
-   [
-    "Especificación",
-    "BT §5.7, §6.2.19 (ítem 5.1.10)",
-    "Bases Técnicas – apoyo a integración"
-   ],
-   [
-    "Otros",
-    "Respuestas Licitación R11, R60, R61, R62, R66, R153, R320, R341, R416",
-    "Respuestas de licitación"
-   ]
-  ],
-  "ant": "Las BT y R320/R341 fijan un apoyo de 10 días (turno día y noche) con 4 técnicos por turno, operativo y sin responsabilidad técnica; R416 declara integración, SAT y PEM fuera del alcance y R66 plantea 6 técnicos + 2 supervisores en 3 turnos; BT §5.7 incluye además configuración de equipos.",
-  "cons": [
-   "Confirmar la dotación y régimen de turnos requeridos para el apoyo a integración.",
-   "Confirmar que la configuración de PLC/PCS 7, pruebas SAT y puesta en marcha son de Innomotics/DAND y que MIES solo presta apoyo físico.",
-   "Indicar el mecanismo de pago si la integración se extiende más allá de 10 días."
-  ],
-  "prop": "Dotación de 4 técnicos por turno (día y noche) por 10 días; extensiones pagadas a tarifa día-técnico a acordar.",
-  "fid": "1SUfMEV4Be21ttLKV91hcL6knP9Nr8IgQ",
-  "archivo": "SDI-CCV-032_Alcance-apoyo-integracion.xlsx",
-  "refp": "BT §5.7, §6.2.19 (ítem 5.1.10)",
+  "actividad": "5.1 Retiro y montaje de equipos (15-03-2027) / 6.1 retiro post parada",
+  "fid": "1VSE4AMcLZSqg4unzBiZVpJ0YTRJFClnp",
+  "archivo": "SDI-CCV-020_Retiro-equipos-y-cables-existentes.xlsx",
   "estado": "Borrador"
  }
 ];
@@ -7078,9 +6722,9 @@ function renderSDI(){
 
   let h = '<div class="page-title"><h1>08 — Solicitudes de Información (SDI)</h1></div>';
   h += '<div class="help"><b>¿Qué es esto?</b> Registro y tablero de las SDI que la oficina técnica MIES emite a CODELCO DAND (formulario RE-03-1O-01-117). ' +
-       'Cada fila del registro abre la ficha con el resumen de la solicitud (antecedentes, consultas, propuesta y documentos de referencia) y el formulario original de la carpeta de Drive para verlo en línea. ' +
+       'Cada fila del registro abre la ficha con el resumen de la solicitud (antecedentes, consultas y documentos de referencia) y el formulario original de la carpeta de Drive para verlo en línea. ' +
        'Plazo de respuesta referencial BT §13.5: 5 días hábiles (urgencia inmediata) / 7 días hábiles desde el ingreso al LOD. Si la respuesta implica variación de plazo o costo debe generarse una SOC. ' +
-       'El administrador registra envío, respuesta y cierre con ✎ (queda compartido para todos).</div>';
+       'El administrador registra envío, respuesta y cierre con ✎ (queda compartido para todos).<br><b>' + esc(SDI_REV) + ':</b> set depurado — no se consulta la ingeniería interior de la sala (Innomotics, aprobada y con suministros comprados) ni temas de alcance contractual; las consultas apuntan a la ingeniería de terreno en desarrollo (R&Q / DAND), sin proponer soluciones, y se envían por lotes según el programa de obra.</div>';
 
   h += '<div class="toolbar" style="margin-bottom:12px"><a class="btn sm primary" href="' + attr(carpeta) + '" target="_blank" rel="noopener">📂 Abrir carpeta SDI en Drive</a>' +
        '<a class="btn sm" href="https://drive.google.com/file/d/' + SDI_REGISTRO_ID + '/view" target="_blank" rel="noopener">📋 Registro_SDI_CCV.xlsx</a>' +
@@ -7111,6 +6755,18 @@ function renderSDI(){
     '<div class="card card-pad"><h2>Documentos más consultados</h2><p class="sub">Documentos de referencia que aparecen en más solicitudes: allí se concentran las definiciones pendientes de la ingeniería.</p>' + sdiBarras(docs, 'var(--accent)', 0) + '</div>' +
   '</div>';
 
+  /* lotes de envío según programa */
+  h += '<div class="card card-pad" style="margin-bottom:14px"><h2>Secuencia de envío según el programa de obra</h2><p class="sub">Cada lote se envía antes de la actividad del programa que necesita la respuesta; así no se envían todas las SDI a la vez. Fecha límite de respuesta: 5 días hábiles (inmediata) / 7 (mediana, normal) desde el envío.</p><div class="sdi-lotes">';
+  SDI_LOTES.forEach(function(L){
+    const ids = T.filter(function(v){ return v.lote === L.n; });
+    const env = ids.filter(function(v){ return v.estado !== 'Borrador'; }).length;
+    const vencido = L.enviar < hoy && env < ids.length;
+    h += '<div class="sdi-lote' + (vencido ? ' tarde' : '') + '"><div class="sdi-lote-cab"><span class="sdi-lote-n">Lote ' + L.n + '</span><b>' + esc(L.nombre) + '</b><span class="spacer"></span><span class="sub" style="margin:0">enviar el <b>' + fmtFecha(L.enviar) + '</b>' + (vencido ? ' · <span style="color:var(--bad)">fecha de envío pasada</span>' : '') + ' · ' + env + '/' + ids.length + ' enviadas</span></div>' +
+         '<div class="sub" style="margin:2px 0 6px">' + esc(L.hito) + ' — ' + esc(L.porque) + '</div><div class="sdi-lote-items">' +
+         ids.map(function(v){ return '<a href="javascript:void 0" onclick="fichaSDI(\'' + v.id + '\')" class="sdi-chip" title="' + attr(v.tema) + '"><b style="white-space:nowrap">' + esc(v.id) + '</b>' + pillSDI(v.efectivo) + '<span>' + esc(v.tema) + '</span></a>'; }).join('') + '</div></div>';
+  });
+  h += '</div></div>';
+
   /* temas críticos */
   const crit = T.filter(function(v){ return v.urg === 'Inmediata' && v.imp.indexOf('Seguridad') >= 0; });
   if(crit.length){
@@ -7125,9 +6781,12 @@ function renderSDI(){
     '<select class="inp" style="max-width:150px" onchange="SDI_UI.urg=this.value;pintarSDI()"><option value="">Urgencia: todas</option>' + ['Inmediata','Mediana','Normal'].map(function(d){ return '<option' + (SDI_UI.urg === d ? ' selected' : '') + '>' + d + '</option>'; }).join('') + '</select>' +
     '<select class="inp" style="max-width:150px" onchange="SDI_UI.imp=this.value;pintarSDI()"><option value="">Impacto: todos</option>' + ['Plazo','Costo','Seguridad'].map(function(d){ return '<option' + (SDI_UI.imp === d ? ' selected' : '') + '>' + d + '</option>'; }).join('') + '</select>' +
     '<select class="inp" style="max-width:150px" onchange="SDI_UI.estado=this.value;pintarSDI()"><option value="">Estado: todos</option>' + ['Borrador','Enviada','Vencida','Respondida','Cerrada'].map(function(d){ return '<option' + (SDI_UI.estado === d ? ' selected' : '') + '>' + d + '</option>'; }).join('') + '</select>' +
-    '<select class="inp" style="max-width:170px" onchange="SDI_UI.orden=this.value;pintarSDI()">' + [['n','Orden: N° SDI'],['urg','Orden: urgencia'],['limite','Orden: fecha límite'],['estado','Orden: estado']].map(function(o){ return '<option value="' + o[0] + '"' + (SDI_UI.orden === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select>' +
+    '<select class="inp" style="max-width:170px" onchange="SDI_UI.orden=this.value;pintarSDI()">' + [['n','Orden: N° SDI / lote'],['urg','Orden: urgencia'],['limite','Orden: fecha límite'],['estado','Orden: estado']].map(function(o){ return '<option value="' + o[0] + '"' + (SDI_UI.orden === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select>' +
     '<span class="spacer"></span><span class="sub" id="sdiCuenta" style="margin:0"></span></div>' +
     '<div id="sdiTabla">' + tablaSDI() + '</div></div>';
+  h += '<details class="card card-pad" style="margin-top:14px"><summary style="cursor:pointer;font-weight:650">SDI de la Rev 0 (30-09-2026) que no se envían por ahora (' + SDI_DIFERIDAS.length + ')</summary>' +
+       '<div class="tbl-wrap" style="margin-top:10px"><table><thead><tr><th style="cursor:default">N° Rev 0</th><th style="cursor:default">Tema</th><th style="cursor:default">Motivo</th></tr></thead><tbody>' +
+       SDI_DIFERIDAS.map(function(d){ return '<tr><td><span class="mono">' + esc(d[0]) + '</span></td><td class="wrap">' + esc(d[1]) + '</td><td class="wrap">' + esc(d[2]) + '</td></tr>'; }).join('') + '</tbody></table></div></details>';
   return h;
 }
 function renderSDIPost(){ bajarPrograma(); }
@@ -7141,7 +6800,7 @@ function tablaSDI(){
   if(!L.length) h += '<tr><td colspan="8"><div class="empty-state">Ninguna SDI coincide con los filtros.</div></td></tr>';
   L.forEach(function(v){
     h += '<tr class="sdi-row" onclick="fichaSDI(\'' + v.id + '\')">' +
-      '<td><span class="mono"><b>' + esc(v.id) + '</b></span><div class="sub" style="margin:2px 0 0">' + fmtFecha(v.fecha) + '</div></td>' +
+      '<td><span class="mono"><b>' + esc(v.id) + '</b></span><div class="sub" style="margin:2px 0 0">Lote ' + v.lote + ' · enviar ' + fmtFecha(SDI_LOTES[v.lote-1].enviar) + '</div></td>' +
       '<td class="wrap" style="max-width:520px">' + esc(v.tema) + '<div class="sub" style="margin:2px 0 0">' + esc(v.refp) + '</div></td>' +
       '<td class="wrap" style="max-width:150px">' + v.disc.map(function(d){ return '<span class="tag">' + esc(d) + '</span>'; }).join(' ') + '</td>' +
       '<td>' + pillUrg(v.urg) + '</td>' +
@@ -7169,13 +6828,13 @@ function fichaSDI(id){
        fila('Documentos de referencia', '<table class="sdi-refs"><tbody>' + v.refs.map(function(r){ return '<tr><td><b>' + esc(r[0]) + '</b></td><td class="mono" style="white-space:normal">' + esc(r[1]) + '</td><td>' + esc(r[2]) + '</td></tr>'; }).join('') + '</tbody></table>') +
        fila('Antecedentes', esc(v.ant)) +
        fila('Consulta', '<ol class="sdi-ol">' + v.cons.map(function(c){ return '<li>' + esc(c) + '</li>'; }).join('') + '</ol>') +
-       fila('Propuesta MIES', esc(v.prop)) +
+       fila('Programa de obra', 'Lote ' + v.lote + ' — ' + esc(SDI_LOTES[v.lote-1].nombre) + ' · enviar el <b>' + fmtFecha(SDI_LOTES[v.lote-1].enviar) + '</b><div class="sub" style="margin:2px 0 0">Actividad que requiere la respuesta: ' + esc(v.actividad) + '</div>') +
        fila('Seguimiento', (v.fechaEnvio ? 'Enviada el ' + fmtFecha(v.fechaEnvio) + ' (LOD/ACONEX) · fecha límite ' + fmtFecha(v.fechaLimite) : '<span style="color:var(--text-3)">Sin enviar — en borrador (pendiente revisión interna, firma Encargado de Calidad y Administrador de Contrato)</span>') +
              (v.fechaRespuesta ? '<div style="margin-top:4px">Respondida el ' + fmtFecha(v.fechaRespuesta) + (v.respuesta ? ': ' + esc(v.respuesta) : '') + '</div>' : '') +
              (v.nota ? '<div class="sub" style="margin:4px 0 0">' + esc(v.nota) + '</div>' : '') +
              (v.por ? '<div class="sub" style="margin:4px 0 0">Actualizado por ' + esc(v.por) + ' el ' + fmtFecha((v.fechaReg || '').slice(0,10)) + '</div>' : '')) +
        '</dl>';
-  b += '<div class="sub" style="margin-top:8px">Archivo: <span class="mono">' + esc(v.archivo) + '</span> · resumen tomado del formulario; el texto completo está en el archivo original.</div>';
+  b += '<div class="sub" style="margin-top:8px">Archivo: <span class="mono">' + esc(v.archivo) + '</span> (' + esc(SDI_REV) + '; reemplaza a ' + esc(v.nAnt) + ' de la Rev 0). El texto completo está en el formulario.</div>';
   b += '</div>';
   b += '<div class="modal-foot">' +
        (idx > 0 ? '<button class="btn sm" onclick="fichaSDI(\'' + SDI_DATA[idx-1].id + '\')">‹ ' + SDI_DATA[idx-1].id + '</button> ' : '') +
@@ -7229,8 +6888,8 @@ function eliminarSDI(id){
   guardarPrograma(); cerrarModal(); render(); toast('Seguimiento eliminado.', 'ok');
 }
 function exportarSDICSV(){
-  const cab = ['N° SDI','Fecha emisión','Tema','Disciplina','Urgencia','Posible impacto','Documento de referencia principal','Estado','Fecha envío','Fecha límite','Fecha respuesta','Respuesta resumida','¿Genera SOC?','Archivo','Observaciones'];
-  const filas = sdiTodas().map(function(v){ return [v.id, fmtFecha(v.fecha), v.tema, v.disc.join(', '), v.urg, v.imp.join(', '), v.refp, v.efectivo, v.fechaEnvio ? fmtFecha(v.fechaEnvio) : '', v.fechaLimite ? fmtFecha(v.fechaLimite) : '', v.fechaRespuesta ? fmtFecha(v.fechaRespuesta) : '', v.respuesta || '', v.soc || '', v.archivo, v.nota || '']; });
+  const cab = ['N° SDI','Lote','Enviar el','Actividad del programa','Fecha emisión','Tema','Disciplina','Urgencia','Posible impacto','Documento de referencia principal','Estado','Fecha envío','Fecha límite','Fecha respuesta','Respuesta resumida','¿Genera SOC?','Archivo','Observaciones','N° Rev 0'];
+  const filas = sdiTodas().map(function(v){ return [v.id, 'Lote ' + v.lote + ' — ' + SDI_LOTES[v.lote-1].nombre, fmtFecha(SDI_LOTES[v.lote-1].enviar), v.actividad, fmtFecha(v.fecha), v.tema, v.disc.join(', '), v.urg, v.imp.join(', '), v.refp, v.efectivo, v.fechaEnvio ? fmtFecha(v.fechaEnvio) : '', v.fechaLimite ? fmtFecha(v.fechaLimite) : '', v.fechaRespuesta ? fmtFecha(v.fechaRespuesta) : '', v.respuesta || '', v.soc || '', v.archivo, v.nota || '', v.nAnt]; });
   const csv = [cab].concat(filas).map(function(r){ return r.map(function(c){ return '"' + String(c).replace(/"/g, '""') + '"'; }).join(';'); }).join('\r\n');
   const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,﻿' + encodeURIComponent(csv); a.download = 'Registro_SDI_CCV_' + hoyISO() + '.csv'; a.click();
 }
