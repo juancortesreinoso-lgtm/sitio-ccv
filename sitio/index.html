@@ -385,6 +385,23 @@ body.lectura .solo-admin{display:none!important}
 .sdi-chip{display:flex;gap:6px;align-items:center;font-size:12px;text-decoration:none;color:var(--text);padding:4px 6px;border-radius:4px;background:var(--surface)}
 .sdi-chip:hover{background:var(--surface-2)}
 .sdi-chip span:last-child{color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:14px}
+.cal-tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:8px 14px;font:inherit;font-size:13.5px;color:var(--text-2);cursor:pointer}
+.cal-tabs button.on{color:var(--accent);border-bottom-color:var(--accent);font-weight:650}
+.cal-folders{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr));gap:12px}
+.cal-folder{border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);padding:12px 14px;cursor:pointer;display:flex;flex-direction:column;gap:8px;transition:box-shadow .15s,border-color .15s}
+.cal-folder:hover{border-color:var(--accent);box-shadow:0 4px 14px rgba(0,0,0,.1)}
+.cal-folder.vacia{border-style:dashed}
+.cal-folder-cab{display:flex;gap:10px;align-items:center}
+.cal-folder-cab>div{flex:1;min-width:0}.cal-folder-cab b{font-size:14px}
+.cal-folder-ico{font-size:26px}
+.cal-folder-n{font-size:24px;font-weight:650;color:var(--accent);font-variant-numeric:tabular-nums}
+.cal-folder-meta{font-size:12px;color:var(--text-2);line-height:1.5;word-break:break-word}
+.cal-subs{display:flex;flex-wrap:wrap;gap:6px}
+.cal-sub{font-size:11.5px;padding:3px 8px;border-radius:12px;background:var(--surface-3);color:var(--text);text-decoration:none}
+.cal-sub:hover{background:var(--accent);color:#fff}.cal-sub.vacia{opacity:.6}
+.cal-folder-pie{margin-top:auto;font-size:12px;color:var(--accent);text-align:right}
+.cal-bar{text-decoration:none;color:var(--text)}.cal-bar:hover .sdi-bar-lab{color:var(--accent)}
 .doc-galeria{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-top:8px}
 .doc-card{display:block;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--bg);text-decoration:none;color:var(--text);transition:box-shadow .15s}
 .doc-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.15)}
@@ -4521,7 +4538,7 @@ function initAdmin(){
 
 const CALIDAD_SERVICIO_URL = 'https://script.google.com/macros/s/AKfycbxdRWFXlNa-1OIrSc1dOB3B8AJz5yBF6kxV05BHWVzXY1ElIJ9YKXCv7qXglXJ10MnzoQ/exec';
 const CALIDAD_REFRESCO_MS = 5 * 60 * 1000;
-const CALIDAD = { arbol:null, hora:null, error:'', cargando:false, carpetaId:'', vista:'lista', orden:'nombre', buscar:'', doc:null, timer:null };
+const CALIDAD = { arbol:null, hora:null, error:'', cargando:false, carpetaId:'', vista:'lista', orden:'nombre', buscar:'', doc:null, timer:null, modo:'resumen' };
 
 function idCarpetaDrive(url){
   const m = str(url).match(/folders\/([A-Za-z0-9_-]{10,})/) || str(url).match(/[?&]id=([A-Za-z0-9_-]{10,})/);
@@ -4638,8 +4655,13 @@ function cuerpoCalidad(){
   const nodo = enc.nodo, ruta = enc.ruta;
   const q = CALIDAD.buscar.trim().toLowerCase();
 
+  /* pestañas Resumen / Explorar */
+  let h = '<div class="cal-tabs"><button class="' + (CALIDAD.modo === 'resumen' ? 'on' : '') + '" onclick="modoCalidad(\'resumen\')">📊 Resumen</button>' +
+          '<button class="' + (CALIDAD.modo !== 'resumen' ? 'on' : '') + '" onclick="modoCalidad(\'explorar\')">📁 Explorar carpetas</button></div>';
+  if(CALIDAD.modo === 'resumen') return h + resumenCalidad();
+
   /* barra superior */
-  let h = '<div class="toolbar">';
+  h += '<div class="toolbar">';
   h += '<a class="btn" href="' + attr(urlDrive) + '" target="_blank" rel="noopener" title="Abrir la carpeta en Google Drive (pestaña nueva)">▲ Ver en Drive</a>';
   h += '<button class="btn" onclick="cargarCalidad(true)" title="Volver a leer la carpeta"' + (CALIDAD.cargando ? ' disabled' : '') + '>↻ ' + (CALIDAD.cargando ? 'Leyendo…' : 'Actualizar') + '</button>';
   h += '<span class="search" style="flex:0 1 320px"><span class="mag">⌕</span><input class="inp" id="calidadBuscar" type="search" placeholder="Buscar en toda la carpeta…" value="' + attr(CALIDAD.buscar) + '" oninput="buscarCalidad(this.value)" style="padding-left:30px"></span>';
@@ -4734,7 +4756,104 @@ function cuerpoCalidadEmbebido(urlDrive){
   return h;
 }
 function refrescarEmbebido(){ const f = document.getElementById('calidadFrame'); if(!f) return; const s = f.src; f.src = 'about:blank'; setTimeout(function(){ f.src = s; }, 50); }
-function irCarpetaCalidad(id){ CALIDAD.carpetaId = id; CALIDAD.buscar = ''; pintarCalidad(); window.scrollTo(0, 0); }
+function irCarpetaCalidad(id){ CALIDAD.carpetaId = id; CALIDAD.buscar = ''; CALIDAD.modo = 'explorar'; pintarCalidad(); window.scrollTo(0, 0); }
+function modoCalidad(m){ CALIDAD.modo = m; if(m === 'resumen') CALIDAD.buscar = ''; pintarCalidad(); }
+
+/* ---------- RESUMEN (dashboard de la carpeta) ---------- */
+function statsCarpeta(nodo){
+  const st = { docs:0, carpetas:0, tam:0, ult:null, tipos:{}, recientes:0, vacias:[] };
+  const lim = Date.now() - 7*86400000;
+  (function rec(n, r){
+    (n.archivos||[]).forEach(function(a){
+      st.docs++; st.tam += Number(a.tam)||0;
+      const t = tipoArchivo(a.mime, a.nombre).label; st.tipos[t] = (st.tipos[t]||0) + 1;
+      const m = new Date(a.mod).getTime();
+      if(!isNaN(m)){ if(m >= lim) st.recientes++; if(!st.ult || m > new Date(st.ult.a.mod).getTime()) st.ult = { a:a, ruta:r.concat([n]) }; }
+    });
+    (n.carpetas||[]).forEach(function(c){
+      st.carpetas++;
+      if(!(c.archivos||[]).length && !(c.carpetas||[]).length) st.vacias.push({ c:c, ruta:r.concat([n]) });
+      rec(c, r.concat([n]));
+    });
+  })(nodo, []);
+  return st;
+}
+function txtTipos(tipos){
+  return Object.keys(tipos).sort(function(a, b){ return tipos[b] - tipos[a]; }).map(function(k){ return tipos[k] + ' ' + k; }).join(' · ');
+}
+function barrasCalidad(pares, total){
+  const max = Math.max.apply(null, pares.map(function(p){ return p[1]; }).concat([1]));
+  return '<div class="sdi-bars">' + pares.map(function(p){
+    const w = Math.round(p[1] / max * 100);
+    return '<a class="sdi-bar cal-bar" href="javascript:void 0"' + (p[2] ? ' onclick="irCarpetaCalidad(\'' + attr(p[2]) + '\')" title="Abrir ' + attr(p[0]) + '"' : '') + '><span class="sdi-bar-lab">' + esc(p[0]) + '</span>' +
+           '<span class="sdi-bar-track"><span class="sdi-bar-fill" style="width:' + w + '%;background:var(--accent)"></span></span>' +
+           '<span class="sdi-bar-val">' + p[1] + (total ? ' <small>(' + Math.round(p[1] / total * 100) + ' %)</small>' : '') + '</span></a>';
+  }).join('') + '</div>';
+}
+function icoCarpetaCalidad(nombre){
+  const n = normTxtCal(nombre);
+  if(n.indexOf('protocol') >= 0) return '🧾';
+  if(n.indexOf('procedim') >= 0) return '📘';
+  if(n.indexOf('pie') >= 0 || n.indexOf('itp') >= 0) return '🗂️';
+  if(n.indexOf('pac') >= 0) return '✅';
+  if(n.indexOf('log') >= 0 || n.indexOf('registro') >= 0) return '📋';
+  if(n.indexOf('dossier') >= 0) return '📚';
+  if(n.indexOf('ncr') >= 0 || n.indexOf('no conform') >= 0) return '⚠️';
+  return '📁';
+}
+function normTxtCal(s){ return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+function resumenCalidad(){
+  const raiz = CALIDAD.arbol, st = statsCarpeta(raiz), urlDrive = urlCarpetaCalidad();
+  let h = '<div class="toolbar" style="margin-bottom:12px"><a class="btn" href="' + attr(urlDrive) + '" target="_blank" rel="noopener">▲ Ver en Drive</a>' +
+          '<button class="btn" onclick="cargarCalidad(true)"' + (CALIDAD.cargando ? ' disabled' : '') + '>↻ ' + (CALIDAD.cargando ? 'Leyendo…' : 'Actualizar') + '</button>' +
+          '<span class="search" style="flex:0 1 320px"><span class="mag">⌕</span><input class="inp" type="search" placeholder="Buscar en toda la carpeta…" onkeydown="if(event.key===\'Enter\'){CALIDAD.modo=\'explorar\';buscarCalidad(this.value);}" style="padding-left:30px"></span>' +
+          '<span class="spacer"></span><span style="font-size:11.5px;color:var(--text-3)">' + (CALIDAD.hora ? 'Leída a las ' + pad(CALIDAD.hora.getHours()) + ':' + pad(CALIDAD.hora.getMinutes()) + ' · se actualiza sola cada 5 min' : '') + '</span></div>';
+
+  /* KPIs */
+  h += '<div class="grid kpis" style="margin-bottom:14px">' +
+    kpi('Documentos', st.docs, 'en ' + st.carpetas + ' carpetas y subcarpetas', '') +
+    kpi('Carpetas principales', (raiz.carpetas||[]).length, st.vacias.length ? st.vacias.length + ' carpeta(s) vacía(s)' : 'todas con contenido', st.vacias.length ? 'warn' : 'good') +
+    kpi('Nuevos o modificados', st.recientes, 'en los últimos 7 días', st.recientes ? 'good' : '') +
+    kpi('Última actualización', st.ult ? fmtFecha(String(st.ult.a.mod).slice(0,10)) : '—', st.ult ? st.ult.a.nombre : 'sin documentos', '') +
+    kpi('Tamaño total', fmtTam(st.tam), txtTipos(st.tipos) || '—', '') +
+  '</div>';
+
+  /* tarjetas de carpetas */
+  const carpetas = (raiz.carpetas||[]).slice().sort(function(a, b){ return String(a.nombre).localeCompare(String(b.nombre), 'es'); });
+  h += '<h2 style="margin:6px 0 10px">Carpetas</h2><div class="cal-folders">';
+  carpetas.forEach(function(c){
+    const s2 = statsCarpeta(c), subs = (c.carpetas||[]);
+    h += '<div class="cal-folder' + (s2.docs ? '' : ' vacia') + '" onclick="irCarpetaCalidad(\'' + attr(c.id) + '\')" title="Entrar a ' + attr(c.nombre) + '">' +
+         '<div class="cal-folder-cab"><span class="cal-folder-ico">' + icoCarpetaCalidad(c.nombre) + '</span><div><b>' + esc(c.nombre) + '</b><div class="sub" style="margin:0">' +
+           (s2.docs ? s2.docs + ' documento' + (s2.docs === 1 ? '' : 's') : 'vacía') + (subs.length ? ' · ' + subs.length + ' subcarpeta' + (subs.length === 1 ? '' : 's') : '') + '</div></div>' +
+           '<span class="cal-folder-n">' + s2.docs + '</span></div>' +
+         (s2.docs ? '<div class="cal-folder-meta">' + esc(txtTipos(s2.tipos)) + (s2.ult ? '<br>Último: <b>' + esc(s2.ult.a.nombre) + '</b> · ' + fmtFecha(String(s2.ult.a.mod).slice(0,10)) : '') + (s2.recientes ? ' <span class="pill aprobado" style="margin-left:4px"><span class="dot"></span>' + s2.recientes + ' nuevo(s) 7 d</span>' : '') + '</div>' : '<div class="cal-folder-meta" style="color:var(--warn)">Sin documentos cargados todavía</div>') +
+         (subs.length ? '<div class="cal-subs">' + subs.slice().sort(function(a, b){ return String(a.nombre).localeCompare(String(b.nombre), 'es'); }).map(function(sc){ const n = statsCarpeta(sc).docs; return '<a href="javascript:void 0" class="cal-sub' + (n ? '' : ' vacia') + '" onclick="event.stopPropagation();irCarpetaCalidad(\'' + attr(sc.id) + '\')">📁 ' + esc(sc.nombre) + ' <b>' + n + '</b></a>'; }).join('') + '</div>' : '') +
+         '<div class="cal-folder-pie">Entrar →</div></div>';
+  });
+  h += '</div>';
+
+  /* gráficos */
+  const porCarpeta = [];
+  carpetas.forEach(function(c){
+    if((c.carpetas||[]).length && !(c.archivos||[]).length) (c.carpetas||[]).forEach(function(sc){ porCarpeta.push([sc.nombre, statsCarpeta(sc).docs, sc.id]); });
+    else porCarpeta.push([c.nombre, statsCarpeta(c).docs, c.id]);
+  });
+  porCarpeta.sort(function(a, b){ return b[1] - a[1]; });
+  const porTipo = Object.keys(st.tipos).map(function(k){ return [k, st.tipos[k]]; }).sort(function(a, b){ return b[1] - a[1]; });
+  h += '<div class="grid cols2" style="margin:14px 0">' +
+       '<div class="card card-pad"><h2>Documentos por carpeta <span class="sub" style="margin:0;font-weight:400">· clic para entrar</span></h2>' + barrasCalidad(porCarpeta, st.docs) + '</div>' +
+       '<div class="card card-pad"><h2>Documentos por tipo</h2>' + barrasCalidad(porTipo, st.docs) +
+         (st.vacias.length ? '<div class="sub" style="margin-top:12px;color:var(--warn)"><b>Carpetas vacías:</b> ' + st.vacias.map(function(v){ return '<a class="doclink" href="javascript:void 0" onclick="irCarpetaCalidad(\'' + attr(v.c.id) + '\')">' + esc(rutaTexto(v.ruta.concat([v.c])).replace(/^Calidad › /, '')) + '</a>'; }).join(', ') + '</div>' : '') + '</div>' +
+       '</div>';
+
+  /* últimos documentos */
+  const todos = todosLosArchivos(raiz).sort(function(x, y){ return String(y.a.mod).localeCompare(String(x.a.mod)); }).slice(0, 10);
+  h += '<div class="card"><div class="card-pad" style="padding-bottom:0"><h2>Últimos documentos actualizados</h2></div><div class="tbl-wrap" style="border:0"><table><thead><tr><th style="cursor:default">Documento</th><th style="cursor:default">Carpeta</th><th style="cursor:default">Modificado</th><th style="cursor:default"></th></tr></thead><tbody>' +
+       todos.map(function(x){ const t = tipoArchivo(x.a.mime, x.a.nombre); return '<tr class="drv-row" onclick="verDocCalidad(\'' + attr(x.a.id) + '\')"><td class="wrap">' + t.ico + ' ' + esc(x.a.nombre) + '</td><td class="wrap" style="color:var(--text-2)">' + esc(rutaTexto(x.ruta).replace(/^Calidad › ?/, '') || 'Calidad') + '</td><td>' + fmtFechaHora(x.a.mod) + '</td><td><button class="btn sm" onclick="event.stopPropagation();verDocCalidad(\'' + attr(x.a.id) + '\')">👁 Ver</button></td></tr>'; }).join('') +
+       '</tbody></table></div></div>';
+  return h;
+}
 function vistaCalidad(v){ CALIDAD.vista = v; pintarCalidad(); }
 function ordenCalidad(o){ CALIDAD.orden = o; pintarCalidad(); }
 function buscarCalidad(v){
