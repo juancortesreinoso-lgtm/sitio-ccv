@@ -1,0 +1,7 @@
+# Lectura de la plantilla 5.7 y de los insumos de la prueba de aceptación desde el servicio Apps Script
+/plantillas/*
+  Access-Control-Allow-Origin: *
+/lib/*
+  Access-Control-Allow-Origin: *
+/pruebas57/*
+  Access-Control-Allow-Origin: *
