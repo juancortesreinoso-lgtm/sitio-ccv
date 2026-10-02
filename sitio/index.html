@@ -438,6 +438,35 @@ body.lectura .solo-admin{display:none!important}
   .dl dt{margin-top:6px}
 }
 @media print{.sidebar,.topbar,.toolbar,#toasts{display:none!important}.content{padding:0}}
+
+/* ---- 5.7 Informe diario digital ---- */
+.i57-filtros{flex-wrap:wrap;gap:8px;padding:10px 12px;margin:0;border-bottom:1px solid var(--border)}
+.i57-filtros label{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-2)}
+.i57-filtros .inp{width:auto;min-width:0}
+.i57-acc{white-space:nowrap}.i57-acc .btn{margin:1px 2px}
+.i57-barra{position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0;margin-bottom:8px;flex-wrap:wrap;gap:6px}
+.i57-nav{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;margin:0 0 12px}
+.i57-nav a{color:var(--text-2);text-decoration:none;border-bottom:1px dotted var(--text-3)}
+.i57-sec{margin-bottom:14px}.i57-body{padding:12px 14px}
+.i57-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:8px 14px}
+.i57-t table{min-width:100%}.i57-t td{padding:3px 4px;vertical-align:top}.i57-t th{white-space:nowrap;font-size:11px}
+.i57-t .inp{min-width:90px;padding:4px 6px;font-size:12px}
+.i57-t .inp.w-xs{min-width:52px;width:58px}.i57-t .inp.w-s{min-width:64px;width:78px}.i57-t .inp.w-m{min-width:120px;width:150px}.i57-t .inp.w-edt{min-width:96px;width:110px}
+.i57-del{padding:2px 7px;color:var(--bad)}
+.i57-h3{margin:12px 0 6px;font-size:13px}
+.i57-chk{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2)}
+.i57-txtrow{display:flex;gap:6px;margin-bottom:4px}.i57-txtrow .inp{flex:1}
+.i57-fotos{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.i57-foto{border:1px solid var(--border);border-radius:8px;padding:6px;display:flex;flex-direction:column;gap:5px}
+.i57-thumb{height:120px;display:flex;align-items:center;justify-content:center;background:var(--bg);border-radius:6px;overflow:hidden}
+.i57-thumb img{max-width:100%;max-height:120px}
+.i57-resumen{padding:10px 14px;margin-bottom:10px}
+.i57-res{display:flex;flex-wrap:wrap;gap:10px 22px}
+.i57-res div{display:flex;flex-direction:column}.i57-res b{font-size:18px}.i57-res span{font-size:11px;color:var(--text-3)}
+.i57-res .ok b{color:var(--ok)}.i57-res .ko b{color:var(--bad)}
+.i57-err li{color:var(--bad);margin:2px 0}.i57-av li{color:var(--text-2);margin:2px 0}
+.i57-ver h3{margin:14px 0 6px}.i57-ver h4{margin:8px 0 4px;font-size:12px}
+@media (max-width:700px){.i57-acc{white-space:normal}.i57-barra{position:static}}
 </style>
 </head>
 <body>
@@ -623,10 +652,7 @@ const MENU = [
   },
   {
     id: 'docctrl', code: '04', label: 'Control Documental (emitidos)', icon: 'folder',
-    route: 'docctrl', wip: true,
-    wipDesc: 'Control de la documentación que MIES emite hacia CODELCO: transmittals de salida, correlativo de emisión, revisiones, estado de aprobación del mandante y planos as-built. Es el espejo del Módulo 01, pero en sentido contrario.',
-    wipItems: ['Correlativo y libro de transmittals emitidos', 'Estado de aprobación por el mandante',
-               'Control de as-built y planos conforme a obra', 'Lista maestra de documentos del contrato']
+    route: 'docctrl', render: 'renderDocCtrl'
   },
   {
     id: 'plan', code: '05', label: 'Planificación y Avance', icon: 'folder',
@@ -636,7 +662,8 @@ const MENU = [
       { id: 'hitos',   label: '5.3 Hitos contractuales',             route: 'plan/hitos',         render: 'renderHitos' },
       { id: 'restr',   label: '5.4 Restricciones y desviaciones',    route: 'plan/restricciones', render: 'renderRestricciones' },
       { id: 'informe', label: '5.5 Informe semanal de avance',       route: 'plan/informe',       render: 'renderInforme' },
-      { id: 'oferta',  label: '5.6 Control de oferta económica',     route: 'plan/oferta',        render: 'renderOferta' }
+      { id: 'oferta',  label: '5.6 Control de oferta económica',     route: 'plan/oferta',        render: 'renderOferta' },
+      { id: 'idiario', label: '5.7 Informe diario digital',          route: 'plan/informe-diario', render: 'renderInformeDiario' }
     ]
   },
   {
@@ -4398,7 +4425,8 @@ const FUNCIONES_EDICION = [
   'formTerreno','guardarTerreno','formDiscrepancia','guardarDiscrepancia','eliminarDiscrepancia',
   'guardarFichaCircuito','guardarContrato','guardarParams',
   'dialogoCargaMasiva','procesarCargaMasiva','importarJSON','recargarBase','limpiarEjemplo','borrarTodo',
-  'formAvance','guardarAvance','eliminarAvance','formDocContractual','guardarDocContractual','formSDI','guardarSDI','eliminarSDI','formRestriccion','guardarRestriccion','eliminarRestriccion','guardarFechaCorte'
+  'formAvance','guardarAvance','eliminarAvance','formDocContractual','guardarDocContractual','formSDI','guardarSDI','eliminarSDI','formRestriccion','guardarRestriccion','eliminarRestriccion','guardarFechaCorte',
+  'i57Nuevo','i57Editar','i57GuardarBorrador','i57Finalizar','i57ReintentarDrive','i57FormEstado','i57GuardarEstado','i57GuardarConfig','i57SubirFotos','i57CopiarEstructura','i57CargarPOD'
 ];
 
 /* SHA-256 (WebCrypto si existe; si no, implementación propia para file://) */
@@ -5381,7 +5409,7 @@ function guardarFechaCorte(v){
    5.1 CARTA GANTT
    ================================================================== */
 function prgNav(actual){
-  const items = [['plan/gantt','5.1 Carta Gantt'],['plan/avance','5.2 Avance y curva S'],['plan/hitos','5.3 Hitos'],['plan/restricciones','5.4 Restricciones'],['plan/informe','5.5 Informe semanal'],['plan/oferta','5.6 Control de oferta']];
+  const items = [['plan/gantt','5.1 Carta Gantt'],['plan/avance','5.2 Avance y curva S'],['plan/hitos','5.3 Hitos'],['plan/restricciones','5.4 Restricciones'],['plan/informe','5.5 Informe semanal'],['plan/oferta','5.6 Control de oferta'],['plan/informe-diario','5.7 Informe diario']];
   return '<div class="toolbar" style="margin-bottom:12px">' + items.map(function(it){ return '<a class="btn sm' + (it[0] === actual ? ' primary' : '') + '" href="#/' + it[0] + '">' + esc(it[1]) + '</a>'; }).join('') +
     '<span class="spacer"></span><span id="sincEstado">' + textoSinc() + '</span><span style="font-size:11.5px;color:var(--text-3);margin-left:8px">Programa: ' + esc(PROGRAMA_META.fuente.replace(/\.xml$/i,'')) + ' · guardado ' + fmtCorta(PROGRAMA_META.guardado) + '</span></div>';
 }
@@ -7209,6 +7237,527 @@ function exportarSDICSV(){
   const csv = [cab].concat(filas).map(function(r){ return r.map(function(c){ return '"' + String(c).replace(/"/g, '""') + '"'; }).join(';'); }).join('\r\n');
   const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,﻿' + encodeURIComponent(csv); a.download = 'Registro_SDI_CCV_' + hoyISO() + '.csv'; a.click();
 }
+/* Itemizado del contrato 4600032755 (ECO Rev2.3, partidas vigentes) — fuente para validar ítem/unidad del informe diario 5.7 */
+const ITEMIZADO_CCV = [{"i":"1.1","d":"Movilización e Instalación de faena","u":"gl","q":1},{"i":"1.2","d":"Desmovilización","u":"gl","q":1},{"i":"2.1","d":"Saneamiento, limpieza del área, instalacion de protecciones y segregación","u":"gl","q":1},{"i":"2.2","d":"Suministro y montaje de estructura muro corta fuego","u":"kg","q":2500},{"i":"2.3","d":"Suministro y montaje de panel tipo fast work","u":"m2","q":70},{"i":"2.4","d":"Traslado de desde Santiago (Siemens santiago) hasta Interior tunel SAG","u":"un","q":4},{"i":"3.1","d":"Armado E-HOUSE de cicloconvertidores","u":"gl","q":1},{"i":"4.1.1","d":"Suministro e instalacion de acero estructural liviano 0<30 kg/m (soporte)","u":"kg","q":200},{"i":"4.1.2","d":"Suministro y montaje de cañerias ranurada 3\" estandar soldada ERW Acero al carbono A-53 B tipo E Externo biselados","u":"m","q":36},{"i":"4.1.3","d":"Suministro y montaje de codo 3\" 45° RL Soldable A-53 -B","u":"Un","q":2},{"i":"4.1.4","d":"Suministro y montaje de codo 3\" 90° RL Soldable A-53 -B","u":"Un","q":10},{"i":"4.1.5","d":"Suministro y montaje de Flange 3\" SO 150# RF STL A105","u":"Un","q":9},{"i":"4.1.6","d":"Suministro y montaje de Flange 3\" Blind 150# FF STL A105","u":"Un","q":2},{"i":"4.1.7","d":"Suministro y montaje de Reduccion excentrica STD WT STL A234 WPB","u":"Un","q":2},{"i":"4.1.8","d":"Suministro y montaje de Tee STD WT ST A234 WPB","u":"Un","q":2},{"i":"4.1.9","d":"Suministro y montaje de Válvula 3\" VMP-506 Butterfly Lug HP 150# CS Buna N HO","u":"Un","q":2},{"i":"4.1.10","d":"TIE-IN","u":"Un","q":2},{"i":"4.1.11","d":"Montaje Refrigeracion / Aire acondicionado","u":"gl","q":1},{"i":"4.1.12","d":"Montaje Unidad de enfriamiento cicloconvertidor","u":"gl","q":1},{"i":"4.2.1","d":"Escalerilla Portaconductores Galvanizado en Caliente Clase 180, 600 mm de ancho y 100 mm de alto. Incluye ferreteria y tapa (nivel superior).","u":"m","q":216},{"i":"4.2.2","d":"Curva Horizontal 90° Escalerilla Portaconductores Galvanizado en Caliente Clase 180, 600 mm de ancho y 100 mm de alto. Rádio de Curvatura 600 mm. Incluye ferreteria, curvas y tapa (nivel superior).","u":"un","q":7},{"i":"4.2.3","d":"Curva Vertical Interior 90° Escalerilla Portaconductores Galvanizado en Caliente Clase 180, 600 mm de ancho y 100 mm de alto. Rádio de Curvatura 600 mm. Incluye ferreteria, curvas y tapa (nivel superior).","u":"un","q":4},{"i":"4.2.4","d":"Curva Vertical Exterior 90° Escalerilla Portaconductores Galvanizado en Caliente Clase 180, 600 mm de ancho y 100 mm de alto. Rádio de Curvatura 600 mm. Incluye ferreteria, curvas y tapa (nivel superior).","u":"un","q":18},{"i":"4.2.5","d":"Curva Horizontal 45° Escalerilla Portaconductores Galvanizado en Caliente, 600 mm de ancho y 100 mm de alto. Rádio de Curvatura 600 mm. Incluye ferreteria, curvas y tapa (nivel superior).","u":"un","q":4},{"i":"4.2.6","d":"Curva Vertical Interior 45° Escalerilla Portaconductores Galvanizado en Caliente Clase 180, 600 mm de ancho y 100 mm de alto. Rádio de Curvatura 600 mm. Incluye ferreteria, curvas y tapa (nivel superior).","u":"un","q":2},{"i":"4.2.7","d":"Curva Vertical Exterior 45° Escalerilla Portaconductores Galvanizado en Caliente, 600 mm de ancho y 100 mm de alto. Rádio de Curvatura 600 mm. Incluye ferreteria, curvas y tapa (nivel superior).","u":"un","q":2},{"i":"4.2.8","d":"Suministro y Montaje Conduits Acero Galvanizado de 1\" a 2 1/2\"","u":"m","q":600},{"i":"4.3.1","d":"Instalacion y pruebas cables desde,Transformadores de poder hasta cicloconvertidor, NHXSGAFHXÖ       3,6/6 Kv   1x240 mm2","u":"m","q":6750},{"i":"4.3.2","d":"Instalacion y pruebas cables desde, desconectador hasta cicloconvertidor,  NHXSGAFHXÖ       3,6/6 Kv   1x240 mm2","u":"m","q":3960},{"i":"4.3.3","d":"Instalación y pruebas de cable desde Transformadores de excitacion hasta gabinete de excitación, NHXSGAFHXÖ       3,6/6 Kv   1x240 mm2","u":"m","q":450},{"i":"4.3.4","d":"Instalación y pruebas de cable desde, Cubiculo excitación hasta desconectador excitación, , NHXSGAFHXÖ       3,6/6 Kv   1x240 mm2","u":"m","q":528},{"i":"4.3.5","d":"Instalación y pruebas de cable desde desconectador hasta estator 1, SISIF-CU VZ \n 6,6 KV 1x185 mm2","u":"m","q":1026},{"i":"4.3.6","d":"Instalación y pruebas de cable desde desconectador hasta estator 2, SISIF-CU VZ\n1x185 MM² 6,6 KV","u":"m","q":1026},{"i":"4.3.7","d":"Instalación y pruebas de cable desde excitación hasta el rotor,  SISIF-CU VZ\n1x185 MM² 6,6 KV","u":"m","q":100},{"i":"4.3.8","d":"Terminal desnudo de cobre estañado galvánico, calibre 500MCM (240mm²) doble perforación 1/2pulgada, con separación de 1/2 pulgada","u":"un","q":170},{"i":"4.3.9","d":"TERMINAL OJO DESNUDO 350 MCM - 185MM","u":"un","q":80},{"i":"4.3.10","d":"Suministro y Tendido de cable Fibra optica 12 filamento","u":"m","q":2000},{"i":"4.3.11","d":"Certificacion Fibra optica","u":"gl","q":1},{"i":"4.3.12","d":"fusionado y conexión fibra optica","u":"gl","q":1},{"i":"4.3.13","d":"Terminales F.O. (SFP, SFP+, QSFP)","u":"gl","q":1},{"i":"4.3.14","d":"Suministro e Instalacion y pruebas de cable desde TDFI-3330-01 hasta +1.B10 (Alimentacion UPS)","u":"m","q":100},{"i":"4.3.15","d":"Suministro e Instalacion y pruebas de cable desde CCM Existente hasta +.B35 HVAC P2","u":"m","q":100},{"i":"4.3.16","d":"Suministro e Instalacion y pruebas de cable desde CCM Existente hasta +1.B51","u":"m","q":100},{"i":"4.3.17","d":"Suministro e Instalacion y pruebas de cable paradas de emergencia","u":"m","q":100},{"i":"4.3.18","d":"Suministro e instalacion Cabezeras F.O","u":"Un","q":10},{"i":"4.3.19","d":"Suministro e instalacion Cables transductores LEM","u":"m","q":400},{"i":"4.4.1","d":"Transformador de corriente 1 (proyectado)","u":"Un","q":1},{"i":"4.4.2","d":"Transformador de corriente 2 (proyectado)","u":"Un","q":1},{"i":"4.4.3","d":"Transformador de corriente 3 (proyectado)","u":"Un","q":1},{"i":"4.4.4","d":"Cicloconvertidor (Proyectado)","u":"Un","q":1},{"i":"4.4.5","d":"Cicloconvertidor (Proyectado)","u":"Un","q":1},{"i":"4.4.7","d":"Rectificador (Proyectado)","u":"Un","q":1},{"i":"5.1.1","d":"Retiro de gabinete de control existente +1.B18 (Gabinete de control SINNAMICS SL 150)","u":"un","q":1},{"i":"5.1.2","d":"Montaje de UPS Y Banco de baterias nuevo +1.B32/33","u":"Un","q":1},{"i":"5.1.3","d":"Montaje de armario de control cicloconvertidor  SINAMIC  SL150 +1B18","u":"un","q":1},{"i":"5.1.4","d":"Montaje armario auxiliar de los variadores","u":"un","q":1},{"i":"5.1.5","d":"Retiro de gabinete de excitatriz +1.B31","u":"un","q":1},{"i":"5.1.6","d":"Montaje de gabinete nuevo excitatriz +1.B31","u":"un","q":1},{"i":"5.1.7","d":"Retiro de CPU existente +.B12 (rack borneras espejo N°2) (UC-320)","u":"un","q":1},{"i":"5.1.8","d":"Montaje nueva CPU S7","u":"un","q":1},{"i":"5.1.9","d":"Reemplazo de estacion de operacon existente +1.B.01(sistema de visualizacion con servidor PCS7 e impresora  switch ethernet","u":"un","q":1},{"i":"5.1.10","d":"Apoyo de persoal directo a la  integracion , comisionamiento, conexioando y apoyo PEM  (dotacion 4 tecnicos en turno dia y 4 tecnicos en turno noche por 14 dias)","u":"gl","q":2},{"i":"5.1.11","d":"Montaje transductores de corriente de estrella (Lem)","u":"Un","q":2},{"i":"5.1.12","d":"Gabinete de conexión y desconexión de motor estator 1parada de planta","u":"Un","q":1},{"i":"5.1.13","d":"Gabinete de conexión y desconexión de motor estator 2 parada de planta","u":"Un","q":1},{"i":"5.1.14","d":"Gabinete de conexión y desconexión de motor excitación parada de planta","u":"Un","q":1},{"i":"5.1.15","d":"Tie - In Electrico","u":"Un","q":1},{"i":"5.1.16","d":"Tie - In Electrico","u":"Un","q":1},{"i":"5.1.17","d":"Tie - In Electrico","u":"Un","q":1},{"i":"6.1.1","d":"Transformador de corriente 1  (Retiro) post parada de planta","u":"Un","q":1},{"i":"6.1.2","d":"Transformador de corriente 2  (Retiro)post parada de planta","u":"Un","q":1},{"i":"6.1.3","d":"Transformador de corriente 3  (Retiro)post parada de planta","u":"Un","q":1},{"i":"6.1.4","d":"Cicloconvertidor retiro post parada de planta","u":"Un","q":1},{"i":"6.1.5","d":"Cicloconvertidor  retiro post parada de planta","u":"Un","q":1},{"i":"6.1.6","d":"Rectificador ( existente a retirar) post parada de planta","u":"Un","q":1},{"i":"6.1.7","d":"Banco y cargador de baterias post parada de planta","u":"Un","q":1},{"i":"6.1.8","d":"UPS 230 VAC post parada de planta","u":"Un","q":1},{"i":"6.1.9","d":"Unidad de enfriamiento post parada de planta","u":"Un","q":1},{"i":"6.1.10","d":"Retiro de cable existente por canalizacion por existentes","u":"m","q":10000},{"i":"7.1.1","d":"Instalacion de panel de incendio Notifier NSF-320","u":"Un","q":1},{"i":"7.1.2","d":"Instalacion Detector fotoelectrico Notifier FSP-951T","u":"Un","q":12},{"i":"7.1.3","d":"Instalación detector temperatura fija/RR Notifier FST-951R","u":"Un","q":8},{"i":"7.1.4","d":"Instalación Pulsador de descarga agente FK-51-12 Notifier NBG-12LR","u":"Un","q":4},{"i":"7.1.5","d":"Instalación Botón aborto a la descarga Edwards rela-ABT","u":"Un","q":4},{"i":"7.1.6","d":"Instalación Modulo de monitoreo  Notifier FMM-1","u":"Un","q":6},{"i":"7.1.7","d":"Instalación Modulo mini de monitoreo  Notifier FMM-101","u":"Un","q":4},{"i":"7.1.8","d":"Modulo de control nac  Notifier FCM-1","u":"Un","q":2},{"i":"7.1.9","d":"Modulo de relé  Notifier FRM-1","u":"Un","q":6},{"i":"7.1.10","d":"Sirena c/luz estobo exterior Edwards 757","u":"Un","q":2},{"i":"7.1.11","d":"Sirena c/luz estobo interior Edwards 757","u":"Un","q":4},{"i":"7.1.12","d":"Campalilla aviso descarga System S. SSM24-6","u":"Un","q":4},{"i":"7.1.13","d":"Switch presión - descarga en curso Siex poinpre","u":"Un","q":2},{"i":"7.1.14","d":"Switch baja presión cilindro  Siex propen50","u":"Un","q":2},{"i":"7.1.15","d":"Switch servicio deshabilitado/habilitado Edwards SIGA-SRV","u":"Un","q":2},{"i":"7.1.16","d":"Switch monitoreo cabezal disparo siex 227AMD","u":"Un","q":2},{"i":"7.1.17","d":"Cilindro de 84 lts. 80 Kgs. De agente Primer piso (Cilindro NOVEC-1230)","u":"Un","q":1},{"i":"7.1.18","d":"Cilindro de 84 lts. 80 Kgs. De agente Segundo piso (Cilindro NOVEC-1230)","u":"Un","q":1},{"i":"7.1.19","d":"Canalización C.A.G. 25mm. ANSI C80. 1 25mm","u":"m","q":60},{"i":"7.1.20","d":"Cajas de derivación 100x100x65 mm","u":"Un","q":70},{"i":"7.1.21","d":"Cajas de derivación 100x65x65 mm","u":"Un","q":20},{"i":"7.1.22","d":"Cañería acero ASTM-SCH 40 1\"","u":"m","q":40},{"i":"7.1.23","d":"Cañería acero ASTM-SCH 40 3/4\"","u":"m","q":40},{"i":"7.1.24","d":"Tendido cable fuerza y control","u":"m","q":200},{"i":"8.1","d":"Montaje transformador 15 KVA","u":"Un","q":1},{"i":"8.2","d":"Montaje de mangueras Linea N1 Y N2","u":"Un","q":2},{"i":"8.3","d":"Montaje de  linea de alta y baja presión (5/8\"), c.a.g. 3/4, cable 4x1,5 mm2, soportación y fitting de sistema refrigeración / aire acondicionado","u":"Un","q":1},{"i":"9.1","d":"Gastos Generales","u":"gl","q":1},{"i":"10.1","d":"Gastos Reembolsables","u":"gl","q":1},{"i":"11.1","d":"Detención por evento climático y corte de caminos","u":"gl","q":1}];
+/* Listas de la plantilla del informe diario (hoja oculta "Listas"): CNC causa/subcausa, turnos, categorías… */
+const LISTAS_57 = {"cnc":[["1.1","PERSONAS","Acreditación del Personal (Capacitaciones, Licencias, Habilitación)"],["1.2","PERSONAS","Dotación menor a la programada"],["1.3","PERSONAS","Licencia Medica / Fallo / Permiso"],["1.4","PERSONAS","Conflicto Laboral"],["1.5","PERSONAS","Activación protocolo COVID"],["1.6","PERSONAS","Coordinación y logística"],["2.1","EQUIPOS","Acreditación de equipos"],["2.2","EQUIPOS","Equipos menores a lo programado"],["2.3","EQUIPOS","Fuera de servicio / Falla"],["2.4","EQUIPOS","Sin Operador"],["2.5","EQUIPOS","Coordinación y logística (Áreas)"],["3.1","HERRAMIENTAS, MATERIALES Y SUMINISTROS","Sin stock (Herramientas, Materiales y Suministro)"],["3.2","HERRAMIENTAS, MATERIALES Y SUMINISTROS","Elementos de protección personal (EPP)"],["3.3","HERRAMIENTAS, MATERIALES Y SUMINISTROS","Servicios(Ventilación, agua, Energía, otros)"],["3.4","HERRAMIENTAS, MATERIALES Y SUMINISTROS","Herramientas Fuera de estándar "],["3.5","HERRAMIENTAS, MATERIALES Y SUMINISTROS","Telecomunicaciones-radios"],["4.1","MÉTODO","Planificación de terreno deficiente"],["4.2","MÉTODO","Interferencia de otros Colaboradores o DAND"],["4.3","MÉTODO","Retraso actividad previa"],["4.4","MÉTODO","Cambio de secuencia Constructiva"],["4.5","MÉTODO","Falta Ingeniería"],["4.6","MÉTODO","Respuestas de Ingeniería (SDI)"],["4.7","MÉTODO","Instructivos y/o Procedimientos de trabajo"],["4.8","MÉTODO","Adelanto indebido en la Planificación trisemanal"],["5.1","ENTORNO","Efectos Climáticos"],["5.2","ENTORNO","Disponibilidad de Acopios o Botaderos"],["5.3","ENTORNO","Hallazgo Arqueológico"],["5.4","ENTORNO","Hidrogeología"],["5.5","ENTORNO","Evaluación Geomecánica"],["5.6","ENTORNO","Planes de manejo forestal"],["5.7","ENTORNO","Condiciones de terreno no previstas"],["5.8","ENTORNO","Protocolo Sísmico"],["5.9","ENTORNO","Interferencia otros colaboradores o DAND"],["5.10","ENTORNO","Interferencia Externas (Protestas)"],["5.11","ENTORNO","Limpieza y/o Despeje de Nieve"],["6.1","MEDIDA","Protocolo (recepción o finalización de la tarea)"],["6.2","MEDIDA","Cambio de Turno"],["6.3","MEDIDA","Permisos"],["6.4","MEDIDA","Accidente o Incidente a las personas"],["6.5","MEDIDA","Condición Insegura (T.V/ART/Check List)"],["6.6","MEDIDA","Accidente o incidente al medio ambiente"],["6.7","MEDIDA","Control de calidad (Retrabajo)"],["6.8","MEDIDA","Condición Insegura del medio ambiente (T.V)"],["6.9","MEDIDA","Liberación de Áreas"],["6.10","MEDIDA","Incumplimiento compromisos contractuales"],["6.11","MEDIDA","Espera por otras Especialidades (Topografía, geología, calidad)"]],"turnos":["A (día)","A (noche)","B (día)","B (noche)"],"categorias":["Primaria","Secundaria","Impacto"],"estados":["Planificada","No planificada"],"tipoImpacto":["Interna","Externa"],"unidades":["Gl","m","m3","un","kg","m2","c/u","m3/km","HH"],"jornadas":["5x2","7x7"]};
+/* ==================================================================
+   5.7 — INFORME DIARIO DIGITAL  (y su consulta desde 04 Control Documental)
+   ------------------------------------------------------------------
+   · Registros en el servidor (Apps Script → Google Drive, carpeta
+     ControlCCV_datos/i57): persisten entre sesiones y se comparten.
+   · El Excel se genera en el navegador sobre la plantilla maestra
+     "CCV v1.0" (plantillas/) con lib/xlsx57.js + lib/gen57.js y se sube
+     a la carpeta configurada: 5.7 Informes diarios / AAAA / MM.
+   · Correlativo y revisiones los asigna el servidor (con bloqueo).
+   ================================================================== */
+const I57_PLANTILLA = 'plantillas/plantilla_CCV_v1.0.xlsx';
+const I57_MANIFIESTO = 'plantillas/plantilla_CCV_v1.0.json';
+const I57_LIBS = ['lib/jszip.min.js', 'lib/xlsx57.js', 'lib/gen57.js'];
+const I57_PREFS = 'ccv_i57_prefs';
+const I57_RESPALDO = 'ccv_i57_respaldo';
+const I57 = { lista: [], cargado: false, cargando: false, error: '', destino: null, hora: '', vista: 'lista', ed: null, sucio: false, ocupado: '',
+  f: { desde: '', hasta: '', turno: '', numero: '', rev: '', estado: '' }, fotoCache: {}, plantilla: null, manifiesto: null };
+
+/* ---------- utilidades ---------- */
+function i57Prefs(){ try{ return JSON.parse(localStorage.getItem(I57_PREFS) || '{}'); }catch(e){ return {}; } }
+function i57SetPrefs(p){ try{ localStorage.setItem(I57_PREFS, JSON.stringify(Object.assign(i57Prefs(), p))); }catch(e){} }
+function i57Usuario(){ return str(i57Prefs().usuario).trim(); }
+function i57Op(){ return 'op' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+function i57Pad(n, k){ return String(n).padStart(k, '0'); }
+function i57Programa(){ if(!I57._prg) I57._prg = (typeof G57 !== 'undefined' ? G57 : null) ? G57.programaDesde(PROGRAMA_TAREAS, ITEMIZADO_CCV) : i57ProgramaLocal(); return I57._prg; }
+function i57ProgramaLocal(){ const it = {}; ITEMIZADO_CCV.forEach(function(p){ it[p.i] = p; });
+  return PROGRAMA_TAREAS.map(function(t){ const m = /^\s*(\d+(?:\.\d+)*)\s*[-–]\s*(.*)$/.exec(t.n || ''); const item = m ? m[1] : ''; const p = item ? it[item] : null;
+    return { edt: String(t.w), item: item, desc: m ? m[2].trim() : String(t.n || '').trim(), unidad: p ? p.u : '', cantidad: p ? p.q : null, hoja: !t.S }; }); }
+function i57Estable(o){ if(Array.isArray(o)) return '[' + o.map(i57Estable).join(',') + ']'; if(o && typeof o === 'object') return '{' + Object.keys(o).sort().map(function(k){ return JSON.stringify(k) + ':' + i57Estable(o[k]); }).join(',') + '}'; return JSON.stringify(o === undefined ? null : o); }
+function i57Hash(d){ return sha256Hex(i57Estable(d)); }
+function i57B64(bytes){ let s = ''; const n = 0x8000; for(let i = 0; i < bytes.length; i += n) s += String.fromCharCode.apply(null, bytes.subarray(i, i + n)); return btoa(s); }
+function i57Bytes(b64){ const s = atob(b64); const u = new Uint8Array(s.length); for(let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; }
+function i57CargarScript(src){ return new Promise(function(ok, ko){ if(document.querySelector('script[data-i57="' + src + '"]')) return ok(); const s = document.createElement('script'); s.src = src; s.dataset.i57 = src; s.onload = ok; s.onerror = function(){ ko(new Error('No se pudo cargar ' + src)); }; document.head.appendChild(s); }); }
+function i57Libs(){ return I57_LIBS.reduce(function(p, src){ return p.then(function(){ return i57CargarScript(src); }); }, Promise.resolve()).then(function(){ I57._prg = null; }); }
+function i57Get(params){
+  if(!servicioDatosOK()) return Promise.reject(new Error('Servicio de datos no configurado'));
+  const u = new URL(servicioDatos()); Object.keys(params).forEach(function(k){ u.searchParams.set(k, params[k]); });
+  return fetch(u.toString(), { redirect: 'follow' }).then(function(r){ return r.json(); }).then(function(j){ if(!j || !j.ok) throw new Error((j && j.error) || 'respuesta inválida'); return j; });
+}
+function i57Post(cuerpo){
+  if(!servicioDatosOK()) return Promise.reject(new Error('Servicio de datos no configurado'));
+  if(!ADMIN.token) return Promise.reject(new Error('Ingrese la clave de administrador (botón 🔒) para escribir en el servidor'));
+  cuerpo.token = ADMIN.token; cuerpo.por = cuerpo.por || i57Usuario() || 'sin identificar';
+  return fetch(servicioDatos(), { method: 'POST', redirect: 'follow', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(cuerpo) })
+    .then(function(r){ return r.json(); }).then(function(j){ if(!j) throw new Error('respuesta inválida'); if(!j.ok && !j.conflicto) throw new Error(j.error || 'error del servidor'); return j; });
+}
+function i57Cargar(forzar){
+  if(I57.cargando || (I57.cargado && !forzar)) return Promise.resolve();
+  I57.cargando = true;
+  return i57Get({ accion: 'i57_listar' }).then(function(j){ I57.lista = j.informes || []; I57.destino = j.destino; I57.hora = j.hora; I57.cargado = true; I57.error = ''; })
+    .catch(function(e){ I57.error = String(e && e.message || e); })
+    .then(function(){ I57.cargando = false; i57Repintar(); });
+}
+function i57Repintar(){ const r = ESTADO_UI.ruta; if((r === 'plan/informe-diario' && I57.vista === 'lista') || r === 'docctrl'){ const c = document.getElementById('i57Lista'); if(c){ c.innerHTML = i57TablaHTML(r === 'docctrl' ? 'docs' : 'informes'); i57Kpis(); aplicarModoLectura(c); } const dd = document.getElementById('i57Destino'); if(dd) dd.innerHTML = i57TextoDestino(); } }
+
+/* ---------- estados ---------- */
+function i57PillDrive(d){ if(!d) return '<span class="pill neutral">sin emitir</span>'; return d.estado === 'Guardado en Drive' ? '<span class="pill ok"><span class="dot"></span>Guardado en Drive</span>' : '<span class="pill warn"><span class="dot"></span>' + esc(d.estado || 'Pendiente de guardar en Drive') + '</span>'; }
+function i57PillElab(v){ const c = v === 'Finalizado' ? 'ok' : v === 'Borrador' ? 'neutral' : 'warn'; return '<span class="pill ' + c + '"><span class="dot"></span>' + esc(v) + '</span>'; }
+function i57PillRev(v){ const c = v === 'Revisado' ? 'ok' : v === 'Observado' ? 'bad' : 'neutral'; return '<span class="pill ' + c + '"><span class="dot"></span>' + esc(v) + '</span>'; }
+function i57PillApr(v){ const c = /^Aprobado/.test(v) ? 'ok' : /^Rechazado/.test(v) ? 'bad' : 'neutral'; return '<span class="pill ' + c + '"><span class="dot"></span>' + esc(v === 'Pendiente' ? 'Aprobación cliente pendiente' : v) + '</span>'; }
+
+/* ==================================================================
+   LISTA / CONSULTA (compartida por 5.7 y 04 Control Documental)
+   ================================================================== */
+function i57Filtradas(){
+  const f = I57.f;
+  return I57.lista.filter(function(x){
+    if(f.desde && x.fecha < f.desde) return false; if(f.hasta && x.fecha > f.hasta) return false;
+    if(f.turno && x.turno !== f.turno) return false;
+    if(f.numero && String(x.numero || '') !== String(+f.numero)) return false;
+    if(f.rev !== '' && f.rev != null && String(x.revision) !== String(+f.rev)) return false;
+    if(f.estado){ const e = f.estado; if(e === 'Pendiente de guardar en Drive' ? !(x.drive && x.drive.estado !== 'Guardado en Drive') : e === 'Guardado en Drive' ? !(x.drive && x.drive.estado === 'Guardado en Drive') : (x.elaboracion !== e && x.revisionEstado !== e && x.aprobacion !== e)) return false; }
+    return true;
+  }).sort(function(a, b){ return (b.fecha + (b.numero || 0)).localeCompare(a.fecha + (a.numero || 0)) || String(b.actualizado).localeCompare(String(a.actualizado)); });
+}
+function i57FiltrosHTML(){
+  const f = I57.f; const est = ['Borrador', 'Finalizado', 'Finalizado con cambios sin emitir', 'Guardado en Drive', 'Pendiente de guardar en Drive', 'Revisado', 'Observado', 'Aprobado por el cliente', 'Rechazado por el cliente'];
+  return '<div class="toolbar i57-filtros">' +
+    '<label>Desde <input class="inp" type="date" value="' + attr(f.desde) + '" onchange="i57Filtro(\'desde\',this.value)"></label>' +
+    '<label>Hasta <input class="inp" type="date" value="' + attr(f.hasta) + '" onchange="i57Filtro(\'hasta\',this.value)"></label>' +
+    '<label>Turno <select class="inp" onchange="i57Filtro(\'turno\',this.value)"><option value="">Todos</option>' + opciones(LISTAS_57.turnos, f.turno) + '</select></label>' +
+    '<label>N° <input class="inp" style="width:80px" type="number" min="1" value="' + attr(f.numero) + '" oninput="i57Filtro(\'numero\',this.value)"></label>' +
+    '<label>Rev <input class="inp" style="width:64px" type="number" min="0" value="' + attr(f.rev) + '" oninput="i57Filtro(\'rev\',this.value)"></label>' +
+    '<label>Estado <select class="inp" onchange="i57Filtro(\'estado\',this.value)"><option value="">Todos</option>' + opciones(est, f.estado) + '</select></label>' +
+    '<button class="btn sm" onclick="i57LimpiarFiltros()">Limpiar</button><span class="spacer"></span><span id="i57Cuenta" class="sub" style="margin:0"></span></div>';
+}
+function i57Filtro(k, v){ if(I57.f[k] === v) return; I57.f[k] = v; clearTimeout(I57._tf); I57._tf = setTimeout(i57Repintar, 250); }
+function i57LimpiarFiltros(){ I57.f = { desde: '', hasta: '', turno: '', numero: '', rev: '', estado: '' }; render(); }
+function i57Kpis(){
+  const el = document.getElementById('i57Kpis'); if(!el) return; const L = I57.lista.filter(function(x){ return !x.prueba; });
+  const emit = L.filter(function(x){ return x.numero; }); const pend = L.filter(function(x){ return x.drive && x.drive.estado !== 'Guardado en Drive'; });
+  const ult = emit.slice().sort(function(a, b){ return (b.fecha).localeCompare(a.fecha); })[0];
+  el.innerHTML = kpi('Informes emitidos', emit.length, 'correlativo actual N°' + (emit.reduce(function(m, x){ return Math.max(m, x.numero || 0); }, 0) || '—'), '') +
+    kpi('Borradores', L.filter(function(x){ return x.elaboracion === 'Borrador'; }).length, 'sin finalizar', '') +
+    kpi('Pendientes de guardar en Drive', pend.length, pend.length ? 'usar “Reintentar”' : 'todo confirmado en Drive', pend.length ? 'warn' : 'good') +
+    kpi('Aprobados por el cliente', L.filter(function(x){ return /^Aprobado/.test(x.aprobacion); }).length, 'Finalizado ≠ aprobado', '') +
+    kpi('Último informe', ult ? 'N°' + ult.numero : '—', ult ? fmtFecha(ult.fecha) + ' · ' + ult.turno : 'sin emitir', '');
+}
+function i57TablaHTML(modo){
+  if(I57.error && !I57.lista.length) return '<div class="empty-state">No se pudo leer el registro del servidor: ' + esc(I57.error) + ' <button class="btn sm" onclick="i57Cargar(true)">Reintentar</button></div>';
+  if(!I57.cargado) return '<div class="empty-state">⟳ Leyendo registros del servidor…</div>';
+  const L = i57Filtradas();
+  setTimeout(function(){ const c = document.getElementById('i57Cuenta'); if(c) c.textContent = L.length + ' de ' + I57.lista.length + ' registros'; }, 0);
+  let h = '<div class="tbl-wrap"><table><thead><tr><th>N° / Rev</th><th>Fecha · turno</th><th>Elaboración</th><th>Revisión · aprobación</th><th>Archivo emitido</th><th>Actualizado</th><th></th></tr></thead><tbody>';
+  if(!L.length) h += '<tr><td colspan="7"><div class="empty-state">' + (I57.lista.length ? 'Ningún informe coincide con los filtros.' : 'Aún no hay informes diarios registrados.') + '</div></td></tr>';
+  L.forEach(function(x){
+    const a = "'" + x.id + "'";
+    h += '<tr>' +
+      '<td><b class="mono">' + (x.numero ? 'N°' + i57Pad(x.numero, 4) : '—') + '</b>' + (x.revision != null ? ' <span class="tag">Rev' + i57Pad(x.revision, 2) + '</span>' : '') + (x.prueba ? ' <span class="pill warn">PRUEBA</span>' : '') + '</td>' +
+      '<td>' + fmtFecha(x.fecha) + '<div class="sub" style="margin:2px 0 0">' + esc(x.turno) + '</div></td>' +
+      '<td>' + i57PillElab(x.elaboracion) + '</td>' +
+      '<td>' + i57PillRev(x.revisionEstado) + '<div style="margin-top:3px">' + i57PillApr(x.aprobacion) + '</div></td>' +
+      '<td class="wrap" style="max-width:300px">' + i57PillDrive(x.drive) + (x.drive && x.drive.nombre ? '<div class="sub mono" style="margin:2px 0 0;font-size:10.5px">' + esc(x.drive.nombre) + '</div>' : '') + '</td>' +
+      '<td><span class="sub" style="margin:0">' + esc(fmtFechaHora(x.actualizado)) + '<br>' + esc(x.por || '') + '</span></td>' +
+      '<td class="i57-acc">' +
+        '<button class="btn sm" onclick="i57Ver(' + a + ')" title="Ver el informe digital">👁 Ver</button>' +
+        (x.drive && x.drive.id ? '<a class="btn sm" href="https://drive.google.com/uc?export=download&id=' + attr(x.drive.id) + '" target="_blank" rel="noopener" title="Descargar el Excel (permisos de la carpeta de Drive)">⬇ Excel</a><a class="btn sm" href="' + attr(x.drive.url) + '" target="_blank" rel="noopener" title="Abrir en Google Drive">Drive ↗</a>' : '') +
+        (x.drive && x.drive.estado !== 'Guardado en Drive' ? '<button class="btn sm primary" onclick="i57ReintentarDrive(' + a + ')">↻ Reintentar Drive</button>' : '') +
+        '<button class="btn sm" onclick="i57Revisiones(' + a + ')" title="Revisiones y trazabilidad">🕘 Revisiones</button>' +
+        (modo === 'informes' ? (x.elaboracion === 'Borrador' ? '<button class="btn sm primary" onclick="i57Editar(' + a + ')">✎ Continuar borrador</button>' : '<button class="btn sm" onclick="i57Editar(' + a + ')" title="Los cambios crean una nueva revisión">✎ Editar (nueva rev.)</button>') +
+          (x.numero ? '<button class="btn sm" onclick="i57FormEstado(' + a + ')">Estados</button>' : '') : '') +
+      '</td></tr>';
+  });
+  return h + '</tbody></table></div>';
+}
+
+/* ---------- página 5.7 ---------- */
+function renderInformeDiario(){
+  if(I57.vista === 'editar' && I57.ed) return i57FormHTML();
+  let h = '<div class="page-title"><h1>5.7 Informe diario digital</h1></div>' + prgNav('plan/informe-diario');
+  h += '<div class="help"><b>¿Qué es esto?</b> Formulario del informe diario del contrato ' + esc(DB.contrato.nContrato) + '. <b>Guardar borrador</b> guarda los datos en el servidor (se recuperan desde cualquier equipo). ' +
+       '<b>Finalizar informe</b> valida los datos indispensables, asigna el correlativo, genera el Excel con el formato de la plantilla <b>CCV v1.0</b> y lo guarda en Drive (<i>5.7 Informes diarios / AAAA / MM</i>). ' +
+       'Los cambios posteriores crean una nueva revisión. <b>Finalizado no significa aprobado por el cliente</b>: elaboración, revisión y aprobación se registran por separado. Los mismos registros se consultan en <a href="#/docctrl">04 Control Documental</a>.</div>';
+  h += '<div class="toolbar" style="margin-bottom:12px"><button class="btn primary" onclick="i57Nuevo()">＋ Nuevo informe diario</button>' +
+       '<button class="btn sm" onclick="i57Cargar(true)">⟳ Actualizar</button>' +
+       '<button class="btn sm" onclick="i57Config()">⚙ Carpeta de destino</button>' +
+       '<span class="spacer"></span><span class="sub" id="i57Destino" style="margin:0">' + i57TextoDestino() + '</span></div>';
+  h += '<div class="grid kpis" id="i57Kpis" style="margin-bottom:14px"></div>';
+  h += '<div class="card"><div class="card-head"><h2>Registro de informes diarios</h2></div>' + i57FiltrosHTML() + '<div id="i57Lista">' + i57TablaHTML('informes') + '</div></div>';
+  return h;
+}
+function renderInformeDiarioPost(){ if(I57.vista === 'editar' && I57.ed){ i57PostForm(); return; } i57Kpis(); i57Cargar(); i57Libs().catch(function(){}); }
+function i57TextoDestino(){ const d = I57.destino; if(!d) return 'Destino: ' + (I57.cargado ? '<i>Cicloconvertidor / 5.7 Informes diarios</i> (se crea al primer guardado)' : '…'); return 'Destino: <a href="' + attr(d.url) + '" target="_blank" rel="noopener">' + esc(d.ruta) + '</a>'; }
+
+/* ---------- página 04 Control Documental ---------- */
+function renderDocCtrl(){
+  let h = '<div class="page-title"><h1>04 — Control Documental (emitidos)</h1></div>';
+  h += '<div class="help"><b>¿Qué es esto?</b> Consulta de los documentos que MIES emite en el contrato. Hoy contiene los <b>informes diarios (5.7)</b> y sus archivos Excel guardados en Drive: los mismos registros del módulo ' +
+       '<a href="#/plan/informe-diario">5.7 Informe diario digital</a>, donde se crean y editan. Cada fila muestra la revisión vigente; “Revisiones” muestra todas las emitidas con su trazabilidad.</div>';
+  h += '<div class="toolbar" style="margin-bottom:12px"><a class="btn sm primary" href="#/plan/informe-diario">Ir a 5.7 Informe diario</a><button class="btn sm" onclick="i57Cargar(true)">⟳ Actualizar</button>' +
+       (I57.destino ? '<a class="btn sm" href="' + attr(I57.destino.url) + '" target="_blank" rel="noopener">📂 Carpeta de informes en Drive</a>' : '') + '<span class="spacer"></span></div>';
+  h += '<div class="grid kpis" id="i57Kpis" style="margin-bottom:14px"></div>';
+  h += '<div class="card"><div class="card-head"><h2>Informes diarios emitidos y archivos</h2></div>' + i57FiltrosHTML() + '<div id="i57Lista">' + i57TablaHTML('docs') + '</div></div>';
+  return h;
+}
+function renderDocCtrlPost(){ i57Kpis(); i57Cargar(); }
+
+/* ==================================================================
+   FORMULARIO
+   ================================================================== */
+function i57Vacio(){
+  const ct = DB.contrato, p = i57Prefs();
+  return { contrato: { nombre: ct.proyecto, numero: ct.nContrato, empresa: ct.contratista, jefeProyecto: p.jefeProyecto || ct.jefeProyecto || '', adminContrato: ct.adminContrato },
+    fecha: hoyISO(), turno: p.turno || '', horaInicio: p.horaInicio || '', horaFin: p.horaFin || '', jornada: p.jornada || '', sector: p.sector || '', sectorOtro: '',
+    actividades: [], tooltime: [], siguiente: [], prevencion: [], varios: [], observaciones: '', interferencias: [], condiciones: {},
+    dotacion: { indirecto: [], directo: [], gg: [] }, equipos: { menores: [], mayores: [] }, usoRecursos: [], pod: [], fotos: [],
+    elaboro: { nombre: p.elaboroNombre || '', cargo: p.elaboroCargo || '' }, reviso: { nombre: p.revisoNombre || '', cargo: p.revisoCargo || '' }, sinActividades: false };
+}
+function i57Nuevo(){ if(!i57Usuario()){ i57PedirUsuario(i57Nuevo); return; } I57.ed = { id: null, version: 0, datos: i57Vacio(), revisiones: [], numero: null, opCrear: i57Op() }; I57.sucio = true; I57.vista = 'editar'; render(); window.scrollTo(0, 0); }
+function i57Editar(id){
+  if(!i57Usuario()){ i57PedirUsuario(function(){ i57Editar(id); }); return; }
+  toast('⟳ Abriendo informe…', '', 1500);
+  i57Get({ accion: 'i57_leer', id: id }).then(function(j){ const inf = j.informe;
+    I57.ed = { id: inf.id, version: inf.version, datos: inf.borrador, revisiones: inf.revisiones, numero: inf.numero, historial: inf.historial, estados: inf.estados };
+    const resp = i57LeerRespaldo(id); if(resp && resp.version === inf.version && resp.guardado > inf.actualizado){ I57.ed.datos = resp.datos; I57.sucio = true; toast('Se recuperaron cambios no guardados de este navegador.', 'ok', 4000); } else I57.sucio = false;
+    I57.vista = 'editar'; render(); window.scrollTo(0, 0); })
+    .catch(function(e){ toast('No se pudo abrir: ' + esc(e.message), 'bad', 6000); });
+}
+function i57PedirUsuario(cb){
+  abrirModal('<div class="modal-head"><h2>Usuario responsable</h2><button class="x" onclick="cerrarModal()">×</button></div><div class="modal-body">' +
+    '<p class="sub">Su nombre queda registrado en cada borrador, emisión y cambio de estado (trazabilidad). Se recuerda en este navegador.</p>' +
+    campo('i57Usr', 'Nombre y cargo', '<input class="inp" id="i57Usr" value="' + attr(i57Usuario()) + '" placeholder="Ej.: Juan Cortés — Oficina Técnica">') + '</div>' +
+    '<div class="modal-foot"><button class="btn" onclick="cerrarModal()">Cancelar</button><button class="btn primary" id="i57UsrOk">Continuar</button></div>', 'narrow');
+  document.getElementById('i57UsrOk').onclick = function(){ const v = valorCampo('i57Usr'); if(!v){ toast('Indique su nombre.', 'bad'); return; } i57SetPrefs({ usuario: v }); cerrarModal(); cb(); };
+}
+function i57Volver(){ if(I57.sucio && !confirm('Hay cambios sin guardar en el servidor. ¿Salir del formulario? (quedan respaldados en este navegador)')) return; I57.vista = 'lista'; I57.ed = null; render(); i57Cargar(true); }
+
+/* --- enlace de datos: data-k="ruta.del.campo" --- */
+function i57GetPath(o, p){ return p.split('.').reduce(function(a, k){ return a == null ? a : a[k]; }, o); }
+function i57SetPath(o, p, v){ const ks = p.split('.'); let a = o; for(let i = 0; i < ks.length - 1; i++){ if(a[ks[i]] == null) a[ks[i]] = /^\d+$/.test(ks[i + 1]) ? [] : {}; a = a[ks[i]]; } a[ks[ks.length - 1]] = v; }
+function i57In(el){
+  const k = el.dataset.k; let v = el.type === 'checkbox' ? el.checked : el.value;
+  if(el.dataset.t === 'num'){ v = v.trim() === '' ? '' : (/^n\/?a$/i.test(v.trim()) ? 'NA' : v.replace(',', '.')); }
+  i57SetPath(I57.ed.datos, k, v); I57.sucio = true; i57GuardarRespaldo();
+  if(el.dataset.re){ clearTimeout(I57._t); I57._t = setTimeout(function(){ i57PintarSeccion(el.dataset.re); }, 350); }
+  if(k === 'fecha' || k === 'turno' || k === 'horaInicio' || k === 'horaFin') i57Cabecera();
+  i57ResumenVivo();
+}
+function i57GuardarRespaldo(){ clearTimeout(I57._r); I57._r = setTimeout(function(){ try{ const all = JSON.parse(localStorage.getItem(I57_RESPALDO) || '{}'); all[I57.ed.id || 'nuevo'] = { datos: I57.ed.datos, version: I57.ed.version, guardado: new Date().toISOString() }; localStorage.setItem(I57_RESPALDO, JSON.stringify(all)); }catch(e){} }, 600); }
+function i57LeerRespaldo(id){ try{ return JSON.parse(localStorage.getItem(I57_RESPALDO) || '{}')[id || 'nuevo'] || null; }catch(e){ return null; } }
+function i57BorrarRespaldo(id){ try{ const all = JSON.parse(localStorage.getItem(I57_RESPALDO) || '{}'); delete all[id || 'nuevo']; localStorage.setItem(I57_RESPALDO, JSON.stringify(all)); }catch(e){} }
+
+function i57Inp(k, opts){
+  opts = opts || {}; const v = i57GetPath(I57.ed.datos, k); const val = v == null ? '' : (v === 'NA' ? 'N/A' : v);
+  const comun = ' data-k="' + attr(k) + '"' + (opts.re ? ' data-re="' + opts.re + '"' : '') + (opts.num ? ' data-t="num"' : '') + (opts.ro ? ' readonly' : '') + ' oninput="i57In(this)" onchange="i57In(this)"' + (opts.ph ? ' placeholder="' + attr(opts.ph) + '"' : '') + (opts.list ? ' list="' + opts.list + '"' : '') + (opts.title ? ' title="' + attr(opts.title) + '"' : '');
+  if(opts.sel) return '<select class="inp' + (opts.cls ? ' ' + opts.cls : '') + '"' + comun + '><option value="">—</option>' + opts.sel.map(function(o){ const ov = Array.isArray(o) ? o[0] : o, ol = Array.isArray(o) ? o[1] : o; return '<option value="' + attr(ov) + '"' + (String(ov) === String(val) ? ' selected' : '') + '>' + esc(ol) + '</option>'; }).join('') + '</select>';
+  if(opts.area) return '<textarea class="inp' + (opts.cls ? ' ' + opts.cls : '') + '" rows="' + (opts.rows || 2) + '"' + comun + '>' + esc(val) + '</textarea>';
+  return '<input class="inp' + (opts.cls ? ' ' + opts.cls : '') + (opts.num ? ' i57-num' : '') + '" type="' + (opts.type || 'text') + '" value="' + attr(val) + '"' + comun + '>';
+}
+function i57Sec(id, titulo, cuerpo, ayudaTxt){ return '<section class="card i57-sec" id="i57s-' + id + '"><div class="card-head"><h2>' + titulo + '</h2>' + (ayudaTxt ? '<span class="sub" style="margin:0">' + ayudaTxt + '</span>' : '') + '</div><div class="i57-body" id="i57b-' + id + '">' + cuerpo + '</div></section>'; }
+function i57Fila(lista, i){ return '<button class="btn sm i57-del" title="Quitar fila" onclick="i57Quitar(\'' + lista + '\',' + i + ')">✕</button>'; }
+function i57Agregar(lista, plantilla){ const arr = i57GetPath(I57.ed.datos, lista) || []; arr.push(plantilla ? JSON.parse(plantilla) : {}); i57SetPath(I57.ed.datos, lista, arr); I57.sucio = true; i57PintarSeccion(i57SecDe(lista)); i57GuardarRespaldo(); }
+function i57Quitar(lista, i){ const arr = i57GetPath(I57.ed.datos, lista) || []; arr.splice(i, 1); I57.sucio = true; if(lista === 'actividades') arr.forEach(function(a, k){ a.n = k + 1; }); i57PintarSeccion(i57SecDe(lista)); i57GuardarRespaldo(); }
+function i57SecDe(lista){ const s = lista.split('.')[0]; return s === 'varios' ? 'observaciones' : s === 'usoRecursos' ? 'equipos' : s === 'pod' ? 'interferencias' : s; }
+function i57PintarSeccion(s){ const b = document.getElementById('i57b-' + s); if(!b) return; const f = I57_SEC[s]; if(!f) return; const foco = document.activeElement && document.activeElement.dataset ? document.activeElement.dataset.k : null; b.innerHTML = f(); if(foco){ const el = b.querySelector('[data-k="' + foco + '"]'); if(el){ el.focus(); try{ const n = el.value.length; el.setSelectionRange && el.type === 'text' && el.setSelectionRange(n, n); }catch(e){} } } i57ResumenVivo(); }
+
+const I57_SEC = {
+  cabecera: function(){ const d = I57.ed.datos;
+    return '<div class="i57-grid">' +
+      campo('', 'Nombre del contrato', i57Inp('contrato.nombre', { ro: true, title: 'Configuración del portal' })) + campo('', 'N.º de contrato', i57Inp('contrato.numero', { ro: true })) +
+      campo('', 'Empresa', i57Inp('contrato.empresa', { ro: true })) + campo('', 'Jefe de Proyecto *', i57Inp('contrato.jefeProyecto')) +
+      campo('', 'Administrador de contrato MIES *', i57Inp('contrato.adminContrato')) +
+      campo('', 'Fecha *', i57Inp('fecha', { type: 'date', ro: !!(I57.ed.revisiones && I57.ed.revisiones.length), title: 'La fecha de un informe emitido es fija' })) +
+      campo('', 'Turno *', i57Inp('turno', { sel: LISTAS_57.turnos })) +
+      campo('', 'Hora inicio turno *', i57Inp('horaInicio', { type: 'time' })) + campo('', 'Hora término turno *', i57Inp('horaFin', { type: 'time', title: 'Si es menor que el inicio, el turno cruza la medianoche' })) +
+      campo('', 'Jornada *', i57Inp('jornada', { sel: LISTAS_57.jornadas })) +
+      campo('', 'Sector *', i57Inp('sector', { ph: 'Ej.: Concentrador – sala de cicloconvertidores' })) + campo('', 'Otro sector', i57Inp('sectorOtro')) +
+      '</div><div class="sub" id="i57Turno" style="margin:6px 0 0"></div>'; },
+  actividades: function(){ const L = I57.ed.datos.actividades || []; const P = i57Programa();
+    let h = '<div class="tbl-wrap i57-t"><table><thead><tr><th>N°</th><th>EDT *</th><th>Ítem</th><th>Descripción *</th><th>Ubicación *</th><th>Unidad *</th><th>Cantidad *</th><th>Observaciones</th><th>HH Tooltime</th><th></th></tr></thead><tbody>';
+    const t = i57Tot();
+    L.forEach(function(a, i){ const p = P.filter(function(x){ return x.edt === a.edt; })[0]; const b = 'actividades.' + i + '.';
+      h += '<tr><td class="mono">' + (a.n || i + 1) + '</td><td>' + i57Inp(b + 'edt', { list: 'i57Edts', cls: 'w-edt', re: 'actividades' }) + '</td>' +
+        '<td class="mono">' + esc(p ? p.item || '—' : (a.edt ? '⚠' : '')) + (p && p.unidad ? '<div class="sub" style="margin:0">' + esc(p.unidad) + '</div>' : '') + '</td>' +
+        '<td>' + i57Inp(b + 'descripcion', { ph: p ? p.desc : '' }) + '</td><td>' + i57Inp(b + 'ubicacion') + '</td>' +
+        '<td>' + i57Inp(b + 'unidad', { list: 'i57Unidades', cls: 'w-s' }) + '</td><td>' + i57Inp(b + 'cantidad', { num: true, cls: 'w-s', ph: 'pendiente', title: 'Vacío = pendiente · 0 = cero confirmado · N/A = no aplica' }) + '</td>' +
+        '<td>' + i57Inp(b + 'obs') + '</td><td class="mono">' + ((t.hhPorActividad || {})[a.n] != null ? Math.round(t.hhPorActividad[a.n] * 100) / 100 : '<span style="color:var(--bad)">sin registro</span>') + '</td><td>' + i57Fila('actividades', i) + '</td></tr>'; });
+    if(!L.length) h += '<tr><td colspan="10"><div class="empty-state">Sin actividades ejecutadas registradas.</div></td></tr>';
+    h += '</tbody></table></div><div class="toolbar"><button class="btn sm" onclick="i57AgregarAct()">＋ Agregar actividad</button>' +
+      '<label class="i57-chk"><input type="checkbox" data-k="sinActividades" onchange="i57In(this)"' + (I57.ed.datos.sinActividades ? ' checked' : '') + '> Sin actividades ejecutadas en el turno (confirmado)</label></div>';
+    return h; },
+  tooltime: function(){ const L = I57.ed.datos.tooltime || []; const acts = I57.ed.datos.actividades || [];
+    const opAct = [['', '— (no asociada)']].concat(acts.map(function(a){ return [String(a.n), a.n + ' · ' + (a.descripcion || a.edt || '')]; }));
+    let h = '<div class="tbl-wrap i57-t"><table><thead><tr><th>Actividad N°</th><th>Responsable</th><th>Inicio *</th><th>Término *</th><th>Área</th><th>Sub-área</th><th>Cuadrilla</th><th>Actividad / tarea *</th><th>Categoría</th><th>Hombres *</th><th>HH</th><th>Estado</th><th>Tipo impacto</th><th>Código CNC</th><th>Obs.</th><th></th></tr></thead><tbody>';
+    L.forEach(function(r, i){ const b = 'tooltime.' + i + '.'; const du = i57Dur(r.inicio, r.fin), hh = du != null && i57Num(r.hombres) != null ? Math.round(du * i57Num(r.hombres) * 100) / 100 : '';
+      h += '<tr><td>' + i57Inp(b + 'act', { sel: opAct, re: 'tooltime' }) + '</td><td>' + i57Inp(b + 'responsable') + '</td><td>' + i57Inp(b + 'inicio', { type: 'time', re: 'tooltime' }) + '</td><td>' + i57Inp(b + 'fin', { type: 'time', re: 'tooltime' }) + '</td>' +
+        '<td>' + i57Inp(b + 'area') + '</td><td>' + i57Inp(b + 'subarea', { ph: r.act ? 'ubicación de la actividad' : '' }) + '</td><td>' + i57Inp(b + 'cuadrilla', { cls: 'w-s' }) + '</td><td>' + i57Inp(b + 'actividad', { ph: r.act ? 'según la actividad' : '' }) + '</td>' +
+        '<td>' + i57Inp(b + 'categoria', { sel: LISTAS_57.categorias }) + '</td><td>' + i57Inp(b + 'hombres', { num: true, cls: 'w-xs', re: 'tooltime' }) + '</td><td class="mono">' + hh + (du != null && i57Hm(r.fin) < i57Hm(r.inicio) ? '<div class="sub" style="margin:0" title="cruza medianoche">↺ 0 h</div>' : '') + '</td>' +
+        '<td>' + i57Inp(b + 'estado', { sel: LISTAS_57.estados }) + '</td><td>' + i57Inp(b + 'tipoImpacto', { sel: LISTAS_57.tipoImpacto }) + '</td><td>' + i57Inp(b + 'codigoImpacto', { sel: LISTAS_57.cnc.map(function(c){ return [c[0], c[0] + ' ' + c[2]]; }), cls: 'w-m' }) + '</td>' +
+        '<td>' + i57Inp(b + 'obs') + '</td><td>' + i57Fila('tooltime', i) + '</td></tr>'; });
+    if(!L.length) h += '<tr><td colspan="16"><div class="empty-state">Sin registros de HH / Tooltime.</div></td></tr>';
+    return h + '</tbody></table></div><div class="toolbar"><button class="btn sm" onclick="i57Agregar(\'tooltime\',\'' + attr(JSON.stringify({ turno: '' })) + '\')">＋ Agregar registro</button><span class="sub" style="margin:0">Cada actividad ejecutada necesita al menos un registro. Las HH se calculan como hombres × duración (los turnos que cruzan medianoche se calculan con el día siguiente).</span></div>'; },
+  siguiente: function(){ return i57Lista('siguiente', [['edt', 'EDT', { list: 'i57Edts', cls: 'w-edt' }], ['texto', 'Actividad relevante del día siguiente *', {}], ['cantidad', 'Cantidad programada', { num: true, cls: 'w-s' }], ['unidad', 'Unidad', { list: 'i57Unidades', cls: 'w-s' }]]); },
+  prevencion: function(){ return i57ListaTxt('prevencion', 'Actividad asociada a prevención de riesgos'); },
+  condiciones: function(){ const c = I57.ed.datos.condiciones || {};
+    return '<div class="tbl-wrap i57-t"><table><thead><tr><th>Condición</th><th>Cumple</th><th>No cumple</th><th>No aplica</th></tr></thead><tbody>' +
+      G57C().map(function(cd){ return '<tr><td>' + esc(cd[1]) + ' *</td>' + ['cumple', 'no', 'na'].map(function(v, k){ return '<td>' + (cd[2][k] ? '<input type="radio" name="i57c_' + cd[0] + '" value="' + v + '" data-k="condiciones.' + cd[0] + '" onchange="i57In(this)"' + (c[cd[0]] === v ? ' checked' : '') + '>' : '<span class="sub" style="margin:0">— (no existe en la plantilla)</span>') + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table></div>'; },
+  dotacion: function(){ return ['indirecto', 'directo', 'gg'].map(function(cat){ const L = I57.ed.datos.dotacion[cat] || []; const tit = { indirecto: 'Indirecto', directo: 'Directo', gg: 'Gastos generales' }[cat];
+    let h = '<h3 class="i57-h3">' + tit + '</h3><div class="tbl-wrap i57-t"><table><thead><tr><th>Cargo *</th><th>Presentes *</th><th>Calle larga</th><th>Teletrabajo</th><th>Descanso</th><th>Licencia</th><th>Horas diarias</th><th>HH</th><th>Comentario</th><th></th></tr></thead><tbody>';
+    L.forEach(function(r, i){ const b = 'dotacion.' + cat + '.' + i + '.'; const hh = (i57Num(r.presentes) || 0) * (i57Num(r.horas) || 0);
+      h += '<tr><td>' + i57Inp(b + 'cargo') + '</td>' + ['presentes', 'calleLarga', 'teletrabajo', 'descanso', 'licencia'].map(function(f){ return '<td>' + i57Inp(b + f, { num: true, cls: 'w-xs', re: 'dotacion', ph: 'pend.' }) + '</td>'; }).join('') +
+        '<td>' + i57Inp(b + 'horas', { num: true, cls: 'w-xs', re: 'dotacion' }) + '</td><td class="mono">' + (hh || 0) + '</td><td>' + i57Inp(b + 'comentario') + '</td><td>' + i57Fila('dotacion.' + cat, i) + '</td></tr>'; });
+    if(!L.length) h += '<tr><td colspan="10"><div class="empty-state">Sin personal ' + tit.toLowerCase() + '.</div></td></tr>';
+    return h + '</tbody></table></div><div class="toolbar"><button class="btn sm" onclick="i57Agregar(\'dotacion.' + cat + '\',\'' + attr(JSON.stringify({ presentes: '', calleLarga: 0, teletrabajo: 0, descanso: 0, licencia: 0 })) + '\')">＋ Agregar cargo</button></div>'; }).join('') +
+    '<div class="toolbar"><button class="btn sm" onclick="i57CopiarEstructura()" title="Copia cargos y equipos del último informe con las cantidades en blanco (pendientes)">⧉ Copiar cargos y equipos del último informe</button></div>'; },
+  equipos: function(){ return ['menores', 'mayores'].map(function(g){ const L = I57.ed.datos.equipos[g] || [];
+    let h = '<h3 class="i57-h3">Equipos ' + g + '</h3><div class="tbl-wrap i57-t"><table><thead><tr><th>Descripción / patente *</th><th>Estado *</th><th>Horas máquina *</th><th>Utilización</th><th>Comentario</th><th></th></tr></thead><tbody>';
+    const dt = i57Dur(I57.ed.datos.horaInicio, I57.ed.datos.horaFin);
+    L.forEach(function(e, i){ const b = 'equipos.' + g + '.' + i + '.'; const u = dt && i57Num(e.hm) != null ? Math.round(i57Num(e.hm) / dt * 100) + ' %' : '—';
+      h += '<tr><td>' + i57Inp(b + 'descripcion') + '</td><td>' + i57Inp(b + 'estado', { sel: [['operando', 'Operando'], ['disponible', 'Disponible'], ['sinOperador', 'Sin operador'], ['mantencion', 'En mantención'], ['panne', 'En panne']] }) + '</td><td>' + i57Inp(b + 'hm', { num: true, cls: 'w-s', re: 'equipos', ph: 'pend.' }) + '</td><td class="mono">' + u + '</td><td>' + i57Inp(b + 'comentario') + '</td><td>' + i57Fila('equipos.' + g, i) + '</td></tr>'; });
+    if(!L.length) h += '<tr><td colspan="6"><div class="empty-state">Sin equipos ' + g + '.</div></td></tr>';
+    return h + '</tbody></table></div><div class="toolbar"><button class="btn sm" onclick="i57Agregar(\'equipos.' + g + '\')">＋ Agregar equipo</button></div>'; }).join('') +
+    '<h3 class="i57-h3">Uso de recursos itemizado</h3>' + i57Lista('usoRecursos', [['item', 'Ítem', { cls: 'w-s', list: 'i57Items' }], ['descripcion', 'Descripción', {}], ['identificacion', 'Identificación / patente', {}], ['unidad', 'Unidad', { list: 'i57Unidades', cls: 'w-s' }], ['cantidad', 'Cantidad', { num: true, cls: 'w-s' }], ['comentario', 'Comentario', {}]]); },
+  interferencias: function(){ return i57Lista('interferencias', [['texto', 'Interferencia / restricción *', {}], ['codigo', 'Código CNC', { sel: LISTAS_57.cnc.map(function(c){ return [c[0], c[0] + ' ' + c[2]]; }), cls: 'w-m' }], ['hh', 'HH no ganadas', { num: true, cls: 'w-s' }]]) +
+    '<h3 class="i57-h3">Cumplimiento del plan del día anterior (POD)</h3>' + i57Lista('pod', [['actividad', 'Actividad POD *', {}], ['item', 'Ítem', { cls: 'w-s', list: 'i57Items' }], ['qProg', 'Q programada', { num: true, cls: 'w-s' }], ['qReal', 'Q real', { num: true, cls: 'w-s', ph: 'pend.' }], ['unidad', 'Unidad', { list: 'i57Unidades', cls: 'w-s' }], ['tipo', 'Tipo', { sel: LISTAS_57.tipoImpacto }], ['cnc', 'CNC', { sel: LISTAS_57.cnc.map(function(c){ return [c[0], c[0] + ' ' + c[2]]; }), cls: 'w-m' }], ['obs', 'Observaciones', {}]]) +
+    '<div class="toolbar"><button class="btn sm" onclick="i57CargarPOD()">⧉ Cargar plan del informe anterior</button></div>'; },
+  fotos: function(){ const L = I57.ed.datos.fotos || []; const acts = I57.ed.datos.actividades || [];
+    let h = '<div class="i57-fotos">' + L.map(function(f, i){ const src = I57.fotoCache[f.id]; return '<div class="i57-foto"><div class="i57-thumb" data-foto="' + attr(f.id) + '">' + (src ? '<img src="' + src + '" alt="">' : '<span class="sub">⟳</span>') + '</div>' +
+      i57Inp('fotos.' + i + '.act', { sel: [['', '— actividad —']].concat(acts.map(function(a){ return [String(a.n), 'Act. ' + a.n + ' · ' + (a.descripcion || a.edt || '')]; })) }) + i57Inp('fotos.' + i + '.descripcion', { area: true, ph: 'Descripción de la fotografía *' }) + i57Fila('fotos', i) + '</div>'; }).join('') + '</div>';
+    if(!L.length) h += '<div class="empty-state">Sin fotografías.</div>';
+    return h + '<div class="toolbar"><label class="btn sm">📷 Adjuntar fotografías<input type="file" accept="image/jpeg,image/png" multiple style="display:none" onchange="i57SubirFotos(this.files);this.value=\'\'"></label><span class="sub" style="margin:0">Se comprimen a 1600 px y se guardan en el servidor. 8 fotos por hoja; sobre 8 se agregan bloques a la hoja.</span></div>'; },
+  observaciones: function(){ return i57ListaTxt('varios', 'Varios') + '<div class="field"><label class="f">Observaciones</label>' + i57Inp('observaciones', { area: true, rows: 3 }) + '</div>' +
+    '<div class="i57-grid">' + campo('', 'Elaborado por — nombre *', i57Inp('elaboro.nombre')) + campo('', 'Elaborado por — cargo *', i57Inp('elaboro.cargo')) + campo('', 'Revisado por — nombre', i57Inp('reviso.nombre')) + campo('', 'Revisado por — cargo', i57Inp('reviso.cargo')) + '</div>' +
+    '<p class="sub">Las firmas y la fecha de revisión no se generan: quedan en blanco en el Excel para firma manual. La aprobación del cliente se registra aparte.</p>'; }
+};
+function G57C(){ return (typeof G57 !== 'undefined') ? G57.COND : [['art','Tiene ART',[1,1,1]],['procedimiento','Cumple procedimiento u otro documento',[1,1,1]],['programa','Se ajusta a programa',[1,1,1]],['iluminacion','Iluminación del frente de trabajo',[1,1,1]],['supervisor','Existe supervisor en el área',[1,1,1]],['conoce','Personal conoce los procedimientos',[1,1,1]],['prevencionista','Existe prevencionista',[1,null,1]]]; }
+function i57Lista(lista, cols){ const L = i57GetPath(I57.ed.datos, lista) || [];
+  let h = '<div class="tbl-wrap i57-t"><table><thead><tr>' + cols.map(function(c){ return '<th>' + esc(c[1]) + '</th>'; }).join('') + '<th></th></tr></thead><tbody>';
+  L.forEach(function(r, i){ h += '<tr>' + cols.map(function(c){ return '<td>' + i57Inp(lista + '.' + i + '.' + c[0], c[2]) + '</td>'; }).join('') + '<td>' + i57Fila(lista, i) + '</td></tr>'; });
+  if(!L.length) h += '<tr><td colspan="' + (cols.length + 1) + '"><div class="empty-state">Sin registros.</div></td></tr>';
+  return h + '</tbody></table></div><div class="toolbar"><button class="btn sm" onclick="i57Agregar(\'' + lista + '\')">＋ Agregar fila</button></div>'; }
+function i57ListaTxt(lista, et){ const L = I57.ed.datos[lista] || [];
+  return '<div class="i57-txt">' + L.map(function(t, i){ return '<div class="i57-txtrow">' + i57Inp(lista + '.' + i, { ph: et }) + i57Fila(lista, i) + '</div>'; }).join('') + '</div><div class="toolbar"><button class="btn sm" onclick="i57AgregarTxt(\'' + lista + '\')">＋ Agregar</button></div>'; }
+function i57AgregarTxt(lista){ const arr = I57.ed.datos[lista] || (I57.ed.datos[lista] = []); arr.push(''); I57.sucio = true; i57PintarSeccion(i57SecDe(lista)); }
+function i57AgregarAct(){ const L = I57.ed.datos.actividades; L.push({ n: L.length + 1, edt: '', descripcion: '', ubicacion: '', unidad: '', cantidad: '' }); I57.sucio = true; i57PintarSeccion('actividades'); i57PintarSeccion('tooltime'); }
+function i57Num(v){ return (typeof G57 !== 'undefined') ? G57.num(v) : (v === '' || v == null || v === 'NA' ? null : (isFinite(+v) ? +v : null)); }
+function i57Hm(s){ const m = /^(\d{1,2}):(\d{2})$/.exec(String(s || '')); return m ? +m[1] * 60 + +m[2] : null; }
+function i57Dur(a, b){ const x = i57Hm(a), y = i57Hm(b); if(x == null || y == null) return null; let d = y - x; if(d < 0) d += 1440; return d / 60; }
+function i57Tot(){ return (typeof G57 !== 'undefined') ? G57.totales(I57.ed.datos) : { hhPorActividad: {} }; }
+
+
+function i57FormHTML(){
+  const ed = I57.ed, d = ed.datos; const ult = ed.revisiones && ed.revisiones.length ? ed.revisiones[ed.revisiones.length - 1] : null;
+  let h = '<div class="page-title"><h1>5.7 Informe diario digital — ' + (ed.numero ? 'N°' + i57Pad(ed.numero, 4) + ' · ' + (ult ? 'editando para Rev' + i57Pad(ult.rev + 1, 2) : '') : (ed.id ? 'borrador' : 'nuevo')) + (d._prueba ? ' <span class="pill warn">INFORME DE PRUEBA</span>' : '') + '</h1></div>';
+  h += '<div class="toolbar i57-barra" id="i57Barra"><button class="btn sm" onclick="i57Volver()">← Volver al registro</button>' +
+    '<button class="btn sm primary" id="i57BtnGuardar" onclick="i57GuardarBorrador()">💾 Guardar borrador</button>' +
+    '<button class="btn sm" onclick="i57Validar(true)">✓ Validar</button>' +
+    '<button class="btn primary" id="i57BtnFin" onclick="i57Finalizar()">Finalizar informe</button>' +
+    '<span class="spacer"></span><span id="i57Estado" class="sub" style="margin:0"></span></div>';
+  h += '<div class="card i57-resumen" id="i57Resumen"></div>';
+  h += '<nav class="i57-nav">' + [['cabecera', '1 Datos generales'], ['actividades', '2 Actividades'], ['tooltime', '3 HH / Tooltime'], ['siguiente', '4 Día siguiente'], ['prevencion', '5 Prevención'], ['condiciones', '6 Condiciones'], ['dotacion', '7 Dotación'], ['equipos', '8 Equipos'], ['interferencias', '9 Interferencias / POD'], ['fotos', '10 Fotos'], ['observaciones', '11 Observaciones y firmas']].map(function(s){ return '<a href="javascript:void(0)" onclick="document.getElementById(\'i57s-' + s[0] + '\').scrollIntoView({behavior:\'smooth\'})">' + s[1] + '</a>'; }).join('') + '</nav>';
+  h += i57Sec('cabecera', '1) Datos generales del contrato, fecha, turno y responsables', I57_SEC.cabecera(), 'contrato según la configuración del portal');
+  h += i57Sec('actividades', '2) Actividades ejecutadas', I57_SEC.actividades(), 'EDT validado contra el programa vigente; unidad contra el itemizado');
+  h += i57Sec('tooltime', '3) Registro de HH y Tooltime por actividad', I57_SEC.tooltime());
+  h += i57Sec('siguiente', '4) Actividades del día hábil siguiente', I57_SEC.siguiente());
+  h += i57Sec('prevencion', '5) Prevención de riesgos', I57_SEC.prevencion());
+  h += i57Sec('condiciones', '6) Condiciones del turno', I57_SEC.condiciones());
+  h += i57Sec('dotacion', '7) Dotación directa, indirecta y gastos generales', I57_SEC.dotacion(), 'vacío = pendiente · 0 = cero confirmado · N/A = no aplica');
+  h += i57Sec('equipos', '8) Equipos, estado, utilización y horas máquina', I57_SEC.equipos());
+  h += i57Sec('interferencias', '9) Interferencias y restricciones', I57_SEC.interferencias());
+  h += i57Sec('fotos', '10) Registro fotográfico', I57_SEC.fotos());
+  h += i57Sec('observaciones', '11) Observaciones, elaboración y revisión', I57_SEC.observaciones());
+  const P = i57Programa();
+  h += '<datalist id="i57Edts">' + P.filter(function(p){ return p.hoja; }).map(function(p){ return '<option value="' + attr(p.edt) + '">' + esc((p.item ? p.item + ' · ' : '') + p.desc) + '</option>'; }).join('') + '</datalist>';
+  h += '<datalist id="i57Items">' + ITEMIZADO_CCV.map(function(p){ return '<option value="' + attr(p.i) + '">' + esc(p.d) + '</option>'; }).join('') + '</datalist>';
+  h += '<datalist id="i57Unidades">' + LISTAS_57.unidades.concat(['gl', 'ml', 'Un', 'kg']).filter(function(v, i, a){ return a.indexOf(v) === i; }).map(function(u){ return '<option value="' + attr(u) + '">'; }).join('') + '</datalist>';
+  return h;
+}
+function i57PostForm(){ i57Libs().then(function(){ ['actividades', 'tooltime'].forEach(i57PintarSeccion); i57ResumenVivo(); }).catch(function(e){ toast('No se cargaron las librerías del informe: ' + esc(e.message), 'bad', 6000); }); i57Cabecera(); i57ResumenVivo(); i57Miniaturas(); }
+function i57Cabecera(){ const el = document.getElementById('i57Turno'); if(!el || !I57.ed) return; const d = I57.ed.datos; const du = i57Dur(d.horaInicio, d.horaFin);
+  el.innerHTML = du != null ? 'Duración del turno: <b>' + du + ' h</b>' + (i57Hm(d.horaFin) < i57Hm(d.horaInicio) ? ' · cruza la medianoche (termina el ' + fmtFecha(i57Sig(d.fecha)) + ')' : '') : ''; }
+function i57Sig(f){ const x = new Date(f + 'T12:00:00Z'); x.setUTCDate(x.getUTCDate() + 1); return x.toISOString().slice(0, 10); }
+function i57ResumenVivo(){ const el = document.getElementById('i57Resumen'); if(!el || !I57.ed || typeof G57 === 'undefined') return;
+  const v = i57Validacion(); const t = v.totales;
+  el.innerHTML = '<div class="i57-res"><div><b>' + t.presentes + '</b><span>personas presentes</span></div><div><b>' + Math.round(t.hhDotacion * 100) / 100 + '</b><span>HH dotación</span></div><div><b>' + Math.round(t.hhDirectas * 100) / 100 + '</b><span>HH directas</span></div><div><b>' + t.hhTooltime + '</b><span>HH Tooltime</span></div>' +
+    '<div class="' + (v.ok ? 'ok' : 'ko') + '"><b>' + (v.ok ? '✓' : v.errores.length) + '</b><span>' + (v.ok ? 'listo para finalizar' : 'datos por completar') + '</span></div><div><b>' + v.avisos.length + '</b><span>avisos</span></div></div>';
+  const est = document.getElementById('i57Estado'); if(est) est.innerHTML = I57.ocupado ? '⟳ ' + esc(I57.ocupado) : (I57.sucio ? '● cambios sin guardar en el servidor' : (I57.ed.id ? '✓ borrador guardado (versión ' + I57.ed.version + ')' : ''));
+}
+function i57Validacion(){ return G57.validar(I57.ed.datos, { programa: i57Programa(), itemizado: ITEMIZADO_CCV, contratoNumero: DB.contrato.nContrato, hoy: hoyISO(), fechaInicio: DB.contrato.fechaInicio, fechaOriginal: (I57.ed.revisiones && I57.ed.revisiones.length) ? I57.ed.revisiones[0].datos.fecha : '' }); }
+function i57Validar(mostrar){
+  const v = i57Validacion();
+  if(mostrar) abrirModal('<div class="modal-head"><h2>' + (v.ok ? '✓ El informe cumple las validaciones' : 'Faltan ' + v.errores.length + ' datos indispensables') + '</h2><button class="x" onclick="cerrarModal()">×</button></div><div class="modal-body">' +
+    (v.errores.length ? '<h3>Errores (impiden emitir)</h3><ul class="i57-err">' + v.errores.map(function(e){ return '<li>' + esc(e.msg) + '</li>'; }).join('') + '</ul>' : '') +
+    (v.avisos.length ? '<h3>Avisos</h3><ul class="i57-av">' + v.avisos.map(function(e){ return '<li>' + esc(e.msg) + '</li>'; }).join('') + '</ul>' : '') +
+    '<h3>Conciliación</h3><p class="sub">HH directas de la dotación: <b>' + v.totales.hhDirectas + '</b> · HH registradas en Tooltime: <b>' + v.totales.hhTooltime + '</b> · máximo de hombres en un registro: <b>' + v.totales.maxHombres + '</b> de ' + v.totales.cat.directo.presentes + ' directos presentes.</p></div>' +
+    '<div class="modal-foot"><button class="btn primary" onclick="cerrarModal()">Cerrar</button></div>');
+  return v;
+}
+
+/* ---------- ayudas de llenado ---------- */
+function i57Ultimo(){ return I57.lista.filter(function(x){ return x.numero && !x.prueba && (!I57.ed || x.id !== I57.ed.id); }).sort(function(a, b){ return (b.fecha + i57Pad(b.numero, 6)).localeCompare(a.fecha + i57Pad(a.numero, 6)); })[0]; }
+function i57CopiarEstructura(){ const u = i57Ultimo(); if(!u){ toast('No hay un informe emitido anterior.', 'bad'); return; }
+  i57Get({ accion: 'i57_leer', id: u.id }).then(function(j){ const r = j.informe.revisiones[j.informe.revisiones.length - 1].datos; const d = I57.ed.datos;
+    ['indirecto', 'directo', 'gg'].forEach(function(c){ (r.dotacion[c] || []).forEach(function(p){ if(!(d.dotacion[c] || []).some(function(q){ return q.cargo === p.cargo; })) d.dotacion[c].push({ cargo: p.cargo, presentes: '', calleLarga: '', teletrabajo: '', descanso: '', licencia: '', horas: p.horas, comentario: '' }); }); });
+    ['menores', 'mayores'].forEach(function(g){ (r.equipos[g] || []).forEach(function(e){ if(!(d.equipos[g] || []).some(function(q){ return q.descripcion === e.descripcion; })) d.equipos[g].push({ descripcion: e.descripcion, estado: '', hm: '', comentario: '' }); }); });
+    I57.sucio = true; i57PintarSeccion('dotacion'); i57PintarSeccion('equipos'); toast('Cargos y equipos copiados del N°' + u.numero + ' con cantidades pendientes: confirme cada valor.', 'ok', 5000); })
+    .catch(function(e){ toast(esc(e.message), 'bad'); }); }
+function i57CargarPOD(){ const u = i57Ultimo(); if(!u){ toast('No hay un informe emitido anterior.', 'bad'); return; }
+  i57Get({ accion: 'i57_leer', id: u.id }).then(function(j){ const inf = j.informe; const r = inf.revisiones[inf.revisiones.length - 1].datos; const P = i57Programa();
+    (r.siguiente || []).forEach(function(s){ const p = P.filter(function(x){ return x.edt === s.edt; })[0]; I57.ed.datos.pod.push({ numeroPod: inf.numero, fechaPod: r.fecha, turno: r.turno, actividad: s.texto, item: p ? p.item : '', descripcion: p ? p.desc : '', qProg: s.cantidad || '', qReal: '', unidad: s.unidad || (p ? p.unidad : ''), fuente: 'Informe N°' + inf.numero }); });
+    I57.sucio = true; i57PintarSeccion('interferencias'); toast('Plan del informe N°' + inf.numero + ' cargado: ingrese la cantidad real.', 'ok'); })
+    .catch(function(e){ toast(esc(e.message), 'bad'); }); }
+
+/* ---------- fotografías ---------- */
+function i57Comprimir(file){ return new Promise(function(ok, ko){ const img = new Image(); const u = URL.createObjectURL(file);
+  img.onload = function(){ const m = 1600, s = Math.min(1, m / Math.max(img.width, img.height)); const c = document.createElement('canvas'); c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(u); ok(c.toDataURL('image/jpeg', 0.82)); };
+  img.onerror = function(){ ko(new Error('Imagen no válida: ' + file.name)); }; img.src = u; }); }
+function i57SubirFotos(files){
+  const arr = Array.prototype.slice.call(files || []); if(!arr.length) return;
+  I57.ocupado = 'subiendo fotografías…'; i57ResumenVivo();
+  arr.reduce(function(p, f){ return p.then(function(){ return i57Comprimir(f).then(function(url){ const op = i57Op();
+    return i57Post({ accion: 'i57_foto_subir', informe: I57.ed.id || 'nuevo', nombre: f.name, mime: 'image/jpeg', b64: url.split(',')[1], opId: op }).then(function(j){ I57.fotoCache[j.id] = url; I57.ed.datos.fotos.push({ id: j.id, descripcion: '', act: '', nombre: f.name }); I57.sucio = true; i57PintarSeccion('fotos'); }); }); }); }, Promise.resolve())
+    .then(function(){ toast(arr.length + ' fotografía(s) guardada(s). Agregue la descripción y guarde el borrador.', 'ok'); })
+    .catch(function(e){ toast('Fotografías: ' + esc(e.message), 'bad', 7000); })
+    .then(function(){ I57.ocupado = ''; i57ResumenVivo(); i57GuardarRespaldo(); });
+}
+function i57Miniaturas(){ (I57.ed && I57.ed.datos.fotos || []).forEach(function(f){ if(I57.fotoCache[f.id]) return; i57Get({ accion: 'i57_foto', id: f.id }).then(function(j){ I57.fotoCache[f.id] = 'data:' + j.mime + ';base64,' + j.b64; const el = document.querySelector('[data-foto="' + f.id + '"]'); if(el) el.innerHTML = '<img src="' + I57.fotoCache[f.id] + '" alt="">'; }).catch(function(){}); }); }
+
+/* ==================================================================
+   GUARDAR / FINALIZAR / DRIVE
+   ================================================================== */
+function i57Recordar(){ const d = I57.ed.datos; i57SetPrefs({ jefeProyecto: d.contrato.jefeProyecto, turno: d.turno, horaInicio: d.horaInicio, horaFin: d.horaFin, jornada: d.jornada, sector: d.sector, elaboroNombre: d.elaboro.nombre, elaboroCargo: d.elaboro.cargo, revisoNombre: d.reviso.nombre, revisoCargo: d.reviso.cargo }); }
+function i57GuardarBorrador(){
+  if(I57.ocupado) return Promise.resolve(false);
+  const ed = I57.ed; if(!/^\d{4}-\d{2}-\d{2}$/.test(ed.datos.fecha || '')){ toast('Indique la fecha del informe.', 'bad'); return Promise.resolve(false); }
+  I57.ocupado = 'guardando borrador…'; i57Botones(true);
+  return i57Hash(ed.datos).then(function(hash){
+    return i57Post({ accion: 'i57_guardar', id: ed.id || '', version: ed.version, datos: ed.datos, hash: hash, opId: ed.id ? i57Op() : ed.opCrear }); })
+    .then(function(j){
+      if(j.conflicto){ toast('⚠ ' + esc(j.error), 'bad', 9000); return false; }
+      const nuevo = !ed.id; ed.id = j.id; ed.version = j.version; I57.sucio = false; i57BorrarRespaldo(nuevo ? null : ed.id); i57Recordar();
+      toast('Borrador guardado en el servidor (versión ' + j.version + ').', 'ok', 2500); return true; })
+    .catch(function(e){ toast('No se guardó en el servidor: ' + esc(e.message) + '. Los datos quedan respaldados en este navegador.', 'bad', 7000); return false; })
+    .then(function(r){ I57.ocupado = ''; i57Botones(false); i57ResumenVivo(); return r; });
+}
+function i57Botones(off){ ['i57BtnGuardar', 'i57BtnFin'].forEach(function(id){ const b = document.getElementById(id); if(b) b.disabled = !!off; }); }
+function i57Finalizar(){
+  if(I57.ocupado) return;
+  const v = i57Validar(false);
+  if(!v.ok){ i57Validar(true); return; }
+  const ed = I57.ed; const avisos = v.avisos.length ? '<h3>Avisos</h3><ul class="i57-av">' + v.avisos.map(function(e){ return '<li>' + esc(e.msg) + '</li>'; }).join('') + '</ul>' : '';
+  abrirModal('<div class="modal-head"><h2>Finalizar informe</h2><button class="x" onclick="cerrarModal()">×</button></div><div class="modal-body">' +
+    '<p>Se ' + (ed.numero ? 'emitirá una <b>nueva revisión del informe N°' + i57Pad(ed.numero, 4) + '</b>' : 'asignará el <b>siguiente correlativo</b>') + ', se generará el Excel con la plantilla CCV v1.0 y se guardará en Drive. ' +
+    'Quedará en estado <b>Finalizado</b> (no aprobado): la revisión y la aprobación del cliente se registran por separado.</p>' + avisos + '</div>' +
+    '<div class="modal-foot"><button class="btn" onclick="cerrarModal()">Cancelar</button><button class="btn primary" id="i57FinOk">Finalizar y emitir</button></div>', 'narrow');
+  document.getElementById('i57FinOk').onclick = function(){ this.disabled = true; cerrarModal(); i57FinalizarEjecutar(); };
+}
+function i57FinalizarEjecutar(){
+  const ed = I57.ed; const op = ed.opFin || (ed.opFin = i57Op());   // el mismo opId en reintentos: el servidor no duplica
+  (I57.sucio || !ed.id ? i57GuardarBorrador() : Promise.resolve(true)).then(function(ok){
+    if(!ok) throw new Error('primero debe guardarse el borrador');
+    I57.ocupado = 'asignando correlativo…'; i57Botones(true); i57ResumenVivo();
+    return Promise.all([i57Hash(ed.datos), i57CargarPlantilla()]); })
+  .then(function(r){ return i57Post({ accion: 'i57_finalizar', id: ed.id, version: ed.version, hash: r[0], opId: op, plantilla: I57.manifiesto.version + ' · sha256 ' + I57.manifiesto.sha256.slice(0, 12) }); })
+  .then(function(j){
+    if(j.conflicto) throw new Error(j.error);
+    ed.opFin = null; ed.numero = j.numero; ed.version = j.version || ed.version;
+    if(j.sinCambios) toast('Sin cambios respecto de la Rev' + i57Pad(j.rev, 2) + ': no se crea una revisión nueva.', '', 5000);
+    I57.ocupado = 'generando Excel…'; i57ResumenVivo();
+    return i57EmitirDrive(ed.id, j.revision, j.numero); })
+  .then(function(a){ toast('Informe N°' + i57Pad(ed.numero, 4) + ' emitido. ' + (a ? '<b>Guardado en Drive</b>.' : ''), 'ok', 6000); I57.vista = 'lista'; I57.ed = null; render(); i57Cargar(true); })
+  .catch(function(e){ toast('No se completó la emisión: ' + esc(e.message) + (ed.numero ? '. El informe quedó registrado como <b>Pendiente de guardar en Drive</b>: use “Reintentar Drive”.' : ''), 'bad', 10000); if(ed.numero){ I57.vista = 'lista'; I57.ed = null; render(); i57Cargar(true); } })
+  .then(function(){ I57.ocupado = ''; i57Botones(false); });
+}
+function i57CargarPlantilla(){
+  if(I57.plantilla) return Promise.resolve(I57.plantilla);
+  return Promise.all([fetch(I57_MANIFIESTO, { cache: 'no-cache' }).then(function(r){ if(!r.ok) throw new Error('manifiesto de plantilla no disponible'); return r.json(); }), fetch(I57_PLANTILLA, { cache: 'no-cache' }).then(function(r){ if(!r.ok) throw new Error('plantilla no disponible'); return r.arrayBuffer(); })])
+    .then(function(r){ return crypto.subtle.digest('SHA-256', r[1]).then(function(h){ const hex = Array.prototype.map.call(new Uint8Array(h), function(b){ return ('0' + b.toString(16)).slice(-2); }).join('');
+      if(hex !== r[0].sha256) throw new Error('la plantilla no coincide con su manifiesto (' + r[0].version + ')'); I57.manifiesto = r[0]; I57.plantilla = new Uint8Array(r[1]); return I57.plantilla; }); });
+}
+/* genera el Excel desde la instantánea guardada en el servidor y lo sube (idempotente) */
+function i57EmitirDrive(id, rev, numero){
+  const d = JSON.parse(JSON.stringify(rev.datos)); d.numero = numero; d.revision = rev.rev; d.fechaElaboracion = String(rev.finalizadoEn).slice(0, 10);
+  const listas = {}; LISTAS_57.cnc.forEach(function(c){ listas[c[0]] = [c[1], c[2]]; });
+  const fotos = {};
+  return i57Libs().then(i57CargarPlantilla).then(function(){
+    return (d.fotos || []).reduce(function(p, f){ return p.then(function(){ return i57Get({ accion: 'i57_foto', id: f.id }).then(function(j){ fotos[f.id] = { bytes: i57Bytes(j.b64) }; }); }); }, Promise.resolve()); })
+  .then(function(){ return G57.generar(I57.plantilla, d, { programa: i57Programa(), fotos: fotos, listasCNC: listas, usuario: rev.finalizadoPor, ahora: rev.finalizadoEn }); })
+  .then(function(r){ if(r.nombre !== rev.archivo.nombre) throw new Error('nombre de archivo inesperado ' + r.nombre);
+    I57.ocupado = 'guardando en Drive…'; i57ResumenVivo();
+    return i57Post({ accion: 'i57_subir', id: id, rev: rev.rev, nombre: r.nombre, b64: i57B64(r.bytes), opId: 'sub-' + id + '-' + rev.rev }); })
+  .then(function(j){ return j.archivo && j.archivo.estado === 'Guardado en Drive' ? j.archivo : null; });
+}
+function i57ReintentarDrive(id){
+  if(I57.ocupado) return; I57.ocupado = 'reintentando…'; toast('⟳ Generando y guardando en Drive…', '', 2500);
+  i57Get({ accion: 'i57_leer', id: id }).then(function(j){ const inf = j.informe; const pend = inf.revisiones.filter(function(r){ return r.archivo.estado !== 'Guardado en Drive'; });
+    return pend.reduce(function(p, r){ return p.then(function(){ return i57EmitirDrive(id, r, inf.numero); }); }, Promise.resolve()).then(function(){ return pend.length; }); })
+    .then(function(n){ toast(n ? 'Guardado en Drive confirmado.' : 'No había archivos pendientes.', 'ok'); })
+    .catch(function(e){ toast('Sigue pendiente de guardar en Drive: ' + esc(e.message), 'bad', 8000); })
+    .then(function(){ I57.ocupado = ''; i57Cargar(true); });
+}
+
+/* ---------- estados (revisión y aprobación del cliente: siempre manuales) ---------- */
+function i57FormEstado(id){ const x = I57.lista.filter(function(y){ return y.id === id; })[0]; if(!x) return;
+  abrirModal('<div class="modal-head"><h2>Estados del informe N°' + i57Pad(x.numero, 4) + '</h2><button class="x" onclick="cerrarModal()">×</button></div><div class="modal-body">' +
+    '<p class="sub">Elaboración: ' + i57PillElab(x.elaboracion) + ' (la asigna el sistema al finalizar). Los estados de revisión y de aprobación del cliente se registran manualmente, con usuario y fecha; nunca se generan automáticamente.</p>' +
+    campo('i57EstRev', 'Revisión interna / ITO', '<select class="inp" id="i57EstRev">' + opciones(['Pendiente', 'Revisado', 'Observado'], x.revisionEstado) + '</select>') +
+    campo('i57EstApr', 'Aprobación del cliente', '<select class="inp" id="i57EstApr">' + opciones(['Pendiente', 'Aprobado por el cliente', 'Rechazado por el cliente'], x.aprobacion) + '</select>') +
+    campo('i57EstNota', 'Respaldo / nota (p. ej. correo o carta del cliente)', '<input class="inp" id="i57EstNota">') + '</div>' +
+    '<div class="modal-foot"><button class="btn" onclick="cerrarModal()">Cancelar</button><button class="btn primary" onclick="i57GuardarEstado(\'' + id + '\')">Registrar</button></div>', 'narrow'); }
+function i57GuardarEstado(id){ const x = I57.lista.filter(function(y){ return y.id === id; })[0]; const nota = valorCampo('i57EstNota'); const cambios = [];
+  if(valorCampo('i57EstRev') !== x.revisionEstado) cambios.push({ campo: 'revision', valor: valorCampo('i57EstRev') });
+  if(valorCampo('i57EstApr') !== x.aprobacion) cambios.push({ campo: 'aprobacion', valor: valorCampo('i57EstApr') });
+  if(!cambios.length){ cerrarModal(); return; }
+  cerrarModal();
+  cambios.reduce(function(p, c){ return p.then(function(){ return i57Post({ accion: 'i57_estado', id: id, campo: c.campo, valor: c.valor, nota: nota, opId: i57Op() }); }); }, Promise.resolve())
+    .then(function(){ toast('Estado registrado.', 'ok'); i57Cargar(true); }).catch(function(e){ toast(esc(e.message), 'bad', 6000); }); }
+
+/* ---------- ver informe digital / revisiones ---------- */
+function i57Ver(id){ i57Get({ accion: 'i57_leer', id: id }).then(function(j){ const inf = j.informe; const ult = inf.revisiones[inf.revisiones.length - 1]; i57VerDatos(ult ? ult.datos : inf.borrador, inf, ult); }).catch(function(e){ toast(esc(e.message), 'bad'); }); }
+function i57VerDatos(d, inf, rev){
+  const T = function(arr, cols){ if(!arr || !arr.length) return '<p class="sub">—</p>'; return '<div class="tbl-wrap"><table><thead><tr>' + cols.map(function(c){ return '<th>' + esc(c[1]) + '</th>'; }).join('') + '</tr></thead><tbody>' + arr.map(function(r){ return '<tr>' + cols.map(function(c){ const v = typeof c[0] === 'function' ? c[0](r) : r[c[0]]; return '<td class="wrap">' + esc(v === 'NA' ? 'N/A' : (v === '' || v == null ? (c[2] ? 'pendiente' : '') : v)) + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table></div>'; };
+  const t = (typeof G57 !== 'undefined') ? G57.totales(d) : null; const cond = d.condiciones || {};
+  abrirModal('<div class="modal-head"><h2>Informe diario ' + (inf.numero ? 'N°' + i57Pad(inf.numero, 4) : '(borrador)') + (rev ? ' Rev' + i57Pad(rev.rev, 2) : '') + ' · ' + fmtFecha(d.fecha) + ' · ' + esc(d.turno || '') + '</h2><button class="x" onclick="cerrarModal()">×</button></div><div class="modal-body i57-ver">' +
+    (d._prueba ? '<p><span class="pill warn">INFORME DE PRUEBA — sin validez contractual</span></p>' : '') +
+    '<p><b>' + esc(d.contrato.nombre) + '</b> · contrato ' + esc(d.contrato.numero) + ' · ' + esc(d.contrato.empresa) + '<br>Jefe de Proyecto: ' + esc(d.contrato.jefeProyecto) + ' · Adm. contrato: ' + esc(d.contrato.adminContrato) + '<br>Turno ' + esc(d.turno) + ' ' + esc(d.horaInicio) + '–' + esc(d.horaFin) + ' · jornada ' + esc(d.jornada) + ' · sector ' + esc(d.sector) + '</p>' +
+    (t ? '<p class="sub">Dotación presente ' + t.presentes + ' · HH dotación ' + Math.round(t.hhDotacion * 100) / 100 + ' · HH directas ' + t.hhDirectas + ' · HH Tooltime ' + t.hhTooltime + '</p>' : '') +
+    '<h3>Actividades ejecutadas</h3>' + T(d.actividades, [['n', 'N°'], ['edt', 'EDT'], ['descripcion', 'Descripción'], ['ubicacion', 'Ubicación'], ['unidad', 'Unidad'], ['cantidad', 'Cantidad', 1], ['obs', 'Obs.']]) +
+    '<h3>HH / Tooltime</h3>' + T(d.tooltime, [['act', 'Act.'], ['inicio', 'Inicio'], ['fin', 'Fin'], ['cuadrilla', 'Cuadrilla'], ['actividad', 'Actividad'], ['hombres', 'Hombres', 1], [function(r){ const du = i57Dur(r.inicio, r.fin); return du != null && i57Num(r.hombres) != null ? Math.round(du * i57Num(r.hombres) * 100) / 100 : ''; }, 'HH'], ['codigoImpacto', 'CNC']]) +
+    '<h3>Día siguiente</h3>' + T(d.siguiente, [['edt', 'EDT'], ['texto', 'Actividad'], ['cantidad', 'Cantidad'], ['unidad', 'Unidad']]) +
+    '<h3>Prevención</h3><ul>' + (d.prevencion || []).map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' +
+    '<h3>Condiciones del turno</h3><p>' + G57C().map(function(c){ return esc(c[1]) + ': <b>' + ({ cumple: 'Cumple', no: 'No cumple', na: 'No aplica' }[cond[c[0]]] || 'pendiente') + '</b>'; }).join(' · ') + '</p>' +
+    '<h3>Dotación</h3>' + ['indirecto', 'directo', 'gg'].map(function(c){ return '<h4>' + { indirecto: 'Indirecto', directo: 'Directo', gg: 'Gastos generales' }[c] + '</h4>' + T(d.dotacion[c], [['cargo', 'Cargo'], ['presentes', 'Presentes', 1], ['calleLarga', 'Calle larga'], ['teletrabajo', 'Teletrabajo'], ['descanso', 'Descanso'], ['licencia', 'Licencia'], ['horas', 'Horas']]); }).join('') +
+    '<h3>Equipos</h3>' + T((d.equipos.menores || []).concat(d.equipos.mayores || []), [['descripcion', 'Equipo'], ['estado', 'Estado'], ['hm', 'HM', 1], ['comentario', 'Comentario']]) +
+    '<h3>Interferencias</h3>' + T(d.interferencias, [['texto', 'Interferencia'], ['codigo', 'CNC'], ['hh', 'HH no ganadas']]) +
+    '<h3>POD día anterior</h3>' + T(d.pod, [['actividad', 'Actividad'], ['qProg', 'Q prog.'], ['qReal', 'Q real', 1], ['unidad', 'Unidad']]) +
+    '<h3>Fotografías</h3><div class="i57-fotos">' + (d.fotos || []).map(function(f){ return '<div class="i57-foto"><div class="i57-thumb" data-foto="' + attr(f.id) + '">' + (I57.fotoCache[f.id] ? '<img src="' + I57.fotoCache[f.id] + '">' : '⟳') + '</div><div class="sub">' + (f.act ? 'Act. ' + esc(f.act) + ' — ' : '') + esc(f.descripcion) + '</div></div>'; }).join('') + '</div>' +
+    '<h3>Varios y observaciones</h3><ul>' + (d.varios || []).map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ul><p>' + esc(d.observaciones || '') + '</p>' +
+    '<p>Elaborado por: <b>' + esc(d.elaboro.nombre) + '</b> (' + esc(d.elaboro.cargo) + ')' + (rev ? ' · finalizado ' + esc(fmtFechaHora(rev.finalizadoEn)) : '') + '<br>Revisado por: ' + esc(d.reviso.nombre || '—') + ' (' + esc(d.reviso.cargo || '') + ') · firma manual</p></div>' +
+    '<div class="modal-foot">' + (rev && rev.archivo.id ? '<a class="btn" href="' + attr(rev.archivo.url) + '" target="_blank" rel="noopener">Abrir Excel en Drive ↗</a>' : '') + '<button class="btn primary" onclick="cerrarModal()">Cerrar</button></div>');
+  (d.fotos || []).forEach(function(f){ if(I57.fotoCache[f.id]) return; i57Get({ accion: 'i57_foto', id: f.id }).then(function(j){ I57.fotoCache[f.id] = 'data:' + j.mime + ';base64,' + j.b64; document.querySelectorAll('[data-foto="' + f.id + '"]').forEach(function(el){ el.innerHTML = '<img src="' + I57.fotoCache[f.id] + '">'; }); }).catch(function(){}); });
+}
+function i57Revisiones(id){ i57Get({ accion: 'i57_leer', id: id }).then(function(j){ const inf = j.informe;
+  abrirModal('<div class="modal-head"><h2>Revisiones y trazabilidad ' + (inf.numero ? '— N°' + i57Pad(inf.numero, 4) : '') + '</h2><button class="x" onclick="cerrarModal()">×</button></div><div class="modal-body">' +
+    '<div class="tbl-wrap"><table><thead><tr><th>Rev</th><th>Finalizada</th><th>Archivo</th><th>Plantilla</th><th>Huella de datos</th><th></th></tr></thead><tbody>' +
+    (inf.revisiones.length ? inf.revisiones.map(function(r){ return '<tr><td><b>Rev' + i57Pad(r.rev, 2) + '</b></td><td>' + esc(fmtFechaHora(r.finalizadoEn)) + '<div class="sub" style="margin:0">' + esc(r.finalizadoPor) + '</div></td>' +
+      '<td class="wrap">' + i57PillDrive(r.archivo) + '<div class="sub mono" style="margin:2px 0 0;font-size:10.5px">' + esc(r.archivo.nombre) + (r.archivo.carpeta ? '<br>' + esc(r.archivo.carpeta) : '') + (r.archivo.subidoEn ? '<br>subido ' + esc(fmtFechaHora(r.archivo.subidoEn)) + ' · ' + r.archivo.intentos + ' intento(s)' : '') + '</div></td>' +
+      '<td class="sub">' + esc(r.plantilla) + '</td><td class="mono" style="font-size:10.5px">' + esc(String(r.hash).slice(0, 16)) + '</td>' +
+      '<td>' + (r.archivo.id ? '<a class="btn sm" href="https://drive.google.com/uc?export=download&id=' + attr(r.archivo.id) + '" target="_blank" rel="noopener">⬇</a> <a class="btn sm" href="' + attr(r.archivo.url) + '" target="_blank" rel="noopener">Drive ↗</a>' : '') + '</td></tr>'; }).join('') : '<tr><td colspan="6"><div class="empty-state">Sin revisiones emitidas (borrador).</div></td></tr>') +
+    '</tbody></table></div><h3>Estados</h3><p class="sub">' + ['revision', 'aprobacion'].map(function(k){ const e = inf.estados[k]; return (k === 'revision' ? 'Revisión' : 'Aprobación cliente') + ': <b>' + esc(e ? e.valor : 'Pendiente') + '</b>' + (e ? ' (' + esc(e.por) + ', ' + esc(fmtFechaHora(e.en)) + (e.nota ? ' — ' + esc(e.nota) : '') + ')' : ''); }).join('<br>') + '</p>' +
+    '<h3>Historial</h3><div class="tbl-wrap" style="max-height:260px;overflow:auto"><table><tbody>' + inf.historial.slice().reverse().map(function(x){ return '<tr><td class="mono" style="white-space:nowrap">' + esc(fmtFechaHora(x.t)) + '</td><td>' + esc(x.por) + '</td><td>' + esc(x.accion) + (x.detalle ? ' — ' + esc(x.detalle) : '') + '</td></tr>'; }).join('') + '</tbody></table></div></div>' +
+    '<div class="modal-foot"><button class="btn primary" onclick="cerrarModal()">Cerrar</button></div>'); }).catch(function(e){ toast(esc(e.message), 'bad'); }); }
+
+/* ---------- carpeta de destino ---------- */
+function i57Config(){
+  i57Get({ accion: 'i57_config' }).then(function(j){
+    const fila = function(t, c){ return c ? '<tr><td>' + t + '</td><td class="wrap"><a href="' + attr(c.url) + '" target="_blank" rel="noopener">' + esc(c.ruta) + '</a><div class="sub" style="margin:0">acceso: ' + esc(c.acceso) + ' · edición del servicio: ' + (c.puedeEditar ? 'sí' : 'no') + ' · dentro del contrato: ' + (c.dentroContrato ? 'sí' : 'no') + '</div></td></tr>' : '<tr><td>' + t + '</td><td>—</td></tr>'; };
+    abrirModal('<div class="modal-head"><h2>Carpeta de destino de los informes</h2><button class="x" onclick="cerrarModal()">×</button></div><div class="modal-body">' +
+      '<div class="tbl-wrap"><table><tbody>' + fila('Destino configurado', j.destino) + fila('Carpeta del contrato (raíz autorizada)', j.raiz) + fila('Carpeta enlazada en el portal (Configuración)', j.carpetaPortal) + '</tbody></table></div>' +
+      '<p class="sub">La carpeta enlazada en el portal es <b>Construcción</b> (documentos de ingeniería): no se usa como destino. Por defecto los informes van a <b>Cicloconvertidor / 5.7 Informes diarios / AAAA / MM</b>. El destino debe estar dentro de la carpeta del contrato y el servicio debe poder editarla; los archivos heredan los permisos de esa carpeta.</p>' +
+      campo('i57Dest', 'Nueva carpeta destino (URL o ID de Drive)', '<input class="inp" id="i57Dest" placeholder="https://drive.google.com/drive/folders/…">') + '</div>' +
+      '<div class="modal-foot"><button class="btn" onclick="cerrarModal()">Cerrar</button><button class="btn primary" onclick="i57GuardarConfig()">Validar y guardar</button></div>');
+  }).catch(function(e){ toast(esc(e.message), 'bad'); });
+}
+function i57GuardarConfig(){ const v = valorCampo('i57Dest'); if(!v){ toast('Indique la URL o el ID.', 'bad'); return; }
+  i57Post({ accion: 'i57_config_set', destino: v }).then(function(j){ cerrarModal(); I57.destino = j.destino; toast('Destino validado: ' + esc(j.destino.ruta), 'ok', 5000); render(); }).catch(function(e){ toast(esc(e.message), 'bad', 7000); }); }
 /* ==================================================================
    ===============  VISTA 1.4 — ESTADÍSTICAS DE INGENIERÍA  =========
    ==================================================================

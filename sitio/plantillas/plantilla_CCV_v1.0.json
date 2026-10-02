@@ -1,0 +1,20 @@
+{
+ "version": "CCV v1.0",
+ "generado": "2026-10-01T19:55:30Z",
+ "origen": "Daily Report N°113 (24.11.25) - SEM 4 Rev1.xlsx",
+ "cambios": [
+  "Vínculos externos eliminados: 169",
+  "Tablas dinámicas eliminadas: 2 cachés",
+  "Nombres definidos: 21131 → 14",
+  "01: datos SEM 4 borrados; 20 casillas desmarcadas; C63/M63 sin fecha automática; D56 = Recursos!J15 (antes HH/O5); M65 = cargo del revisor; validación Q8 (lista histórica) quitada",
+  "02: combinación de la columna Comentario (S:X) completada en filas S14:X14, S32:X32",
+  "02: datos borrados; fórmulas I/P/Q/R y totales homogeneizados por bloque; T = 1-S-U-V-W; X (HM) pasa a dato ingresado",
+  "03: datos borrados",
+  "04: 8 fotografías de ejemplo quitadas, 2 logos conservados",
+  "05: datos borrados; Duración = MOD(fin-inicio,1) (turnos que cruzan medianoche); Causa/Subcausa: '[168]CARATULA EP ' → Listas!A:C",
+  "06: datos borrados; N° y fecha POD: '[87] Datos turno reporte' → valores del informe anterior registrado en el portal; Causa/Subcausa: '[87]Listas' → Listas!A:C; Descripción ítem: '[87]Itemizado' → '08 Programa'!C:D (programa vigente); 3 validaciones a libro externo quitadas; CNC validado con Listas!A3:A48",
+  "Ocultas: Detalle1, Hoja1, registro hh, Fecha N° informe y 08 Programa sin datos SEM 4 (estructura y nombres de hoja conservados)"
+ ],
+ "sha256": "a46223cb5de1143e52e755c5220eae1cb4ada45906c3eae42586d4fcf3b4273d",
+ "archivo": "plantilla_CCV_v1.0.xlsx"
+}
