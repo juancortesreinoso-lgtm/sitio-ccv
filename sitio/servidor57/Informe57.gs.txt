@@ -1,0 +1,193 @@
+/* =====================================================================
+   5.7 Informe diario digital — servicio en el servidor (Apps Script)
+   ---------------------------------------------------------------------
+   · Las credenciales de Drive quedan en el servidor: el script se ejecuta
+     como su propietario; el portal solo envía el token de administrador
+     para escribir.
+   · Registros: un JSON por informe + un índice, en ControlCCV_datos/i57.
+   · Excel: carpeta destino configurable (Script Properties I57_DESTINO),
+     siempre dentro de la carpeta del contrato (I57_RAIZ); estructura
+     AAAA/MM; nombre 5.7_Informe_Diario_CCV_[Contrato]_[AAAA-MM-DD]_N[0001]_Rev[00].xlsx
+   · Correlativo, revisiones y subidas bajo LockService + opId idempotente:
+     doble clic, reintentos o usuarios simultáneos no duplican.
+   ===================================================================== */
+const I57_RAIZ = '1z14VS0Y8VlE7Y3A0Nf0oU7uQvHoWvukG';          // carpeta del contrato "Cicloconvertidor"
+const I57_CARPETA_DEF = '5.7 Informes diarios';
+const I57_PROP_DESTINO = 'I57_DESTINO';
+const I57_CONTRATO = '4600032755';
+
+function i57Lock_(fn){ const l = LockService.getScriptLock(); l.waitLock(30000); try{ return fn(); } finally { l.releaseLock(); } }
+function i57Datos_(){ const base = carpetaDatos_(); const it = base.getFoldersByName('i57'); return it.hasNext() ? it.next() : base.createFolder('i57'); }
+function i57Sub_(padre, nombre){ const it = padre.getFoldersByName(nombre); return it.hasNext() ? it.next() : padre.createFolder(nombre); }
+function i57LeerJSON_(carpeta, nombre, def){ const it = carpeta.getFilesByName(nombre); if(!it.hasNext()) return def; return JSON.parse(it.next().getBlob().getDataAsString('UTF-8')); }
+function i57EscribirJSON_(carpeta, nombre, obj){ const s = JSON.stringify(obj); const it = carpeta.getFilesByName(nombre); if(it.hasNext()){ it.next().setContent(s); } else { carpeta.createFile(nombre, s, 'application/json'); } }
+function i57Indice_(){ return i57LeerJSON_(i57Datos_(), 'i57_indice.json', { seq: 0, informes: {} }); }
+function i57Informe_(id){ if(!/^I57-[\w-]+$/.test(String(id || ''))) throw new Error('Id de informe inválido'); const x = i57LeerJSON_(i57Datos_(), id + '.json', null); if(!x) throw new Error('Informe no encontrado: ' + id); return x; }
+function i57Pad_(n, k){ return ('0000' + n).slice(-k); }
+function i57Ahora_(){ return new Date().toISOString(); }
+function i57IdDe_(s){ const m = String(s || '').match(/[-\w]{25,}/); return m ? m[0] : ''; }
+
+/* carpeta destino: configurada y validada (dentro de la carpeta del contrato) */
+function i57DentroDe_(folder, raizId){ let f = folder, n = 0; while(f && n < 20){ if(f.getId() === raizId) return true; const p = f.getParents(); if(!p.hasNext()) return false; f = p.next(); n++; } return false; }
+function i57Destino_(crear){
+  const id = PropertiesService.getScriptProperties().getProperty(I57_PROP_DESTINO);
+  if(id) return DriveApp.getFolderById(id);
+  if(!crear) return null;
+  const f = i57Sub_(DriveApp.getFolderById(I57_RAIZ), I57_CARPETA_DEF);
+  PropertiesService.getScriptProperties().setProperty(I57_PROP_DESTINO, f.getId());
+  return f;
+}
+function i57Ruta_(f){ const r = []; let x = f, n = 0; while(x && n < 12){ r.unshift(x.getName()); if(x.getId() === I57_RAIZ) break; const p = x.getParents(); x = p.hasNext() ? p.next() : null; n++; } return r.join(' / '); }
+function i57InfoCarpeta_(f){
+  if(!f) return null;
+  const yo = DriveApp.getRootFolder().getOwner().getEmail();
+  let puedeEditar = false; try{ puedeEditar = f.getOwner().getEmail() === yo || f.getEditors().some(function(u){ return u.getEmail() === yo; }); }catch(e){}
+  let acceso = ''; try{ acceso = String(f.getSharingAccess()) + '/' + String(f.getSharingPermission()); }catch(e){}
+  return { id: f.getId(), nombre: f.getName(), url: f.getUrl(), ruta: i57Ruta_(f), dentroContrato: i57DentroDe_(f, I57_RAIZ), puedeEditar: puedeEditar, acceso: acceso };
+}
+
+/* ---------- lectura (GET) ---------- */
+function i57Get_(p){
+  switch(p.accion){
+    case 'i57_listar': { const ix = i57Indice_(); return { ok: true, seq: ix.seq, informes: Object.keys(ix.informes).map(function(k){ return ix.informes[k]; }), destino: i57InfoCarpeta_(i57Destino_(false)), hora: i57Ahora_() }; }
+    case 'i57_leer': return { ok: true, informe: i57Informe_(p.id) };
+    case 'i57_config': return { ok: true, destino: i57InfoCarpeta_(i57Destino_(false)), raiz: i57InfoCarpeta_(DriveApp.getFolderById(I57_RAIZ)), carpetaPortal: (function(){ try{ return i57InfoCarpeta_(DriveApp.getFolderById('1AMPknVM0vV6eBRyXKo7snW__kNlnwzKg')); }catch(e){ return { error: String(e) }; } })() };
+    case 'i57_foto': {
+      const f = DriveApp.getFileById(String(p.id));
+      if(!i57DentroDe_(f.getParents().next(), i57Datos_().getId())) throw new Error('Foto fuera del alcance del informe diario');
+      const b = f.getBlob(); return { ok: true, mime: b.getContentType(), b64: Utilities.base64Encode(b.getBytes()) };
+    }
+  }
+  throw new Error('Acción no válida');
+}
+
+/* ---------- escritura (POST, token ya verificado) ---------- */
+function i57Post_(c){
+  const por = String(c.por || '').slice(0, 80) || 'sin identificar';
+  switch(c.accion){
+    case 'i57_guardar': return i57Lock_(function(){ return i57Guardar_(c, por); });
+    case 'i57_finalizar': return i57Lock_(function(){ return i57Finalizar_(c, por); });
+    case 'i57_subir': return i57Lock_(function(){ return i57Subir_(c, por); });
+    case 'i57_estado': return i57Lock_(function(){ return i57Estado_(c, por); });
+    case 'i57_foto_subir': return i57Lock_(function(){ return i57FotoSubir_(c, por); });
+    case 'i57_config_set': return i57Lock_(function(){ return i57ConfigSet_(c, por); });
+  }
+  throw new Error('Acción no válida');
+}
+
+function i57Resumen_(inf){
+  const d = inf.borrador || {}; const ult = inf.revisiones.length ? inf.revisiones[inf.revisiones.length - 1] : null;
+  return { id: inf.id, fecha: d.fecha || '', turno: d.turno || '', numero: inf.numero || null, revision: ult ? ult.rev : null, revisiones: inf.revisiones.length,
+    elaboracion: ult ? (inf.borradorHash && inf.borradorHash !== ult.hash ? 'Finalizado con cambios sin emitir' : 'Finalizado') : 'Borrador',
+    revisionEstado: (inf.estados.revision || {}).valor || 'Pendiente', aprobacion: (inf.estados.aprobacion || {}).valor || 'Pendiente',
+    drive: ult ? { estado: ult.archivo.estado, url: ult.archivo.url || '', id: ult.archivo.id || '', nombre: ult.archivo.nombre } : null,
+    prueba: !!d._prueba, opCreacion: inf.opCreacion || '', actualizado: inf.actualizado, por: inf.actualizadoPor, version: inf.version };
+}
+function i57GuardarInforme_(inf){ i57EscribirJSON_(i57Datos_(), inf.id + '.json', inf); const ix = i57Indice_(); ix.informes[inf.id] = i57Resumen_(inf); i57EscribirJSON_(i57Datos_(), 'i57_indice.json', ix); return ix; }
+
+function i57Guardar_(c, por){
+  const datos = c.datos || {}; if(!/^\d{4}-\d{2}-\d{2}$/.test(String(datos.fecha || ''))) throw new Error('El borrador necesita una fecha');
+  let inf;
+  if(c.id){
+    inf = i57Informe_(c.id);
+    if(c.opId && inf.ultimoOp === c.opId) return { ok: true, id: inf.id, version: inf.version, repetido: true };
+    if(+c.version !== +inf.version) return { ok: false, conflicto: true, error: 'El informe fue modificado por ' + inf.actualizadoPor + ' (' + inf.actualizado + '). Recarga antes de guardar.', version: inf.version };
+    if(inf.revisiones.length && datos.fecha !== inf.revisiones[0].datos.fecha) throw new Error('La fecha de un informe emitido es fija (' + inf.revisiones[0].datos.fecha + ')');
+  } else {
+    const ix = i57Indice_();
+    if(c.opId){ for(const k in ix.informes){ const r = ix.informes[k]; if(r.opCreacion === c.opId) return { ok: true, id: k, version: r.version, repetido: true }; } }
+    inf = { id: 'I57-' + datos.fecha.replace(/-/g, '') + '-' + Utilities.getUuid().slice(0, 8), version: 0, creado: i57Ahora_(), creadoPor: por, numero: null, revisiones: [], estados: {}, historial: [], opCreacion: c.opId || '' };
+  }
+  inf.borrador = datos; inf.borradorHash = String(c.hash || ''); inf.version++; inf.actualizado = i57Ahora_(); inf.actualizadoPor = por; inf.ultimoOp = c.opId || '';
+  inf.historial.push({ t: inf.actualizado, por: por, accion: 'Guardar borrador', version: inf.version });
+  if(inf.historial.length > 300) inf.historial = inf.historial.slice(-300);
+  i57GuardarInforme_(inf);
+  return { ok: true, id: inf.id, version: inf.version };
+}
+
+function i57Finalizar_(c, por){
+  const inf = i57Informe_(c.id); const d = inf.borrador || {};
+  const ult = inf.revisiones.length ? inf.revisiones[inf.revisiones.length - 1] : null;
+  if(ult && c.opId && ult.opId === c.opId) return { ok: true, repetido: true, numero: inf.numero, rev: ult.rev, nombre: ult.archivo.nombre, datos: ult.datos, revision: ult };
+  if(+c.version !== +inf.version) return { ok: false, conflicto: true, error: 'El borrador cambió (versión ' + inf.version + '). Recarga antes de finalizar.' };
+  if(ult && ult.hash && ult.hash === c.hash) return { ok: true, sinCambios: true, numero: inf.numero, rev: ult.rev, nombre: ult.archivo.nombre, datos: ult.datos, revision: ult };
+  // datos indispensables (la validación completa se hace en el portal)
+  ['fecha', 'turno', 'horaInicio', 'horaFin'].forEach(function(k){ if(!d[k]) throw new Error('Falta ' + k + ': no se emite el informe'); });
+  if(!d.contrato || String(d.contrato.numero) !== I57_CONTRATO) throw new Error('El N.º de contrato del informe no corresponde al contrato ' + I57_CONTRATO);
+  if(!d.elaboro || !d.elaboro.nombre) throw new Error('Falta quien elabora: no se emite el informe');
+  if(ult && d.fecha !== inf.revisiones[0].datos.fecha) throw new Error('La fecha de un informe emitido es fija');
+  const ix = i57Indice_();
+  if(!inf.numero){
+    for(const k in ix.informes){ const r = ix.informes[k]; if(k !== inf.id && r.numero && r.fecha === d.fecha && r.turno === d.turno && !r.prueba === !d._prueba) throw new Error('Ya existe el informe N°' + r.numero + ' para ' + d.fecha + ' turno ' + d.turno + '. Crea una revisión de ese informe en lugar de uno nuevo.'); }
+    if(d._prueba){ inf.numero = 9000 + (ix.seqPrueba = (ix.seqPrueba || 0) + 1); }
+    else { ix.seq = (ix.seq || 0) + 1; inf.numero = ix.seq; }
+    i57EscribirJSON_(i57Datos_(), 'i57_indice.json', ix);
+  }
+  const rev = inf.revisiones.length;
+  const nombre = '5.7_Informe_Diario_CCV_' + I57_CONTRATO + '_' + d.fecha + '_N' + i57Pad_(inf.numero, 4) + '_Rev' + i57Pad_(rev, 2) + '.xlsx';
+  const r = { rev: rev, opId: c.opId || '', hash: String(c.hash || ''), datos: d, finalizadoPor: por, finalizadoEn: i57Ahora_(), plantilla: String(c.plantilla || ''),
+    archivo: { nombre: nombre, estado: 'Pendiente de guardar en Drive', id: '', url: '', intentos: 0, carpeta: '' } };
+  inf.revisiones.push(r); inf.version++; inf.actualizado = r.finalizadoEn; inf.actualizadoPor = por;
+  inf.historial.push({ t: r.finalizadoEn, por: por, accion: 'Finalizar informe', detalle: 'N°' + inf.numero + ' Rev' + i57Pad_(rev, 2) });
+  i57GuardarInforme_(inf);
+  return { ok: true, numero: inf.numero, rev: rev, nombre: nombre, datos: d, revision: r, version: inf.version };
+}
+
+function i57Subir_(c, por){
+  const inf = i57Informe_(c.id); const r = inf.revisiones[+c.rev]; if(!r) throw new Error('Revisión inexistente');
+  const dest = i57Destino_(true);
+  if(!i57DentroDe_(dest, I57_RAIZ)) throw new Error('La carpeta destino no está dentro de la carpeta del contrato');
+  const d = r.datos; const anio = d.fecha.slice(0, 4), mes = d.fecha.slice(5, 7);
+  const carpeta = i57Sub_(i57Sub_(dest, anio), mes);
+  // ya guardado: no se duplica
+  if(r.archivo.id){ try{ const f0 = DriveApp.getFileById(r.archivo.id); if(!f0.isTrashed()) return { ok: true, repetido: true, archivo: r.archivo }; }catch(e){} }
+  r.archivo.intentos = (r.archivo.intentos || 0) + 1;
+  const bytes = Utilities.base64Decode(String(c.b64 || ''));
+  if(bytes.length < 1000) throw new Error('Archivo vacío');
+  if(c.nombre && c.nombre !== r.archivo.nombre) throw new Error('Nombre de archivo no coincide con la revisión');
+  let f; const it = carpeta.getFilesByName(r.archivo.nombre);
+  if(it.hasNext()){ f = it.next(); }   // un intento anterior alcanzó a crearlo
+  else { f = carpeta.createFile(Utilities.newBlob(bytes, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', r.archivo.nombre)); }
+  f.setDescription('Informe diario 5.7 · contrato ' + I57_CONTRATO + ' · N°' + inf.numero + ' Rev' + i57Pad_(r.rev, 2) + ' · ' + d.fecha + ' ' + (d.turno || '') + ' · plantilla ' + r.plantilla + ' · generado por ' + por);
+  // confirmación: se relee desde Drive
+  const conf = DriveApp.getFileById(f.getId()); const tam = conf.getSize();
+  if(!tam) throw new Error('Drive no confirmó el archivo');
+  r.archivo = { nombre: r.archivo.nombre, estado: 'Guardado en Drive', id: conf.getId(), url: conf.getUrl(), tam: tam, subidoEn: i57Ahora_(), subidoPor: por, intentos: r.archivo.intentos, carpeta: i57Ruta_(carpeta), carpetaId: carpeta.getId() };
+  inf.version++; inf.actualizado = r.archivo.subidoEn; inf.actualizadoPor = por;
+  inf.historial.push({ t: r.archivo.subidoEn, por: por, accion: 'Guardado en Drive', detalle: r.archivo.nombre });
+  i57GuardarInforme_(inf);
+  return { ok: true, archivo: r.archivo, version: inf.version };
+}
+
+function i57Estado_(c, por){
+  const inf = i57Informe_(c.id); const campo = c.campo; const permitidos = { revision: ['Pendiente', 'Revisado', 'Observado'], aprobacion: ['Pendiente', 'Aprobado por el cliente', 'Rechazado por el cliente'] };
+  if(!permitidos[campo] || permitidos[campo].indexOf(c.valor) < 0) throw new Error('Estado no válido');
+  if(!inf.revisiones.length) throw new Error('Solo un informe finalizado puede cambiar de estado de revisión o aprobación');
+  if(c.opId && inf.ultimoOp === c.opId) return { ok: true, repetido: true };
+  inf.estados[campo] = { valor: c.valor, por: por, en: i57Ahora_(), nota: String(c.nota || '').slice(0, 500), rev: inf.revisiones.length - 1 };
+  inf.historial.push({ t: inf.estados[campo].en, por: por, accion: 'Estado ' + campo + ': ' + c.valor, detalle: inf.estados[campo].nota });
+  inf.ultimoOp = c.opId || ''; inf.version++; inf.actualizado = inf.estados[campo].en; inf.actualizadoPor = por;
+  i57GuardarInforme_(inf);
+  return { ok: true, estados: inf.estados, version: inf.version };
+}
+
+function i57FotoSubir_(c, por){
+  const carpeta = i57Sub_(i57Datos_(), 'fotos');
+  const op = String(c.opId || '').replace(/[^\w-]/g, '').slice(0, 60);
+  const mime = /^image\/(jpeg|png)$/.test(c.mime) ? c.mime : 'image/jpeg';
+  const nombre = 'i57_' + String(c.informe || 'nuevo').replace(/[^\w-]/g, '') + '_' + (op || Utilities.getUuid().slice(0, 8)) + (mime === 'image/png' ? '.png' : '.jpg');
+  if(op){ const it = carpeta.getFilesByName(nombre); if(it.hasNext()) return { ok: true, id: it.next().getId(), repetido: true }; }
+  const bytes = Utilities.base64Decode(String(c.b64 || '')); if(bytes.length > 8 * 1024 * 1024) throw new Error('Foto demasiado grande');
+  const f = carpeta.createFile(Utilities.newBlob(bytes, mime, nombre));
+  f.setDescription('Informe diario 5.7 · ' + (c.informe || '') + ' · ' + por + ' · ' + String(c.nombre || ''));
+  return { ok: true, id: f.getId() };
+}
+
+function i57ConfigSet_(c, por){
+  const id = i57IdDe_(c.destino); if(!id) throw new Error('Indica la URL o el ID de una carpeta de Drive');
+  let f; try{ f = DriveApp.getFolderById(id); }catch(e){ throw new Error('No se puede abrir la carpeta: verifica el ID y los permisos'); }
+  if(!i57DentroDe_(f, I57_RAIZ)) throw new Error('La carpeta debe estar dentro de la carpeta del contrato (Cicloconvertidor)');
+  const info = i57InfoCarpeta_(f); if(!info.puedeEditar) throw new Error('La cuenta del servicio no tiene permiso de edición en esa carpeta');
+  PropertiesService.getScriptProperties().setProperty(I57_PROP_DESTINO, f.getId());
+  return { ok: true, destino: info, por: por };
+}

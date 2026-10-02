@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html><head><base target="_top"><meta charset="utf-8">
+<script src="https://controlccvdand.netlify.app/lib/jszip.min.js"></script>
+<script src="https://controlccvdand.netlify.app/lib/xlsx57.js"></script>
+<script src="https://controlccvdand.netlify.app/lib/gen57.js"></script>
+<style>body{font:13px Arial,sans-serif;margin:16px}pre{background:#f4f6f8;padding:10px;white-space:pre-wrap;font-size:11.5px}</style>
+</head><body>
+<h2>Prueba de aceptación 5.7 — Drive real (informe de PRUEBA, correlativo 9000+)</h2>
+<p>Insumos leídos de https://controlccvdand.netlify.app (plantilla publicada + carpeta pruebas57). Se ejecuta automáticamente al abrir.</p>
+<button id="btn" onclick="ejecutar()">Ejecutar de nuevo</button>
+<pre id="log">Listo.</pre>
+<script>
+var LOG = [], RES = [];
+function log(s){ LOG.push(s); document.getElementById('log').textContent = LOG.join('\n'); }
+function ok(n, c, d){ RES.push({ prueba: n, ok: !!c, det: d || '' }); log((c ? 'OK    ' : 'FALLA ') + n + (d ? ' — ' + d : '')); }
+function srv(fn, arg){ return new Promise(function(res, rej){ google.script.run.withSuccessHandler(function(s){ var j = JSON.parse(s); if(j && j.ok === false && !j.conflicto) rej(new Error(j.error)); else res(j); }).withFailureHandler(rej)[fn](arg); }); }
+function post(c){ return srv('prueba57Post', c); }
+function get(p){ return srv('prueba57Get', p); }
+var BASE = 'https://controlccvdand.netlify.app/';
+function leer(ruta){ return fetch(BASE + ruta, { cache: 'no-cache' }).then(function(r){ if(!r.ok) throw new Error(ruta + ' HTTP ' + r.status); return r.arrayBuffer(); }).then(function(b){ return new Uint8Array(b); }); }
+function b64(u){ var s = '', n = 0x8000; for(var i = 0; i < u.length; i += n) s += String.fromCharCode.apply(null, u.subarray(i, i + n)); return btoa(s); }
+function hex(buf){ return Array.prototype.map.call(new Uint8Array(buf), function(b){ return ('0' + b.toString(16)).slice(-2); }).join(''); }
+function sha(u){ return crypto.subtle.digest('SHA-256', u).then(hex); }
+function estable(o){ if(Array.isArray(o)) return '[' + o.map(estable).join(',') + ']'; if(o && typeof o === 'object') return '{' + Object.keys(o).sort().map(function(k){ return JSON.stringify(k) + ':' + estable(o[k]); }).join(',') + '}'; return JSON.stringify(o === undefined ? null : o); }
+function hashDatos(d){ return sha(new TextEncoder().encode(estable(d))); }
+async function generarYSubir(id, rev, numero, ctx){
+  var d = JSON.parse(JSON.stringify(rev.datos)); d.numero = numero; d.revision = rev.rev; d.fechaElaboracion = String(rev.finalizadoEn).slice(0, 10);
+  var r = await G57.generar(ctx.plantilla, d, { programa: ctx.programa, fotos: ctx.fotos, listasCNC: { '4.2': ['MÉTODO', 'Interferencia de otros Colaboradores o DAND'] }, usuario: rev.finalizadoPor, ahora: rev.finalizadoEn });
+  ok('Excel generado con la plantilla (' + r.nombre + ')', r.nombre === rev.archivo.nombre, (r.bytes.length / 1024).toFixed(0) + ' KB, sha256 ' + (await sha(r.bytes)).slice(0, 16));
+  return { nombre: r.nombre, b64: b64(r.bytes), sha: await sha(r.bytes) };
+}
+async function ejecutar(){
+  document.getElementById('btn').disabled = true; LOG = []; RES = [];
+  try{
+    var man = JSON.parse(new TextDecoder().decode(await leer('plantillas/plantilla_CCV_v1.0.json')));
+    var ctx = { plantilla: await leer('plantillas/plantilla_CCV_v1.0.xlsx'), programa: JSON.parse(new TextDecoder().decode(await leer('pruebas57/programa.json'))), fotos: {} };
+    var d = JSON.parse(new TextDecoder().decode(await leer('pruebas57/informe_prueba.json')));
+    ok('Plantilla publicada coincide con su manifiesto (' + man.version + ')', (await sha(ctx.plantilla)) === man.sha256, man.sha256.slice(0, 16));
+    log('Plantilla ' + ctx.plantilla.length + ' B · sha256 ' + (await sha(ctx.plantilla)).slice(0, 16));
+    // 1. fotografías
+    var ids = [];
+    for(var i = 0; i < d.fotos.length; i++){ var u = await leer('pruebas57/' + d.fotos[i].id + '.jpg'); var j = await post({ accion: 'i57_foto_subir', nombre: d.fotos[i].id + '.jpg', mime: 'image/jpeg', b64: b64(u), opId: 'prueba-foto-' + (i + 1) }); ids.push(j.id); ctx.fotos[j.id] = { bytes: u }; }
+    var rep = await post({ accion: 'i57_foto_subir', nombre: 'foto1.jpg', mime: 'image/jpeg', b64: b64(await leer('pruebas57/foto1.jpg')), opId: 'prueba-foto-1' });
+    ok('10 fotos guardadas en Drive; reintento de una foto no duplica', ids.length === 10 && rep.repetido && rep.id === ids[0]);
+    d.fotos = d.fotos.map(function(f, k){ return Object.assign({}, f, { id: ids[k] }); }); delete d.numero; delete d.revision; d._prueba = true;
+    // 2. borrador
+    var h = await hashDatos(d);
+    var g1 = await post({ accion: 'i57_guardar', datos: d, hash: h, opId: 'prueba-crear-1', version: 0 });
+    var g2 = await post({ accion: 'i57_guardar', datos: d, hash: h, opId: 'prueba-crear-1', version: 0 });
+    ok('Guardar borrador en el servidor (doble envío = mismo registro)', g1.id && g2.id === g1.id && g2.repetido, g1.id);
+    var L = await get({ accion: 'i57_leer', id: g1.id });
+    ok('Recuperación del borrador desde Drive', estable(L.informe.borrador) === estable(d), 'versión ' + L.informe.version);
+    // 3. finalizar con doble clic simultáneo
+    var f = await Promise.all([post({ accion: 'i57_finalizar', id: g1.id, version: L.informe.version, hash: h, opId: 'prueba-fin-0', plantilla: man.version + ' · sha256 ' + man.sha256.slice(0, 12) }), post({ accion: 'i57_finalizar', id: g1.id, version: L.informe.version, hash: h, opId: 'prueba-fin-0', plantilla: man.version + ' · sha256 ' + man.sha256.slice(0, 12) })]);
+    L = await get({ accion: 'i57_leer', id: g1.id });
+    ok('Doble clic en Finalizar: una sola revisión y un correlativo', L.informe.revisiones.length === 1 && f[0].numero === f[1].numero, 'N°' + f[0].numero + ' Rev' + f[0].rev);
+    var rev0 = L.informe.revisiones[0];
+    ok('Estado antes de subir: Pendiente de guardar en Drive', rev0.archivo.estado === 'Pendiente de guardar en Drive');
+    var x0 = await generarYSubir(g1.id, rev0, L.informe.numero, ctx);
+    var s = await Promise.all([post({ accion: 'i57_subir', id: g1.id, rev: 0, nombre: x0.nombre, b64: x0.b64, opId: 's0' }), post({ accion: 'i57_subir', id: g1.id, rev: 0, nombre: x0.nombre, b64: x0.b64, opId: 's0' })]);
+    var s3 = await post({ accion: 'i57_subir', id: g1.id, rev: 0, nombre: x0.nombre, b64: x0.b64, opId: 's0' });
+    ok('Guardado en Drive confirmado; reintentos no duplican', s[0].archivo.estado === 'Guardado en Drive' && s[1].archivo.id === s[0].archivo.id && s3.repetido && s3.archivo.id === s[0].archivo.id, s[0].archivo.carpeta + ' · ' + s[0].archivo.id + ' · ' + s[0].archivo.tam + ' B');
+    // 4. nueva revisión
+    L = await get({ accion: 'i57_leer', id: g1.id });
+    d.observaciones = 'INFORME DE PRUEBA DE ACEPTACIÓN 5.7 — Rev01 (corrección de prueba en Drive real)'; h = await hashDatos(d);
+    var g3 = await post({ accion: 'i57_guardar', id: g1.id, version: L.informe.version, datos: d, hash: h, opId: 'prueba-ed-1' });
+    var conf = await post({ accion: 'i57_guardar', id: g1.id, version: L.informe.version, datos: d, hash: h, opId: 'prueba-ed-otro' });
+    ok('Usuario simultáneo con versión antigua: conflicto, no sobrescribe', conf.conflicto === true);
+    var f1 = await post({ accion: 'i57_finalizar', id: g1.id, version: g3.version, hash: h, opId: 'prueba-fin-1', plantilla: man.version + ' · sha256 ' + man.sha256.slice(0, 12) });
+    ok('Cambio posterior a la emisión crea Rev01', f1.rev === 1 && f1.numero === f[0].numero, f1.nombre);
+    L = await get({ accion: 'i57_leer', id: g1.id });
+    var x1 = await generarYSubir(g1.id, L.informe.revisiones[1], L.informe.numero, ctx);
+    var s1 = await post({ accion: 'i57_subir', id: g1.id, rev: 1, nombre: x1.nombre, b64: x1.b64, opId: 's1' });
+    ok('Rev01 guardada en Drive', s1.archivo.estado === 'Guardado en Drive', s1.archivo.id);
+    var arch = JSON.parse(await new Promise(function(res, rej){ google.script.run.withSuccessHandler(res).withFailureHandler(rej).prueba57Archivos(g1.id); }));
+    ok('Drive: un archivo por revisión, en 5.7 Informes diarios / AAAA / MM', arch.length === 2 && arch.every(function(a){ return a.copias === 1 && /5\.7 Informes diarios \/ 2026 \/ 09$/.test(a.ruta); }), JSON.stringify(arch));
+    var lis = await get({ accion: 'i57_listar' }); var me = lis.informes.filter(function(x){ return x.id === g1.id; })[0];
+    ok('Registro consultable (listar): Rev01 · Guardado en Drive · Finalizado ≠ aprobado', me.revision === 1 && me.drive.estado === 'Guardado en Drive' && me.elaboracion === 'Finalizado' && me.aprobacion === 'Pendiente', JSON.stringify({ numero: me.numero, rev: me.revision, destino: lis.destino && lis.destino.ruta }));
+    log('\nSHA256 Rev00 ' + x0.sha + '\nSHA256 Rev01 ' + x1.sha + '\nID ' + g1.id + '\nRESUMEN ' + RES.filter(function(r){ return r.ok; }).length + '/' + RES.length + ' OK');
+  }catch(e){ log('ERROR ' + (e && e.message || e)); RES.push({ prueba: 'Ejecución', ok: false, det: String(e && e.message || e) }); }
+  google.script.run.prueba57Guardar(JSON.stringify({ fecha: new Date().toISOString(), resultados: RES, log: LOG }));
+  document.getElementById('btn').disabled = false;
+}
+window.addEventListener('load', function(){ setTimeout(ejecutar, 500); });
+</script></body></html>

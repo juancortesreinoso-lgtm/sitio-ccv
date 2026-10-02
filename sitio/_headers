@@ -5,3 +5,5 @@
   Access-Control-Allow-Origin: *
 /pruebas57/*
   Access-Control-Allow-Origin: *
+/servidor57/*
+  Access-Control-Allow-Origin: *
