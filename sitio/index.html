@@ -663,7 +663,8 @@ const MENU = [
       { id: 'restr',   label: '5.4 Restricciones y desviaciones',    route: 'plan/restricciones', render: 'renderRestricciones' },
       { id: 'informe', label: '5.5 Informe semanal de avance',       route: 'plan/informe',       render: 'renderInforme' },
       { id: 'oferta',  label: '5.6 Control de oferta económica',     route: 'plan/oferta',        render: 'renderOferta' },
-      { id: 'idiario', label: '5.7 Informe diario digital',          route: 'plan/informe-diario', render: 'renderInformeDiario' }
+      { id: 'idiario', label: '5.7 Informe diario digital',          route: 'plan/informe-diario', render: 'renderInformeDiario' },
+      { id: 'multas',  label: '5.8 Multas y sanciones contractuales', route: 'plan/multas',        render: 'renderMultas' }
     ]
   },
   {
@@ -5409,7 +5410,7 @@ function guardarFechaCorte(v){
    5.1 CARTA GANTT
    ================================================================== */
 function prgNav(actual){
-  const items = [['plan/gantt','5.1 Carta Gantt'],['plan/avance','5.2 Avance y curva S'],['plan/hitos','5.3 Hitos'],['plan/restricciones','5.4 Restricciones'],['plan/informe','5.5 Informe semanal'],['plan/oferta','5.6 Control de oferta'],['plan/informe-diario','5.7 Informe diario']];
+  const items = [['plan/gantt','5.1 Carta Gantt'],['plan/avance','5.2 Avance y curva S'],['plan/hitos','5.3 Hitos'],['plan/restricciones','5.4 Restricciones'],['plan/informe','5.5 Informe semanal'],['plan/oferta','5.6 Control de oferta'],['plan/informe-diario','5.7 Informe diario'],['plan/multas','5.8 Multas']];
   return '<div class="toolbar" style="margin-bottom:12px">' + items.map(function(it){ return '<a class="btn sm' + (it[0] === actual ? ' primary' : '') + '" href="#/' + it[0] + '">' + esc(it[1]) + '</a>'; }).join('') +
     '<span class="spacer"></span><span id="sincEstado">' + textoSinc() + '</span><span style="font-size:11.5px;color:var(--text-3);margin-left:8px">Programa: ' + esc(PROGRAMA_META.fuente.replace(/\.xml$/i,'')) + ' · guardado ' + fmtCorta(PROGRAMA_META.guardado) + '</span></div>';
 }
@@ -7758,6 +7759,173 @@ function i57Config(){
 }
 function i57GuardarConfig(){ const v = valorCampo('i57Dest'); if(!v){ toast('Indique la URL o el ID.', 'bad'); return; }
   i57Post({ accion: 'i57_config_set', destino: v }).then(function(j){ cerrarModal(); I57.destino = j.destino; toast('Destino validado: ' + esc(j.destino.ruta), 'ok', 5000); render(); }).catch(function(e){ toast(esc(e.message), 'bad', 7000); }); }
+/* ==================================================================
+   5.8 — MULTAS Y SANCIONES CONTRACTUALES (exposición del contratista)
+   ------------------------------------------------------------------
+   Fuente: revisión de los Documentos Integrantes del contrato 4600032755
+   (cláusula TERCERO del contrato, orden de precedencia):
+     a) Contrato · b) Carta de adjudicación 15-09-2026 · e/f) Respuestas a
+     consultas (25-06-2026 y 03-07-2026) · g) BEC · h) BT (Rev 2) · i) BAG R6
+     + BT Anexo 2 SSO/MA (PMAC) · Anexo BAG Laboral.
+   Revisado el 02-10-2026. Los montos en $ son referenciales: UF del
+   contrato (27-08-2026) y precio original; el simulador permite ajustarlos.
+   ================================================================== */
+const MULTAS_REVISION = '2026-10-02';
+const MULTAS_BASE = {
+  precioTotal: 2827946494,        // Contrato, cláusula QUINTO (+ IVA), incluye gastos reembolsables
+  precioSinReemb: 2641636280,     // = garantía 5% $132.081.814 / 0,05 (Contrato, cláusula DÉCIMO)
+  uf: 40868.5,                    // valor UF fijado en el contrato (27-08-2026)
+  actaInicio: '2026-09-24'        // Acta de Inicio de Actividades (5.3 Hitos)
+};
+const MULTAS_FUENTES = {
+  contrato: { n: 'Contrato N.º 4600032755 y Carta de adjudicación CW449427 (15-09-2026)', url: '' },
+  resp: { n: 'Respuestas Licitación Reemplazo Cicloconvertidor 20260625 Rev0', url: 'https://drive.google.com/file/d/1TJO3HEG9dDAycd1IUnuSrTeOCwwK3OLI/view' },
+  bec: { n: '03 BEC CODELCO Montaje cicloconvertidor Rev 0 (§8.6 Condiciones Particulares)', url: 'https://drive.google.com/file/d/1qIHRzSIs68QB2ICJGPZevOJILMZ9_4_7/view' },
+  bt: { n: 'Bases Técnicas Montaje cicloconvertidor Rev 2 (§7, §8, §13, §14, §15, §21)', url: 'https://drive.google.com/file/d/1Ywx8Xoe5D8br6r9xRNxrVOQdCcjMd5yi/view' },
+  bag: { n: 'BAG R6 Bases Administrativas Generales (§28 Régimen de Sanciones, §29 Término anticipado)', url: 'https://drive.google.com/file/d/1xsH8thWyy0zN-Spm3LcoqfNbxCIlqzrZ/view' },
+  sso: { n: 'BT Anexo 2 Gestión SSO y MA Rev 0 (§7.12 PMAC, §9 Sanciones)', url: 'https://drive.google.com/file/d/19m702Zkm5pV5ZI4znsVJ4ju9yoUkWVvo/view' },
+  lab: { n: 'Anexo BAG Laboral Rev 0 (III.2 Sanciones y medidas)', url: '' }
+};
+/* Matriz de multas pecuniarias (tipo: pct = % del precio por día; uf = UF; utm = UTM) */
+const MULTAS_MATRIZ = [
+  { id: 'plazo', causal: 'Atraso en el plazo total de ejecución (365 días)', tipo: 'pct', valor: 0.001, base: 'precioTotal', unidad: 'por día de atraso',
+    regla: '0,1% del monto actualizado/total del contrato por cada día de atraso en el plazo final. Si se cumple el plazo final, se condonan las multas de hitos intermedios.',
+    fuentes: 'BEC 8.6.a · BT 21.3', control: 'Programa vigente y avance (5.1–5.2); término el 24-09-2027.', link: 'plan/avance' },
+  { id: 'hito', causal: 'Atraso en hitos intermedios (8 hitos, todos multables)', tipo: 'pct', valor: 0.001, base: 'precioTotal', unidad: 'por día y por evento',
+    regla: '0,1% del monto del contrato base por día y por evento. Respuesta a consulta N°250: “Todos son multables”. Hito cumplido = en plazo y recepcionado a conformidad por DAND con acta.',
+    fuentes: 'BEC 8.6.b · BT 15 y 21.4 · Respuestas N°14, 131, 135, 250', control: 'Calendario de hitos (abajo) y 5.3 Hitos contractuales.', link: 'plan/hitos' },
+  { id: 'clave', causal: 'Ausencia de personal clave/obligatorio', tipo: 'uf', valor: 2.5, unidad: 'por día y por persona',
+    regla: 'Desde 30 días después del acta de entrega de terreno. Ausencias solo con autorización escrita (vacaciones, enfermedad, permisos, fuerza mayor) y con subrogante equivalente; sobre 5 días corridos, reemplazo por un profesional ajeno a la planta obligatoria. Prevencionistas de terreno = personal clave (cambios con autorización GSSO).',
+    fuentes: 'BEC 8.6.c · BT 7 y 21.5 · Respuesta N°166', control: 'Dotación del informe diario (5.7): Administrador, Jefe de Terreno, Programación y Control, Calidad, Asesor SSO/MA.', link: 'plan/informe-diario' },
+  { id: 'remocion', causal: 'Remover personal clave sin consentimiento de Codelco', tipo: 'uf', valor: 100, unidad: 'por cada evento',
+    regla: 'Cada vez que el contratista retire del proyecto, por su sola decisión, a un profesional definido como personal clave en las BT.',
+    fuentes: 'BEC 8.6.c · BT 21.5', control: 'Todo cambio: aviso previo al AdC DAND y aprobación (BT 7).', link: '' },
+  { id: 'informes', causal: 'Atraso en informes, programas y documentos', tipo: 'uf', valor: 10, unidad: 'por día de atraso',
+    regla: 'Informes del punto 14 (diario, semanal, mensual, calidad, final, minutas, turnos de fin de semana), cronograma del punto 13, Plan de Calidad (Anexo 1) y Plan SSO-MA (Anexo 2). Informe = entregado cuando DAND lo firma conforme; cronograma y planes = cuando DAND valida la versión 0 por LOD. Un informe rechazado por inconsistencias cuenta como no entregado.',
+    fuentes: 'BT 14 y 21.6 · Respuesta N°222 (confirma 10 UF) · BEC 8.6.d indica 1 UTM', control: 'Plazos de entrega (tabla abajo); 5.5 Informe semanal y 5.7 Informe diario.', link: 'plan/informe-diario' },
+  { id: 'ep', causal: 'Estado de pago mensual fuera de plazo (día 20)', tipo: 'utm', valor: 1, unidad: 'por día de atraso',
+    regla: 'Presentación del estado de pago mensual con todos sus protocolos de respaldo el día 20 de cada mes; se cumple cuando DAND lo firma conforme. Solo figura en BEC 8.6.d (no en BT 21.6).',
+    fuentes: 'BEC 8.6.d.e', control: 'Cierre de avance y protocolos antes del día 20.', link: '' },
+  { id: 'remun', causal: 'No pagar las remuneraciones ofrecidas en la oferta económica', tipo: 'eq', unidad: 'monto equivalente a lo no pagado',
+    regla: 'Incumplimiento grave. Codelco puede exigir el reintegro a los trabajadores y multar por LOD en montos equivalentes; se descuenta de facturas o cualquier pago. Además causal de término anticipado (Anexo BAG Laboral).',
+    fuentes: 'BT 8 (Remuneraciones) · Anexo BAG Laboral III.2', control: 'Control laboral SUCAL y liquidaciones vs ECO-05.', link: '' },
+  { id: 'pmac', causal: 'Incumplimientos SSO y Medio Ambiente (RESSO / PMAC)', tipo: 'nd', unidad: 'monto según procedimiento PMAC / PUC',
+    regla: 'Amonestaciones y multas, retención de estados de pago y cobro de garantías, paralización de faenas, término anticipado y suspensión del registro. Si Codelco recibe multas de la autoridad (p. ej. RCA) por hechos del contratista, el contratista asume el total. Los documentos del contrato no fijan un monto unitario.',
+    fuentes: 'BT Anexo 2 §7.12 y §9 · BAG 23 (garantías)', control: 'Puntaje Formulario PMAC ≥ aceptable (A ≥ 90%, B ≥ 85%, C ≥ 80%).', link: '' }
+];
+const MULTAS_PLAZOS = [
+  ['Informe diario', 'Hasta las 09:00 del día siguiente; observaciones de la ITO subsanadas el mismo día hasta las 17:00; viernes a domingo, el lunes', 'BT 14.1', 'plan/informe-diario'],
+  ['Informe semanal', 'Lunes 15:00 (día hábil siguiente si es feriado), corte el domingo', 'BT 14.2', 'plan/informe'],
+  ['Informe mensual (respaldo de avance)', 'Reemplaza el semanal de la última semana del mes; lunes 15:00', 'BT 14.3', 'plan/informe'],
+  ['Informe de gestión de calidad', 'Primeros 3 días hábiles de cada mes, vía LOD', 'BT 14.4', 'calidad'],
+  ['Minutas de reuniones de coordinación', '24 horas después del término de la reunión (Respuesta N°222: afecta a multa de 10 UF/día)', 'BT 14.6', ''],
+  ['Turnos de fin de semana', 'Jueves 12:00, haya o no turno', 'BT 14.10', ''],
+  ['Informe final', 'Al momento de la recepción provisional', 'BT 14.5', ''],
+  ['Cronograma de trabajo oficial', '15 días corridos desde el acta de entrega de terreno (versión 0 validada por LOD)', 'BT 13.2', 'plan/gantt'],
+  ['Metodología Last Planner', 'Dentro de los mismos 15 días del cronograma oficial', 'BT 13.6', ''],
+  ['Programa de puesta en marcha', '45 días corridos desde el acta de entrega de terreno', 'BT 13.8', ''],
+  ['Plan de Calidad (Anexo 1)', 'Versión 0 validada por DAND vía LOD', 'BT 21.6.c', 'calidad'],
+  ['Plan SSO y Medio Ambiente (Anexo 2)', 'Versión 0 validada por DAND vía LOD', 'BT 21.6.d', ''],
+  ['Estado de pago mensual', 'Día 20 de cada mes, con protocolos de respaldo (1 UTM/día según BEC)', 'BEC 8.6.d.e', '']
+];
+const MULTAS_HITOS = [
+  ['1', 'Movilización e instalación de faenas', 30], ['2', 'Armado de sala eléctrica', 120], ['3', 'Equipamiento de sala eléctrica', 150],
+  ['4', 'Tendido de cables de fuerza y control', 150], ['5', 'Integración de equipos', 180], ['6', 'Puesta en marcha de planta', 210],
+  ['7', 'Post puesta en marcha (retiro de canalizaciones y saneamiento)', 350], ['8', 'Desmovilización', 365]
+];
+const MULTAS_OTRAS = [
+  ['Régimen de sanciones a proveedores (faltas contractuales, éticas, ambientales/comunitarias y SSO)', 'Amonestación escrita · suspensión temporal · suspensión permanente (incluso término de contratos en curso), aplicables también a empresas relacionadas y después de terminado el contrato. Descargos en 10 días; plan de acción en 20 días.', 'BAG 28.1–28.2'],
+  ['Multas acumuladas sobre el tope', 'Superar el 10% constituye incumplimiento grave: término anticipado sin indemnización.', 'BEC 8.6 · BAG 29.1.e'],
+  ['No iniciar los trabajos', 'Término anticipado si no se inicia dentro de 14 días desde el inicio del plazo.', 'BAG 29.1.a'],
+  ['Atraso irrecuperable del programa', 'Término anticipado si no recupera el retraso en el plazo convenido o si es razonable anticipar que no se cumplirá el plazo.', 'BAG 29.1.f'],
+  ['Incumplimientos laborales, de acceso, SSO, ocultamiento de incidentes, alcohol y drogas, DD.HH., Ley Karin', 'Obligaciones esenciales: incumplimiento grave y término anticipado; retención y pago por subrogación de obligaciones laborales.', 'Anexo BAG Laboral III.2'],
+  ['Desempeño PMAC inaceptable (A ≤ 80%, B ≤ 70%, C ≤ 64%)', 'Plan de acción en 2 días, suspensión del contrato por 2 días, citación al Gerente General, registro en LOD y propuesta de sanción según PUC.', 'BT Anexo 2 §7.12'],
+  ['Cesión irregular de facturas (duplicación, doble cesión)', 'Incumplimiento grave: cobro de multas o garantías, suspensión de relaciones comerciales y término anticipado.', 'BAG (Factoring)'],
+  ['Cobro revertido (back charge)', 'Codelco puede cobrar el costo de corregir un incumplimiento no subsanado en el plazo notificado, además de las multas.', 'BAG (Back charge)']
+];
+const MULTAS_HALLAZGOS = [
+  ['Monto de la multa por informes', 'BEC 8.6.d dice 1 UTM/día; BT 21.6 dice 10 UF/día. La Respuesta N°222 (documento de mayor precedencia que BEC y BT) confirma 10 UF/día. Se usa 10 UF; el estado de pago del día 20 solo está en BEC (1 UTM/día).'],
+  ['Hitos multables', 'La tabla de BT 15 tiene la nota “(**) Hitos multables” sin marcar ninguno. La Respuesta N°250 aclara: “Todos son multables”, con un “nuevo cuadro de hitos” enviado en la ronda de consultas.'],
+  ['Base de cálculo del 0,1%', 'Plazo total: “monto total del Contrato” (BEC) / “monto actualizado” (BT). Hitos: “monto del contrato base”. El precio es referencial (serie de precios unitarios) y se reajusta por IPC semestral: confirmar con el AdC qué valor se usa al aplicar.'],
+  ['Tope del 10%', 'BEC 8.6 y BT 21.2: 10% del monto del contrato (actualizado) excluidos gastos reembolsables; el último párrafo de BEC 8.6 habla del “Precio original”. Se muestra el tope sobre $2.641.636.280 (precio sin reembolsables, derivado de la garantía del 5%).'],
+  ['Condonación', 'Si se cumple el plazo final, las multas de hitos intermedios se condonan (BEC 8.6.a, BT 21.3). Las demás multas no tienen condonación y el AdC no puede renunciar a aplicarlas (BEC, facultades del AdC).'],
+  ['Aplicación', 'Administrativa, previa notificación al Administrador del Contrato del contratista; se descuentan de estados de pago, retenciones, garantías o cualquier pago (BEC 8.6). La consulta pidiendo instancia de descargos (N°386) se respondió remitiendo a las bases.']
+];
+
+function multasCLP(n){ return n == null || isNaN(n) ? '—' : '$' + Math.round(n).toLocaleString('es-CL'); }
+function multasUnidad(m, p){
+  if(m.tipo === 'pct') return multasCLP(p[m.base] * m.valor);
+  if(m.tipo === 'uf') return multasCLP(m.valor * p.uf) + ' (' + String(m.valor).replace('.', ',') + ' UF)';
+  if(m.tipo === 'utm') return p.utm ? multasCLP(m.valor * p.utm) + ' (1 UTM)' : '1 UTM (valor del mes)';
+  if(m.tipo === 'eq') return 'Igual a lo no pagado';
+  return 'Según procedimiento';
+}
+function multasParams(){ const s = MULTAS_UI; return { precioTotal: s.precioTotal, precioSinReemb: s.precioSinReemb, uf: s.uf, utm: s.utm }; }
+const MULTAS_UI = { precioTotal: MULTAS_BASE.precioTotal, precioSinReemb: MULTAS_BASE.precioSinReemb, uf: MULTAS_BASE.uf, utm: 0, dPlazo: 0, dHito: 0, nHitos: 1, dClave: 0, nClave: 1, nRemocion: 0, dInformes: 0 };
+
+function renderMultas(){
+  const p = multasParams(); const tope = p.precioSinReemb * 0.10; const diaPlazo = p.precioTotal * 0.001;
+  const base = (DB.contrato && DB.contrato.fechaActaInicio) || MULTAS_BASE.actaInicio;
+  let h = '<div class="page-title"><h1>5.8 Multas y sanciones contractuales</h1></div>' + prgNav('plan/multas');
+  h += '<div class="help"><b>¿Qué es esto?</b> Exposición de MIES a multas y sanciones por incumplimiento, extraída de todos los documentos integrantes del contrato 4600032755: contrato y carta de adjudicación, respuestas a consultas, BEC, BT Rev 2, BAG R6, Anexo 2 SSO/MA y Anexo BAG Laboral (revisión al ' + fmtFecha(MULTAS_REVISION) + '). ' +
+       'Orden de precedencia (contrato, cláusula TERCERO): contrato › carta › RESSO/PMAC › normas › <b>respuestas a consultas</b> › <b>BEC</b> › <b>BT</b> › <b>BAG</b>. Los montos en pesos son referenciales (UF y precio del contrato); ajústalos en el simulador.</div>';
+  h += '<div class="grid kpis" style="margin-bottom:14px">' +
+    kpi('Tope total de multas', multasCLP(tope), '10% del precio sin gastos reembolsables; superarlo = término anticipado', 'bad') +
+    kpi('Atraso del plazo total', multasCLP(diaPlazo), 'por día · 0,1% del precio total · tope en ' + Math.floor(tope / diaPlazo) + ' días', 'warn') +
+    kpi('Atraso de un hito', multasCLP(diaPlazo), 'por día y por hito · 8 hitos multables', 'warn') +
+    kpi('Informes y documentos', multasCLP(10 * p.uf), '10 UF por día de atraso (Respuesta N°222)', '') +
+    kpi('Personal clave ausente', multasCLP(2.5 * p.uf), '2,5 UF por día y persona · remoción 100 UF', '') + '</div>';
+  /* matriz */
+  h += '<div class="card" style="margin-bottom:14px"><div class="card-head"><h2>Matriz de multas pecuniarias</h2><span class="sub" style="margin:0">monto unitario referencial</span></div><div class="tbl-wrap" style="border:0;border-radius:0"><table><thead><tr><th>Causal</th><th>Multa</th><th>Condiciones</th><th>Fuente</th><th>Cómo controlarla</th></tr></thead><tbody>' +
+    MULTAS_MATRIZ.map(function(m){ return '<tr><td class="wrap" style="max-width:220px"><b>' + esc(m.causal) + '</b></td><td class="wrap" style="min-width:130px"><b>' + esc(multasUnidad(m, p)) + '</b><br><span class="sub" style="margin:0">' + esc(m.unidad) + '</span></td><td class="wrap" style="max-width:380px">' + esc(m.regla) + '</td><td class="wrap" style="max-width:150px"><span class="sub" style="margin:0">' + esc(m.fuentes) + '</span></td><td class="wrap" style="max-width:200px">' + esc(m.control) + (m.link ? ' <a href="#/' + m.link + '">Abrir ›</a>' : '') + '</td></tr>'; }).join('') +
+    '</tbody></table></div></div>';
+  /* hitos */
+  h += '<div class="grid cols2" style="margin-bottom:14px"><div class="card"><div class="card-head"><h2>Hitos multables</h2><span class="sub" style="margin:0">días corridos desde ' + fmtFecha(base) + '</span></div><div class="tbl-wrap" style="border:0;border-radius:0"><table><thead><tr><th>Hito</th><th>Descripción</th><th>Día</th><th>Fecha límite</th><th>Faltan</th></tr></thead><tbody>' +
+    MULTAS_HITOS.map(function(x){ const f = multasSumar(base, x[2]); const d = multasDias(hoyISO(), f); return '<tr><td><b>' + x[0] + '</b></td><td class="wrap">' + esc(x[1]) + '</td><td>' + x[2] + '</td><td>' + fmtFecha(f) + '</td><td>' + (d < 0 ? '<span class="pill bad">vencido ' + (-d) + ' d</span>' : d <= 15 ? '<span class="pill warn">' + d + ' d</span>' : d + ' d') + '</td></tr>'; }).join('') +
+    '</tbody></table></div><p class="sub" style="margin:8px 14px 12px">BT 15 cuenta los días desde el acta de entrega de terreno; aquí se usan desde el Acta de Inicio (configuración del portal). Un hito se cumple con acta de recepción conforme de DAND. Al cumplir el plazo final se condonan las multas de hitos.</p></div>';
+  /* plazos */
+  h += '<div class="card"><div class="card-head"><h2>Plazos de entrega sujetos a multa</h2><span class="sub" style="margin:0">10 UF por día de atraso</span></div><div class="tbl-wrap" style="border:0;border-radius:0"><table><thead><tr><th>Documento</th><th>Plazo</th><th>Fuente</th></tr></thead><tbody>' +
+    MULTAS_PLAZOS.map(function(x){ return '<tr><td class="wrap"><b>' + esc(x[0]) + '</b>' + (x[3] ? ' <a href="#/' + x[3] + '">›</a>' : '') + '</td><td class="wrap">' + esc(x[1]) + '</td><td><span class="sub" style="margin:0">' + esc(x[2]) + '</span></td></tr>'; }).join('') +
+    '</tbody></table></div></div></div>';
+  /* simulador */
+  h += '<div class="card" style="margin-bottom:14px"><div class="card-head"><h2>Simulador de exposición</h2><span class="sub" style="margin:0">referencial; no reemplaza el cálculo del AdC</span></div><div style="padding:12px 14px"><div class="i57-grid">' +
+    multasCampo('precioTotal', 'Precio total del contrato ($)') + multasCampo('precioSinReemb', 'Precio sin gastos reembolsables ($)') + multasCampo('uf', 'Valor UF ($)') + multasCampo('utm', 'Valor UTM ($, para EP)') +
+    multasCampo('dPlazo', 'Días de atraso del plazo total') + multasCampo('dHito', 'Días de atraso por hito') + multasCampo('nHitos', 'N.º de hitos atrasados') +
+    multasCampo('dClave', 'Días de ausencia de personal clave') + multasCampo('nClave', 'N.º de personas ausentes') + multasCampo('nRemocion', 'Remociones sin consentimiento') + multasCampo('dInformes', 'Días-documento atrasados') +
+    '</div><div id="multasRes" style="margin-top:12px"></div></div></div>';
+  /* otras sanciones */
+  h += '<div class="card" style="margin-bottom:14px"><div class="card-head"><h2>Sanciones no pecuniarias y término anticipado</h2></div><div class="tbl-wrap" style="border:0;border-radius:0"><table><thead><tr><th>Situación</th><th>Consecuencia</th><th>Fuente</th></tr></thead><tbody>' +
+    MULTAS_OTRAS.map(function(x){ return '<tr><td class="wrap" style="max-width:300px"><b>' + esc(x[0]) + '</b></td><td class="wrap">' + esc(x[1]) + '</td><td><span class="sub" style="margin:0">' + esc(x[2]) + '</span></td></tr>'; }).join('') + '</tbody></table></div></div>';
+  /* hallazgos */
+  h += '<div class="card" style="margin-bottom:14px"><div class="card-head"><h2>Hallazgos de la revisión</h2><span class="sub" style="margin:0">diferencias entre documentos y criterios a confirmar con el AdC</span></div><div class="tbl-wrap" style="border:0;border-radius:0"><table><tbody>' +
+    MULTAS_HALLAZGOS.map(function(x){ return '<tr><td class="wrap" style="max-width:220px"><b>' + esc(x[0]) + '</b></td><td class="wrap">' + esc(x[1]) + '</td></tr>'; }).join('') + '</tbody></table></div></div>';
+  /* fuentes */
+  h += '<div class="card"><div class="card-head"><h2>Documentos revisados</h2></div><ul style="margin:10px 14px 14px;padding-left:18px;font-size:12.5px">' +
+    Object.keys(MULTAS_FUENTES).map(function(k){ const f = MULTAS_FUENTES[k]; return '<li>' + (f.url ? '<a href="' + attr(f.url) + '" target="_blank" rel="noopener">' + esc(f.n) + '</a>' : esc(f.n)) + '</li>'; }).join('') +
+    '<li>Sin multas aplicables en: Instrucciones a los Proponentes, BT Anexos 1 (Calidad), 3 (MyC), 4 (RRLL) y 6 (PyC), NCC-030 y guías SGP-07MYC.</li></ul></div>';
+  return h;
+}
+function renderMultasPost(){ multasCalcular(); }
+function multasCampo(k, label){ return campo('mu_' + k, label, '<input class="inp" type="number" min="0" step="any" id="mu_' + k + '" value="' + attr(MULTAS_UI[k] || '') + '" oninput="multasCambiar(\'' + k + '\', this.value)">'); }
+function multasCambiar(k, v){ MULTAS_UI[k] = Math.max(0, parseFloat(String(v).replace(',', '.')) || 0); multasCalcular(); }
+function multasCalcular(){
+  const el = document.getElementById('multasRes'); if(!el) return; const s = MULTAS_UI;
+  const filas = [
+    ['Plazo total', s.dPlazo * s.precioTotal * 0.001],
+    ['Hitos intermedios', s.dHito * s.nHitos * s.precioTotal * 0.001],
+    ['Personal clave ausente', s.dClave * s.nClave * 2.5 * s.uf],
+    ['Remoción de personal clave', s.nRemocion * 100 * s.uf],
+    ['Informes y documentos', s.dInformes * 10 * s.uf]
+  ];
+  const total = filas.reduce(function(a, f){ return a + f[1]; }, 0); const tope = s.precioSinReemb * 0.1; const pct = tope ? total / tope * 100 : 0;
+  el.innerHTML = '<div class="tbl-wrap"><table><tbody>' + filas.map(function(f){ return '<tr><td>' + esc(f[0]) + '</td><td style="text-align:right">' + multasCLP(f[1]) + '</td></tr>'; }).join('') +
+    '<tr><td><b>Total</b></td><td style="text-align:right"><b>' + multasCLP(total) + '</b></td></tr><tr><td>Tope (10%)</td><td style="text-align:right">' + multasCLP(tope) + '</td></tr></tbody></table></div>' +
+    '<div class="pbar" style="margin-top:8px;width:100%;height:18px;line-height:18px"><div style="width:' + Math.min(100, pct) + '%;background:' + (pct >= 100 ? 'var(--bad)' : pct >= 50 ? 'var(--warn)' : 'var(--ok)') + '"></div><span>' + pct.toLocaleString('es-CL', { maximumFractionDigits: 1 }) + ' % del tope</span></div>' +
+    (pct >= 100 ? '<p style="color:var(--bad);margin:8px 0 0"><b>Supera el tope:</b> incumplimiento grave y causal de término anticipado (BEC 8.6, BAG 29.1.e).</p>' : '') +
+    '<p class="sub" style="margin:6px 0 0">Si se cumple el plazo final, las multas de hitos se condonan. El estado de pago fuera de plazo (1 UTM/día, BEC) no se incluye en el total.</p>';
+}
+function multasSumar(iso, d){ const x = new Date(iso + 'T12:00:00Z'); x.setUTCDate(x.getUTCDate() + d); return x.toISOString().slice(0, 10); }
+function multasDias(a, b){ return Math.round((Date.parse(b + 'T12:00:00Z') - Date.parse(a + 'T12:00:00Z')) / 864e5); }
 /* ==================================================================
    ===============  VISTA 1.4 — ESTADÍSTICAS DE INGENIERÍA  =========
    ==================================================================
