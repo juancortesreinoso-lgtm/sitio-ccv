@@ -4,16 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Control de Contrato CCV</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 /* ============================================================
    PALETA Y VARIABLES  —  estilo industrial-corporativo sobrio
    ============================================================ */
 :root{
-  --bg:#f4f6f8; --surface:#ffffff; --surface-2:#eef1f5; --surface-3:#e3e8ee;
-  --text:#1b2430; --text-2:#5a6676; --text-3:#8a95a5;
-  --border:#d5dce4; --border-2:#c2cbd6;
-  --accent:#12507e; --accent-2:#1a6ba8; --accent-soft:#e6eff7;
-  --focus:#1a6ba8;
+  /* Paleta Flujo (somosflujo.netlify.app): tinta #0A1633 · lima #C7F53F */
+  --bg:#f3f5fa; --surface:#ffffff; --surface-2:#edf0f7; --surface-3:#e1e6f1;
+  --text:#0a1633; --text-2:#4a5574; --text-3:#7c86a2;
+  --border:#d7dce8; --border-2:#c3cadb;
+  --accent:#182a58; --accent-2:#2c4a94; --accent-soft:#e6eaf5;
+  --focus:#2c4a94;
+  --on-accent:#ffffff; --cta:#c7f53f; --cta-text:#0a1633; --cta-borde:#a9d62a;
+  --sb-bg:#0a1633; --sb-bg-2:#101f44; --sb-text:#ffffff; --sb-text-2:#aab2c8; --sb-text-3:#7c86a2;
+  --sb-borde:rgba(255,255,255,.10); --sb-hover:rgba(255,255,255,.06); --sb-activo:rgba(199,245,63,.13); --lima:#c7f53f; --lima-oscuro:#6e8c33;
   /* estados */
   --st-recibido:#6b7684;      --st-recibido-bg:#e9edf1;
   --st-revision:#1a6ba8;      --st-revision-bg:#e3eefa;
@@ -30,11 +36,12 @@
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#11161c; --surface:#171d25; --surface-2:#1e262f; --surface-3:#26303b;
-    --text:#e6ebf1; --text-2:#a3b0be; --text-3:#7d8b9a;
-    --border:#2b3541; --border-2:#3a4655;
-    --accent:#6fb3e8; --accent-2:#8cc6f5; --accent-soft:#1b2a38;
-    --focus:#6fb3e8;
+    --bg:#0a1633; --surface:#101f44; --surface-2:#182a58; --surface-3:#213669;
+    --text:#f1f4fa; --text-2:#aab2c8; --text-3:#7f89a6;
+    --border:#22335f; --border-2:#2f4378;
+    --accent:#c7f53f; --accent-2:#d6f96f; --accent-soft:#263943;
+    --focus:#c7f53f;
+    --sb-bg:#081129; --sb-bg-2:#0d1a3a; --on-accent:#0a1633;
     --st-recibido:#aab5c2;      --st-recibido-bg:#242c35;
     --st-revision:#7ab8ef;      --st-revision-bg:#16283a;
     --st-comentarios:#e0b054;   --st-comentarios-bg:#332a15;
@@ -49,11 +56,12 @@
   }
 }
 :root[data-theme="dark"]{
-  --bg:#11161c; --surface:#171d25; --surface-2:#1e262f; --surface-3:#26303b;
-  --text:#e6ebf1; --text-2:#a3b0be; --text-3:#7d8b9a;
-  --border:#2b3541; --border-2:#3a4655;
-  --accent:#6fb3e8; --accent-2:#8cc6f5; --accent-soft:#1b2a38;
-  --focus:#6fb3e8;
+  --bg:#0a1633; --surface:#101f44; --surface-2:#182a58; --surface-3:#213669;
+  --text:#f1f4fa; --text-2:#aab2c8; --text-3:#7f89a6;
+  --border:#22335f; --border-2:#2f4378;
+  --accent:#c7f53f; --accent-2:#d6f96f; --accent-soft:#263943;
+  --focus:#c7f53f;
+  --sb-bg:#081129; --sb-bg-2:#0d1a3a; --on-accent:#0a1633;
   --st-recibido:#aab5c2;      --st-recibido-bg:#242c35;
   --st-revision:#7ab8ef;      --st-revision-bg:#16283a;
   --st-comentarios:#e0b054;   --st-comentarios-bg:#332a15;
@@ -91,10 +99,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .sidebar.collapsed .sb-label,.sidebar.collapsed .sb-brand-text,
 .sidebar.collapsed .tree,.sidebar.collapsed .sb-foot{display:none}
 .sb-brand{display:flex;align-items:center;gap:10px;padding:14px 14px;border-bottom:1px solid var(--border);min-height:60px}
-.sb-mark{width:30px;height:30px;flex:0 0 30px;border-radius:7px;background:var(--accent);color:#fff;
-  display:grid;place-items:center;font-weight:700;font-size:12px;letter-spacing:.5px}
-:root[data-theme="dark"] .sb-mark,html:not([data-theme="light"]) .sb-mark{color:#0d1219}
-@media (prefers-color-scheme: light){:root:not([data-theme="dark"]) .sb-mark{color:#fff}}
+.sb-mark{width:30px;height:30px;flex:0 0 30px;border-radius:8px;background:var(--lima);color:#0a1633;
+  display:grid;place-items:center;font-weight:700;font-size:12px;letter-spacing:.5px;font-family:Poppins,system-ui,sans-serif}
 .sb-brand-text{min-width:0}
 .sb-brand-text b{display:block;font-size:13px;line-height:1.2}
 .sb-brand-text span{display:block;font-size:11px;color:var(--text-2)}
@@ -153,8 +159,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 /* ============================ COMPONENTES ============================ */
 .page-title{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;margin:0 0 4px}
-h1{font-size:20px;margin:0;font-weight:650;letter-spacing:-.2px}
-h2{font-size:15px;margin:0 0 10px;font-weight:650}
+h1{font-size:20px;margin:0;font-weight:600;letter-spacing:-.2px;font-family:Poppins,system-ui,sans-serif}
+h2{font-size:15px;margin:0 0 10px;font-weight:600;font-family:Poppins,system-ui,sans-serif}
 h3{font-size:13px;margin:0 0 8px;font-weight:650;color:var(--text-2);text-transform:uppercase;letter-spacing:.4px}
 .sub{color:var(--text-2);font-size:12.5px;margin:0 0 16px;max-width:90ch}
 
@@ -175,9 +181,7 @@ h3{font-size:13px;margin:0 0 8px;font-weight:650;color:var(--text-2);text-transf
   border-radius:var(--radius-sm);padding:7px 12px;cursor:pointer;font-size:12.5px;font-weight:500;color:var(--text);
 }
 .btn:hover{background:var(--surface-3)}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
-:root[data-theme="dark"] .btn.primary{color:#0d1219}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.primary{color:#0d1219}}
+.btn.primary{background:var(--cta);border-color:var(--cta-borde);color:var(--cta-text);font-weight:600}
 .btn.primary:hover{filter:brightness(1.08)}
 .btn.danger{color:var(--bad);border-color:var(--border)}
 .btn.danger:hover{background:var(--bad-bg)}
@@ -281,9 +285,9 @@ a.doclink:hover{text-decoration:none;border-bottom-style:solid}
 a.btn{text-decoration:none}
 .pasos{list-style:none;margin:0;padding:0;display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
 .pasos li{display:flex;gap:10px;font-size:12.5px;border:1px solid var(--border);border-radius:6px;padding:10px;line-height:1.5}
-.pnum{flex:0 0 26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700;font-size:12px}
-:root[data-theme="dark"] .pnum{color:#0d1219}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .pnum{color:#0d1219}}
+.pnum{flex:0 0 26px;height:26px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;font-weight:700;font-size:12px}
+:root[data-theme="dark"] .pnum{color:#0a1633}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .pnum{color:#0a1633}}
 details.acc{border:1px solid var(--border);border-radius:6px;padding:8px 12px;margin-bottom:6px}
 details.acc summary{cursor:pointer;font-weight:600;font-size:13px}
 details.acc summary::marker{color:var(--text-3)}
@@ -380,7 +384,7 @@ body.lectura .solo-admin{display:none!important}
 .sdi-lote{border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:var(--radius);padding:8px 10px;background:var(--bg)}
 .sdi-lote.tarde{border-left-color:var(--bad)}
 .sdi-lote-cab{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px}
-.sdi-lote-n{background:var(--accent);color:#fff;border-radius:4px;padding:1px 7px;font-size:11.5px;font-weight:650}
+.sdi-lote-n{background:var(--accent);color:var(--on-accent);border-radius:4px;padding:1px 7px;font-size:11.5px;font-weight:650}
 .sdi-lote-items{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:6px}
 .sdi-chip{display:flex;gap:6px;align-items:center;font-size:12px;text-decoration:none;color:var(--text);padding:4px 6px;border-radius:4px;background:var(--surface)}
 .sdi-chip:hover{background:var(--surface-2)}
@@ -399,7 +403,7 @@ body.lectura .solo-admin{display:none!important}
 .cal-folder-meta{font-size:12px;color:var(--text-2);line-height:1.5;word-break:break-word}
 .cal-subs{display:flex;flex-wrap:wrap;gap:6px}
 .cal-sub{font-size:11.5px;padding:3px 8px;border-radius:12px;background:var(--surface-3);color:var(--text);text-decoration:none}
-.cal-sub:hover{background:var(--accent);color:#fff}.cal-sub.vacia{opacity:.6}
+.cal-sub:hover{background:var(--accent);color:var(--on-accent)}.cal-sub.vacia{opacity:.6}
 .cal-folder-pie{margin-top:auto;font-size:12px;color:var(--accent);text-align:right}
 .cal-bar{text-decoration:none;color:var(--text)}.cal-bar:hover .sdi-bar-lab{color:var(--accent)}
 .doc-galeria{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-top:8px}
@@ -467,6 +471,39 @@ body.lectura .solo-admin{display:none!important}
 .i57-err li{color:var(--bad);margin:2px 0}.i57-av li{color:var(--text-2);margin:2px 0}
 .i57-ver h3{margin:14px 0 6px}.i57-ver h4{margin:8px 0 4px;font-size:12px}
 @media (max-width:700px){.i57-acc{white-space:normal}.i57-barra{position:static}}
+
+/* ===================== IDENTIDAD FLUJO ===================== */
+.sidebar{background:var(--sb-bg);border-right-color:var(--sb-borde);color:var(--sb-text)}
+.sidebar .sb-brand,.sidebar .sb-foot{border-color:var(--sb-borde)}
+.sidebar .sb-brand-text b{font-family:Poppins,system-ui,sans-serif;font-weight:600;color:var(--sb-text)}
+.sidebar .sb-brand-text span,.sidebar .sb-foot{color:var(--sb-text-2)}
+.sidebar .sb-toggle{border-color:var(--sb-borde);color:var(--sb-text-2)}
+.sidebar .sb-toggle:hover,.sidebar .node-head:hover{background:var(--sb-hover)}
+.sidebar .node-head{color:#dfe4f0}
+.sidebar .node-head .ico,.sidebar .caret{color:var(--sb-text-3)}
+.sidebar .node-head.active{background:var(--sb-activo);color:var(--lima);box-shadow:inset 3px 0 0 var(--lima)}
+.sidebar .node-head.active .ico{color:var(--lima)}
+.sidebar .badge{background:rgba(255,255,255,.08);color:var(--sb-text-2)}
+.sidebar .node-head.active .badge{background:var(--lima);color:#0a1633}
+.sidebar .badge.wip{background:transparent;border-color:rgba(255,255,255,.18);color:var(--sb-text-3)}
+.sidebar .children{border-left-color:var(--sb-borde)}
+.sidebar .tree{scrollbar-color:rgba(255,255,255,.15) transparent}
+.flujo-firma{display:flex;align-items:center;gap:9px;margin:0 8px 10px;padding:8px 10px;border-radius:10px;
+  background:var(--sb-bg-2);border:1px solid var(--sb-borde);color:var(--sb-text-2);text-decoration:none;font-size:11px;line-height:1.35;transition:border-color .15s}
+.flujo-firma:hover{border-color:rgba(199,245,63,.45)}
+.flujo-firma svg{flex:0 0 24px;width:24px;height:24px}
+.flujo-firma b{color:var(--sb-text);font-family:Poppins,system-ui,sans-serif;font-weight:600}
+.flujo-firma em{display:block;font-style:normal;color:var(--lima);font-size:10.5px}
+.sidebar.collapsed .flujo-firma{margin:0 auto 10px;padding:6px;border:0;background:none}
+.sidebar.collapsed .flujo-firma span{display:none}
+.credito{margin-top:auto;padding:14px 20px 18px;border-top:1px solid var(--border);font-size:11.5px;color:var(--text-3);
+  display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}
+.credito a{color:var(--text-2);text-decoration:none}
+.credito a:hover{color:var(--accent-2);text-decoration:underline}
+.credito .marca{display:inline-flex;align-items:center;gap:6px;color:var(--text-2)}
+.credito .marca b{font-family:Poppins,system-ui,sans-serif;font-weight:600;color:var(--text)}
+.credito svg{width:18px;height:18px;background:#0a1633;border-radius:5px;padding:1px}
+@media print{.credito,.flujo-firma{display:none}}
 </style>
 </head>
 <body>
@@ -485,6 +522,7 @@ body.lectura .solo-admin{display:none!important}
     <div class="sb-foot">
       <div id="sbFoot">—</div>
     </div>
+    <a class="flujo-firma" href="https://somosflujo.netlify.app/" target="_blank" rel="noopener" title="Plataforma diseñada por Flujo — software y simuladores a medida"><svg viewBox="0 0 100 100" aria-hidden="true"><rect x="14" y="26" width="30" height="12" rx="6" fill="#C7F53F"/><rect x="14" y="44" width="42" height="12" rx="6" fill="#C7F53F"/><rect x="14" y="62" width="20" height="10" rx="5" fill="#6E8C33"/><polygon points="62,32 88,50 62,68" fill="#C7F53F"/></svg><span>Diseñada por <b>Flujo</b><em>Software a medida · somosflujo.netlify.app ›</em></span></a>
   </aside>
 
   <!-- ============ MAIN ============ -->
@@ -505,6 +543,12 @@ body.lectura .solo-admin{display:none!important}
     </header>
     <div class="fsbar" id="fsBar" hidden></div>
     <main class="content" id="content"></main>
+    <footer class="credito">
+      <span class="marca"><svg viewBox="0 0 100 100" aria-hidden="true"><rect x="14" y="26" width="30" height="12" rx="6" fill="#C7F53F"/><rect x="14" y="44" width="42" height="12" rx="6" fill="#C7F53F"/><rect x="14" y="62" width="20" height="10" rx="5" fill="#6E8C33"/><polygon points="62,32 88,50 62,68" fill="#C7F53F"/></svg>Plataforma diseñada e implementada por <b>Flujo</b> — software y simuladores a medida</span>
+      <a href="https://somosflujo.netlify.app/" target="_blank" rel="noopener">somosflujo.netlify.app</a>
+      <a href="https://instagram.com/flujo.cl" target="_blank" rel="noopener">@flujo.cl</a>
+      <a href="mailto:juan.cortes.reinoso@gmail.com">juan.cortes.reinoso@gmail.com</a>
+    </footer>
   </div>
 </div>
 <div id="modalRoot"></div>
@@ -7934,7 +7978,7 @@ function multasDias(a, b){ return Math.round((Date.parse(b + 'T12:00:00Z') - Dat
    ================================================================== */
 
 /* Paleta de series para gráficos (coherente con la paleta de la app) */
-const SERIE = ['#12507e','#2f8f83','#9a6205','#6b4fa0','#b3261e','#2e7d46','#5b6672','#a8562a','#1a6ba8'];
+const SERIE = ['#2c4a94','#2f8f83','#9a6205','#6b4fa0','#b3261e','#2e7d46','#5b6672','#a8562a','#1a6ba8'];
 
 function kpi(label, valor, nota, cls){
   return '<div class="card kpi ' + (cls || '') + '">' +
