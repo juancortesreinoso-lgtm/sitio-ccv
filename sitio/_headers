@@ -1,9 +1,15 @@
-# Lectura de la plantilla 5.7 y de los insumos de la prueba de aceptación desde el servicio Apps Script
+# Portal Control de Contrato CCV (datos cifrados; ingreso por perfil)
+/*
+  X-Robots-Tag: noindex, nofollow
+  Referrer-Policy: no-referrer
+  X-Frame-Options: SAMEORIGIN
+  X-Content-Type-Options: nosniff
+/
+  Cache-Control: no-cache
+/index.html
+  Cache-Control: no-cache
+# Lectura de la plantilla 5.7 y librerías desde el servicio Apps Script
 /plantillas/*
   Access-Control-Allow-Origin: *
 /lib/*
-  Access-Control-Allow-Origin: *
-/pruebas57/*
-  Access-Control-Allow-Origin: *
-/servidor57/*
   Access-Control-Allow-Origin: *
