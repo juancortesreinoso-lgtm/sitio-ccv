@@ -1,0 +1,27 @@
+{
+ "id": "/?app=asistencia",
+ "name": "Asistencia CCV",
+ "short_name": "Asistencia",
+ "description": "Registro diario de asistencia del personal del contrato.",
+ "lang": "es-CL",
+ "start_url": "/?app=asistencia",
+ "scope": "/",
+ "display": "standalone",
+ "orientation": "portrait",
+ "background_color": "#0A1633",
+ "theme_color": "#0A1633",
+ "icons": [
+  {
+   "src": "icons/asis-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "any maskable"
+  },
+  {
+   "src": "icons/asis-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any maskable"
+  }
+ ]
+}

@@ -13,3 +13,9 @@
   Access-Control-Allow-Origin: *
 /lib/*
   Access-Control-Allow-Origin: *
+
+# App instalable (PWA)
+/*.webmanifest
+  Content-Type: application/manifest+json
+/sw.js
+  Cache-Control: no-cache
